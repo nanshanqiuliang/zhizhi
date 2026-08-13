@@ -84,4 +84,14 @@ describe("knowledge tree workspace", () => {
     expect(screen.getByRole("region", { name: "节点详情" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "课程与笔记" })).toBeInTheDocument();
   });
+
+  it("keeps honest demo boundaries available in the compact layout", () => {
+    render(<App />);
+
+    const boundary = screen.getByLabelText("演示能力边界");
+    expect(boundary).toHaveTextContent("示例数据");
+    expect(boundary).toHaveTextContent("仅本次会话");
+    expect(boundary).toHaveTextContent("AI 未连接");
+    expect(boundary).toHaveTextContent("未连接数据库");
+  });
 });

@@ -324,3 +324,26 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: commit the green Web implementation with its repeatable
   tests, hand the immutable SHA to role-separated QA, preserve the review
   evidence, then run the complete repository gate suite before closure.
+
+## Step 3A QA failure checkpoint — 2026-08-14 03:08 +08:00
+
+- Frozen implementation `5aab0e3` passed local Web/full-repository/browser
+  verification, but role-separated QA attempt 001 returned FAIL with one P1.
+- Finding: at `max-width: 820px`, CSS hides the header mode badges, the sidebar
+  session-only notice, and the footer database boundary simultaneously. Mobile
+  users can still see “保存修改” without any visible statement that data is
+  sample/session-only and AI/database/import are absent.
+- No P0/P2 or additional finding was reported. QA independently confirmed the
+  direct Ready/red/green chain, 8-node fixture, no network/storage APIs, Web
+  check/build, history branch/reset mutations, deletion and lock semantics.
+- Failure evidence is preserved as
+  `evidence/TR-20260814-004/ai-web-qa-attempt-001.md`; it is correlated machine
+  review, not a human signature or owner acceptance.
+- A new component regression requires one compact-layout boundary element to
+  contain `示例数据`, `仅本次会话`, `AI 未连接`, and `未连接数据库`. Against
+  `5aab0e3` this test must fail before the UI fix.
+- Natural-language Step 3 returns to approximately 75%; personal MVP remains
+  approximately 32%. The full QA gate is not passed despite local green checks.
+- Exact next action: run and commit the expected failing regression, add an
+  always-visible mobile capability-boundary strip, verify its computed mobile
+  display in the browser, rerun gates, and submit a superseding frozen SHA.
