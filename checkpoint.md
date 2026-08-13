@@ -17,7 +17,8 @@ Continue the repository's current active development work after reading the gove
 - The independent subject reviewer accepted `db0831b` after three attempts.
 - Four uncommitted immutable-handoff summaries exist under `evidence/TR-20260813-005/` (three subject attempts and one QA attempt).
 - The independent QA attempt reran the repository gates successfully but returned FAIL because of three P1 and three P2 semantic bypasses.
-- Eight regression tests for those findings have been added to `tests/contract/test_ai_review_harness.py`; the last recorded targeted run was intentionally red: 8 failed, 31 passed.
+- Eight regression tests for those findings were added to `tests/contract/test_ai_review_harness.py`; the recovered red baseline was 8 failed, 31 passed.
+- All six findings are now closed in commit `ae834d9051553aa02a079e72ce2bf6bd8955c081`; the targeted harness suite passes 39/39.
 
 ## Key decisions
 
@@ -37,20 +38,23 @@ Continue the repository's current active development work after reading the gove
 
 ## Remaining work
 
-1. Implement the six QA closures against the eight red regression tests.
-2. Rerun targeted tests, then the full mandated repository gates.
-3. Commit the fix with the required Conventional Commit body and evidence references.
-4. Ask the role-separated QA agent to audit the new immutable commit/artifact, recording model/provider correlation.
-5. Save the superseding QA evidence and hashes; update `DEVELOPMENT_LOG`, `OPS_LOG`, `ENGINEERING_PLAN`, `TRACEABILITY_MATRIX`, the active work item, and user-facing documentation as required by the Definition of Done.
-6. Run final gates, commit the documentation/evidence closure, and verify a clean worktree.
+- No implementation, verification, QA, evidence, or documentation work remains in WORK-2026-004 scope.
+- The closure changes are ready for their final Conventional Commit; after that, only confirm HEAD and a clean worktree.
 
 ## Current risks or blockers
 
-- No external blocker is known.
-- The current worktree is intentionally red until the QA findings are implemented.
+- No blocker remains for WORK-2026-004 closure.
 - Real-provider execution and owner authentication are explicitly out of scope and must remain disabled.
 - Subject and QA attestations may be correlated because the available agents can share a model/provider family; the evidence must disclose that correlation and cannot impersonate a human signature.
 
+## Verification after recovery
+
+- Targeted contract suite: 39/39 passed.
+- Full local gates at `ae834d9`: repository validator passed; Ruff format/lint passed; mypy passed; pytest 84/84 passed; pnpm frozen install/peer check/web check/web build passed.
+- No live provider, network search, secret, database, or owner-authentication path was enabled.
+- Role-separated QA attempt 002 passed immutable commit `ae834d9`, superseded the preserved FAIL attempt 001, and found no new P0/P1/P2; correlation remains conservatively classified as `correlated_review`.
+- Final post-documentation gates also passed: repository validator, Ruff format/lint, mypy, pytest 84/84, pnpm frozen install/peers/check, Web 1/1, and production build.
+
 ## Exact next action
 
-Patch `scripts/ai_review_harness.py` and `evals/calculus-v1/schema/machine-review.schema.json` so the eight new tests fail closed for live-mode relabeling, incomplete/tampered traces, unauthenticated owner acceptance, claim-ID substitution, policy-provenance substitution, and adjudicator session reuse; then run the targeted contract test file.
+On recovery, first verify the closure commit exists and `git status --short` is empty. Do not start a new main stage automatically: follow `docs/ENGINEERING_PLAN.md`, where the next dependency is workspace-owner review of WORK-2026-001/002 decisions; keep real Provider/Web and owner acceptance disabled meanwhile.

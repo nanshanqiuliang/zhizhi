@@ -1,7 +1,7 @@
 # WORK-2026-004：建立微积分金标集与许可清单
 
 ```yaml
-status: in_progress
+status: completed
 type: spike
 owner: Codex (dataset author / implementation role)
 reviewers: [workspace_owner, ai_subject_reviewer, ai_qa_auditor]
@@ -9,7 +9,7 @@ related_ids: [CHG-2026-001, ADR-0015, REQ-2026-002, REQ-2026-003, REQ-2026-004, 
 target_stage: "阶段 -1 / 阶段 0 入口准备"
 risk: high
 created_at: 2026-08-13T18:25:00+08:00
-updated_at: 2026-08-13T22:15:00+08:00
+updated_at: 2026-08-13T23:16:30+08:00
 ```
 
 ## 问题与结果
@@ -48,7 +48,7 @@ updated_at: 2026-08-13T22:15:00+08:00
 - [x] AC-8：v2 machine attestation contract 完整记录 actor/run/lineage、provider/model/revision、prompt/context/tool-policy/harness/input/output hash、证据/反证、不确定性和工具轨迹。
 - [x] AC-9：AI 学科与 QA 使用不同 run/prompt/context，QA 绑定冻结学科 artifact；共享会话硬失败，相同模型/Provider 自动标为 `correlated_review`。
 - [x] AC-10：确定性 mock/replay harness 覆盖 accept/dispute/abstain/inconclusive、第三方裁决、30/40/50 覆盖、提示注入、工具越权、输入漂移、伪引用、超时和预算失败。
-- [x] AC-11：机器审查只能进入 `machine_reviewed`/`machine_verified`；`accepted_with_owner_risk` 显式绑定 owner、风险、范围、内容 hash、policy、时间/期限，且不能豁免硬安全不变量。
+- [x] AC-11：mock/replay 只能保持 `inconclusive`；当前 prototype 尚无可信 owner 身份/时钟边界，因此拒绝所有 `accepted_with_owner_risk` artifact。owner 风险接受字段仅保留为可演进 contract，认证与期限校验归 WORK-2026-010，不能豁免硬安全不变量。
 
 ## 验证计划
 
@@ -60,13 +60,13 @@ updated_at: 2026-08-13T22:15:00+08:00
 | TC-DATA-004 | security/legal | 署名、许可、非商业与 ShareAlike 元数据 | 缺失时失败 | TR-20260813-003 |
 | TC-DATA-005 | visual | 代表页面 Poppler render | 清晰、页码/章节可辨 | TR-20260813-003 |
 | TC-DATA-006 | contract/review | 独立复核包绑定、覆盖、分歧与双签门 | 待签模板合法；缺项/重复/hash 漂移/伪签字失败 | TR-20260813-004 |
-| TC-AIREV-001..010 | contract/security/replay | v2 provenance、隔离、证据、搜索、失败与风险接受 | mock/replay 可重跑；所有硬不变量失败关闭 | 首轮 28/28；两轮隔离学科 dispute 后 v2 32/32、全套 77/77；正式 TR 待复核 |
+| TC-AIREV-001..010 | contract/security/replay | v2 provenance、隔离、证据、搜索、失败与风险接受 | mock/replay 可重跑；所有硬不变量失败关闭 | TR-20260813-005；targeted 39/39、全套 84/84；AI 学科 accept + QA PASS（相关性披露） |
 
 ## 交付物与关闭
 
-- Commit/PR：数据集 `e918fdf915d635760a86842ba1ccee933f962ed1`；复核门 `232d0cdc48c25d8cd986013ea21b8060fd37336f`；无远端 PR。
+- Commit/PR：数据集 `e918fdf915d635760a86842ba1ccee933f962ed1`；复核门 `232d0cdc48c25d8cd986013ea21b8060fd37336f`；v2 实现链 `73a74da`、`3f9b637`、`db0831b`、`ae834d9051553aa02a079e72ce2bf6bd8955c081`；无远端 PR。
 - Contract/ADR/migration/prompt：eval fixture schema v1；v2 machine review schema + review policy/prompt/context v2；无产品 migration。
-- Test Run：`TR-20260813-003`（数据集作者验证）与 `TR-20260813-004`（独立复核门验证）均为 CONDITIONAL GO；真实独立复核待完成。
+- Test Run：`TR-20260813-003/004` 保持 v1 历史 CONDITIONAL GO；`TR-20260813-005` 对离线 v2 prototype 为 GO，保留三轮学科 attempt 和两轮 QA attempt，最终 QA PASS。
 - Release：无；仅非商业研发 fixture。
-- 观察结果：复核门实现提交上 43/43 Python、1/1 Web 及完整本地门通过；待签包普通门通过，完成门按预期以 `calculus_review_invalid`/退出 1 阻断；此前 7 张代表页清晰可辨。
-- 未完成项：v2 contract、mock harness 和安全 fixture 已实现；`73a74da` 后两轮隔离 AI 学科复核分别发现证据自证/错绑/范围/裁决 ledger 及 controlled-live assurance/裁决 position 问题，均已回归修复，最终修复待提交并复核。v1 不接受 AI 伪签，真实联网另受 WORK-2026-007/008 门控制。
+- 观察结果：最终实现提交上 84/84 Python、1/1 Web 及完整本地门通过；QA 首轮 3 P1/3 P2 均由红灯测试复现并在 `ae834d9` 关闭；复审未发现新 P0/P1/P2。mock 输出仍为 `inconclusive`、`product_eligible=false`。
+- 未完成项的新 ID：真实 Provider/Web 与质量/成本/延迟证据归 WORK-2026-007/008；authenticated owner、产品状态机、持久化/UI 与通用 harness 归 WORK-2026-010；Anchor/GraphPatch 产品 contract 与区域指标归 WORK-2026-005。v1 不接受 AI 伪签，AI 证明相关性为 `correlated_review`。

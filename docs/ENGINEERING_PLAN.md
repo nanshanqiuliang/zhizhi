@@ -7,7 +7,7 @@
 
 ## 当前结论
 
-产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现并通过本地验证；正式证据/隔离 AI 复核、产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
+产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
 ## 当前阶段出口门
 
@@ -18,7 +18,7 @@
 - [ ] 回答架构基线第 21 节待决问题；
 - [ ] 确定仓库归属、公开性和许可证；
 - [x] 复核执行角色确定为 `ai_subject_reviewer`、`ai_qa_auditor` 和按需 `ai_dispute_adjudicator`；技术/发布 Owner 仍待定；
-- [ ] 确定微积分金标资料及许可；
+- [x] 确定微积分金标资料及许可；MIT OCW RES.18-001 第 2 章已冻结并记录 CC BY-NC-SA 4.0 边界；
 - [ ] 冻结 Anchor v1、GraphPatch v1 和核心 enum。
 - [x] 首家真实 LLM Provider 决策为 DeepSeek，兼容与配置基线存在；
 - [ ] 批准 DeepSeek task budget、Embedding Provider 和大陆网络验收口径；
@@ -30,7 +30,7 @@
 | WORK-2026-001 | 审阅并批准架构与开发运维基线 | 待验收 | 项目负责人 | 无 | 批准记录/修订意见 | 文档状态变更 |
 | WORK-2026-002 | 回答编码前待决问题 | 未开始 | 产品+技术 | WORK-2026-001 | 决策清单 | ADR/计划更新 |
 | WORK-2026-003 | 确定仓库、许可证与分支保护 | 未开始 | 项目负责人 | WORK-2026-001 | 仓库治理记录 | 本地/远端检查 |
-| WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 进行中 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 `73a74da` 后两轮学科 dispute 已修到 77 Python 通过，最终修复提交/TR/复核待完成 |
+| WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 已完成 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 `73a74da..ae834d9` + TR-005，84/84 Python、QA PASS（correlated） |
 | WORK-2026-005 | 冻结 Anchor/GraphPatch v1 | 未开始 | 总工程师 | WORK-2026-002 | JSON Schema、ADR | 契约测试设计 |
 | WORK-2026-006 | 建仓和最小 CI/证据骨架 | 待验收 | 开发+QA+运维 | WORK-2026-003（远端治理仍待定） | 本地 Git、CI workflow、锁文件、状态页 | `TR-20260813-002` CONDITIONAL GO；独立 QA/远端 CI 待验收 |
 | WORK-2026-007 | 冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约 | 规划完成/待实现 | AI+后端+QA+运维 | WORK-2026-001 | 多 LLM 基线、配置 v1、错误与 Runbook | TC-LLM-001..009 待执行 |
@@ -42,10 +42,9 @@
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 技术尖峰实施 | 个人 AI Agent/自动复核方向已批准，review v2 原型已实现但正式证据/独立机器复核、核心 contract、预算、真实 API Key 和其余 MVP 细项仍未完成 | 完成 WORK-2026-004 v2 实现提交、TR 和隔离 AI 学科/QA 复核，再完成阶段 -1 其余出口门 |
+| 后续技术尖峰 | WORK-2026-004 已完成；架构/产品待决项、Anchor/GraphPatch contract、预算、真实 API Key 和其余 MVP 细项仍未完成 | 先完成 WORK-2026-001/002 的 owner 决策，再按依赖推进 WORK-2026-005/007；不得直接跳到 live |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
-| WORK-2026-004 关闭 | v1 作者/合同门已通过；v2 连续两轮隔离学科 `dispute` 的发现均已修复，但最终修复尚未冻结/复核；仍缺不可变 TR 和 AI QA 结论 | 提交最终争议修复并由学科 Agent复核；固定其 artifact hash 后交给独立 QA；机器审查与 owner 风险接受分离 |
 
 ## 下一门
 
-`Gate A：阶段 -1 出口验收`。产品方向和机器复核角色已明确；WORK-2026-004 的 v1 数据/门禁和 `TR-20260813-003/004` 保持历史证据，不改写为 AI 签字。v2 隔离学科复核已连续两轮通过安全变异发现证据/状态语义缺陷，全部以失败测试复现并修复。下一动作是冻结最终修复提交并做第三次学科复核；若无阻断，固定 attestation 后交给隔离 QA。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭。
+`Gate A：阶段 -1 出口验收`。WORK-2026-004 已以 `TR-20260813-005` 完成离线 prototype 收口；v1 数据/门禁和 `TR-20260813-003/004` 仍是不可改写的历史证据，不被 AI 伪签。下一动作按依赖回到 WORK-2026-001/002：由 workspace owner 审阅基线并回答架构第 21 节待决问题，随后才冻结 WORK-2026-005 的 Anchor/GraphPatch v1。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭；owner 风险接受在 WORK-2026-010 建立认证边界前也保持拒绝。

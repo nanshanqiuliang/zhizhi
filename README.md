@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-当前处于“阶段 -1：架构与证据准备”。本仓库已开始执行第一轮动工顺序的第 1 步：建立本地 Git、模块目录、校验脚本、最小前端壳和 CI 证据骨架。尚未冻结 Anchor/GraphPatch v1，尚未导入金标数据，未启用真实 LLM，也没有可发布桌面安装包。
+当前处于“阶段 -1：架构与证据准备”。仓库已建立本地 Git、模块目录、校验脚本、最小前端壳和 CI 证据骨架，并完成微积分 30/40/50 金标 fixture 与离线 AI 机器复核 v2 prototype。该 prototype 只做确定性 mock/replay，最终 QA 证明标记为 `correlated_review`，输出始终是 `inconclusive`/非产品可用。Anchor/GraphPatch v1 尚未冻结，真实 LLM/Web 与 owner 风险接受均未启用，也没有可发布桌面安装包。
 
 不要把当前骨架当作 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
 

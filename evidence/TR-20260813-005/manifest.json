@@ -1,0 +1,48 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260813-005",
+  "created_at": "2026-08-13T23:16:30+08:00",
+  "commit": "ae834d9051553aa02a079e72ce2bf6bd8955c081",
+  "dataset": {
+    "id": "calculus-continuity-differentiability-v1",
+    "version": "1.0.0-draft.2",
+    "status": "author_reviewed",
+    "review_subject_sha256": "54021dcac42e5e5030aaa2109d09a8ca0393e51ca7d87f2ac3e76075178a4574"
+  },
+  "review": {
+    "schema": "calculus-machine-review.v2",
+    "policy_sha256": "7f98e974acb10d3d8351c73d1f36e387bdf0c5171ebba6e27cd90350de558368",
+    "execution_mode": "deterministic_mock_replay",
+    "machine_state": "inconclusive",
+    "product_eligible": false,
+    "correlation_classification": "correlated_review",
+    "subject_attestation": {
+      "path": "ai-subject-attempt-003.md",
+      "sha256": "9905ca560d6776427db4d890f498fa7f8ab68601f21b187e91590a64ea6ec2b1",
+      "reviewed_commit": "db0831b0806d82e7bab95e2ad804bfe69e8d81cd",
+      "decision": "accept"
+    },
+    "qa_attestation": {
+      "path": "ai-qa-attempt-002.md",
+      "sha256": "f8b35b19f259e2befb764a94285add68e809b03eab6f0eb36e8a21e1be9b144e",
+      "reviewed_commit": "ae834d9051553aa02a079e72ce2bf6bd8955c081",
+      "decision": "pass",
+      "supersedes": "ai-qa-attempt-001.md"
+    }
+  },
+  "files": [
+    "ai-subject-attempt-001.md",
+    "ai-subject-attempt-002.md",
+    "ai-subject-attempt-003.md",
+    "ai-qa-attempt-001.md",
+    "ai-qa-attempt-002.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "human_signature": false,
+  "owner_acceptance": false
+}

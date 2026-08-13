@@ -13,9 +13,9 @@
 | RISK-2026-007 | 把 OpenAI 兼容误认为语义完全相同，导致 DeepSeek tool/thinking/JSON 失败 | 高 | 高 | 高 | 400、空 JSON、断流、schema failure 上升 | protocol/profile 分层、capability preflight、TC-LLM-001..009 | 隔离 deployment、回退批准配置、恢复 mock | 待定 | 阶段 0/2 | open |
 | RISK-2026-008 | Provider 回退重复工具副作用或产生不可追溯的混合草案 | 中 | 极高 | 高 | 同一 tool_call 重放、partial output 被复用 | fresh model run、禁止副作用自动回退、幂等键 | 禁用回退/AI 草案、审计并撤销 revision | 待定 | 阶段 2 | open |
 | RISK-2026-009 | 模型下线、别名漂移或能力变化造成静默退化 | 高 | 高 | 高 | `/models` 差异、capability mismatch、eval 漂移 | 显式模型 ID、能力快照、启动探测不自动升级 | 关闭 deployment、回退批准 snapshot | 待定 | 阶段 2/运营 | open |
-| RISK-2026-010 | AI 学科与 QA 同源错误造成虚假一致 | 高 | 极高 | 极高 | 相同模型/来源一致 PASS、mutation 漏检 | run/prompt/context 隔离；优先跨模型/Provider；同源自动标 `correlated_review`；独立 seed/mutation 校准 | 返回 inconclusive 或要求 owner 接受仅残余同源风险；关闭自动放行 | workspace_owner | 阶段 0/2 | open |
-| RISK-2026-011 | 搜索结果提示注入、SEO/引用洗白或网页漂移污染自动复核 | 高 | 极高 | 极高 | 工具越权、引用不支持 claim、内容 hash 漂移 | SearchProvider allowlist、来源分级、内容视为不可信、引用/hash/获取时间、反证搜索、安全 fixture | 隔离来源、使 attestation 失效、回到本地一手证据或 inconclusive | workspace_owner | 阶段 0/2/3 | open |
-| RISK-2026-012 | Harness/validator 共同缺陷同时误导学科 Agent 和 QA | 中 | 极高 | 高 | 两角色共同漏检确定性 mutation | 纯领域验证、property/mutation test、content-addressed artifact、全部 attempt 留证 | 禁用机器通过状态、修复并重放所有受影响 run | workspace_owner（技术负责人确定前） | 阶段 0/2 | open |
+| RISK-2026-010 | AI 学科与 QA 同源错误造成虚假一致 | 高 | 极高 | 极高 | 相同模型/来源一致 PASS、mutation 漏检 | run/prompt/context 隔离；优先跨模型/Provider；同源自动标 `correlated_review`；TR-005 已验证离线披露/隔离 | 返回 inconclusive；认证 owner 边界未实现前拒绝风险接受；关闭自动放行 | workspace_owner | 阶段 0/2 | open |
+| RISK-2026-011 | 搜索结果提示注入、SEO/引用洗白或网页漂移污染自动复核 | 高 | 极高 | 极高 | 工具越权、引用不支持 claim、内容 hash 漂移 | SearchProvider allowlist、来源分级、内容视为不可信、引用/hash/获取时间、反证搜索；TR-005 已验证冻结 replay fixture | 隔离来源、使 attestation 失效、回到本地一手证据或 inconclusive | workspace_owner | 阶段 0/2/3 | open |
+| RISK-2026-012 | Harness/validator 共同缺陷同时误导学科 Agent 和 QA | 中 | 极高 | 高 | 两角色共同漏检确定性 mutation | 纯领域验证、property/mutation test、content-addressed artifact、全部 attempt 留证；TR-005 已关闭 3 P1/3 P2 | 禁用机器通过状态、修复并重放所有受影响 run | workspace_owner（技术负责人确定前） | 阶段 0/2 | open |
 
 ## 评分
 

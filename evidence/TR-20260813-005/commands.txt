@@ -1,0 +1,16 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run python -m scripts.validate_calculus_dataset
+uv run python -m scripts.validate_ai_review_harness
+uv run ruff format --check scripts tests
+uv run ruff check .
+uv run mypy scripts
+uv run pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+git diff --check
+
+# Role-separated AI QA replayed the attempt-001 security mutations against immutable commit ae834d9.
+# No real provider, Web Search, secret, owner authentication, database, or external service was used.

@@ -89,6 +89,17 @@
 - 回滚：回退本轮修复提交恢复初版原型，但会重新暴露误读/错绑风险，因此不得用于放行。
 - 遗留风险与下一步：冻结修复提交，要求同一学科角色复核争议是否解决；再将冻结学科 attestation hash 交给隔离 QA。
 
+## 2026-08-13 — 完成 AI 机器复核 v2 离线原型与隔离 QA 收口
+
+- 关联 ID：WORK-2026-004、ADR-0015、REQ-2026-002..005、NFR-2026-009、RISK-2026-010..012、TR-20260813-005。
+- 实际变化：隔离学科 attempt 003 接受 `db0831b` 后，独立 QA attempt 001 对冻结提交发现 3 P1/3 P2；以 8 个红灯回归修复 live 重标、trace 缺失/篡改、伪 owner、claim 替换、tool-policy 自证和裁决 session 复用，形成 `ae834d9`。QA attempt 002 复放全部缺陷及额外组合后 PASS，未发现新 P0/P1/P2。
+- 影响模块/接口/schema/migration/prompt：subject/QA trace contract 固定为每个 120 claims 精确覆盖；validator 把 trace 绑定到 claim/query/result/tool/status，把 provenance 绑定到有效 role policy/harness，并要求三角色 session 隔离。当前 prototype 显式拒绝 `controlled_live` 和任何 owner acceptance artifact；无数据库 migration 或 live prompt。
+- 兼容性：v1 `TR-20260813-003/004` 和 QA FAIL attempt 001 原样保留；attempt 002 通过 `supersedes` 追加而非改写。mock 仍为 `inconclusive`/`product_eligible=false`，不映射为人类 `approved`。
+- 验证与证据：`TR-20260813-005`；targeted 39/39，完整 pytest 84/84、Web 1/1；repository validator、Ruff format/lint、mypy、pnpm frozen install/peers/check/build 全通过。学科/QA 同源独立性无外部证明，保守披露 `correlated_review`。
+- 性能/安全/运维影响：无网络、模型费用、秘密、数据库、真实用户内容或常驻进程；120-claim trace 只做本地确定性 replay。任何真实 Provider、Web Search 或 owner 身份使用继续失败关闭。
+- 回滚：回退 `ae834d9` 会重新暴露 QA 已证明的状态/证据绕过，不得用于放行；如需禁用，整体关闭 v2 policy/harness 并保留所有失败/通过 artifact。
+- 遗留风险与下一步：WORK-2026-004 的离线 prototype 已完成；真实 Provider/live eval 归 WORK-2026-007/008，认证 owner/产品状态机/通用 harness 归 WORK-2026-010，Anchor/GraphPatch 产品 contract 归 WORK-2026-005。RISK-2026-010..012 保持 open。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

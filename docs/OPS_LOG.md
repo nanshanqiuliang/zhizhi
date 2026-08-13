@@ -95,6 +95,19 @@
 - 验证：同源披露、隔离、artifact 绑定、提示注入、越权、漂移、伪引用、timeout/budget、裁决和硬不变量风险豁免均有正/负向测试。
 - 遗留风险/Owner/期限：正式 QA 尚未对冻结提交复核；真实搜索的 SSRF/allowlist/版权与 Provider 失败仍未验证，继续保持关闭。
 
+## 2026-08-13 23:16 — AI 机器复核 v2 离线原型完成证据收口
+
+- 关联 ID：WORK-2026-004、TR-20260813-005、RISK-2026-010..012。
+- 环境/版本/build/config：Windows 11 x64 10.0.26200；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；commit `ae834d9051553aa02a079e72ce2bf6bd8955c081`；dataset `1.0.0-draft.2`；harness `calculus-ai-review-harness.v2.mock.1`。
+- 操作者：Codex（实现）；职责隔离 `ai_subject_reviewer` 与 `ai_qa_auditor`（只读机器证明；非真人签字/owner 接受）。
+- 变更或症状：QA attempt 001 在绿门下发现 3 P1/3 P2 语义绕过；全部先以 8 个失败测试复现，再在 `ae834d9` 失败关闭。QA attempt 002 绑定该提交并 PASS，明确 `correlation_classification=correlated_review`。
+- 时间线：`73a74da` 初版 → `3f9b637`/`db0831b` 三轮学科复核收敛 → QA-001 FAIL → `ae834d9` 修复 → QA-002 PASS。
+- 影响：无部署、数据库、真实 Provider/Web、用户数据、秘密或模型费用；mock 继续输出 `inconclusive`，不能声明产品能力上线。
+- 证据：`docs/test-reports/TR-20260813-005_calculus-ai-review-v2.md` 与 `evidence/TR-20260813-005/`；targeted 39/39、pytest 84/84、Web 1/1，完整本地门全部通过。
+- 缓解/回滚：`controlled_live` 和任意 owner acceptance artifact 在本原型中均被拒绝；回退 `ae834d9` 不得作为放行手段。若异常，禁用整个 v2 harness 并保留所有 attempt。
+- 验证：trace/claim/policy/session/live/owner 变异以及原有注入、越权、漂移、伪引用、timeout/budget、裁决测试均通过；QA 未发现新 P0/P1/P2。
+- 遗留风险/Owner/期限：真实搜索 SSRF/来源/版权、跨模型独立性、认证 owner 和产品状态机仍未验证；Owner 为 WORK-2026-007/008/010 对应角色，相关 gate 完成前保持关闭。
+
 ---
 
 ## 新条目模板

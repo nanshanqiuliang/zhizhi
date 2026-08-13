@@ -1,6 +1,6 @@
 # 测试报告索引
 
-当前已有工程骨架、本地验证、微积分 eval fixture 作者验证和独立复核待签门验证；仍没有产品业务、独立 QA 签字或真实 Provider 测试：
+当前已有工程骨架、本地验证、微积分 eval fixture 作者验证、v1 独立复核待签门，以及 v2 离线 AI 机器复核证明；仍没有产品业务、人类 QA 签字或真实 Provider 测试：
 
 | Report | Build | 范围 | 结论 | 关联 |
 |---|---|---|---|---|
@@ -8,6 +8,7 @@
 | [TR-20260813-002](TR-20260813-002_repository-skeleton-validation.md) | `bd66e8b` | 本地仓库、配置、安全、Python/Web 与浏览器骨架 | CONDITIONAL GO | WORK-2026-006 |
 | [TR-20260813-003](TR-20260813-003_calculus-gold-dataset-validation.md) | `e918fdf` | 微积分金标 schema/语义/来源/许可、失败变异与代表页渲染 | CONDITIONAL GO | WORK-2026-004 |
 | [TR-20260813-004](TR-20260813-004_calculus-independent-review-gate.md) | `232d0cd` | 微积分金标逐条复核包、内容绑定、分歧裁决与双签完成硬门 | CONDITIONAL GO | WORK-2026-004 |
+| [TR-20260813-005](TR-20260813-005_calculus-ai-review-v2.md) | `ae834d9` | 离线 AI 学科/QA/裁决、证据/trace/provenance、安全变异与完整门 | GO（仅 prototype；correlated） | WORK-2026-004 |
 
 正式执行时：
 
