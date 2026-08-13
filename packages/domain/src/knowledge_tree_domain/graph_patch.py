@@ -621,6 +621,13 @@ def preview_graph_patch(
     return GraphPatchPreview(status=status, snapshot=working_graph)
 
 
+def validate_course_graph(graph: Mapping[str, Any]) -> None:
+    """Validate graph schema and cross-entity semantics without mutating the input."""
+
+    _validate_schema("course_graph", graph)
+    _validate_graph_semantics(deepcopy(dict(graph)))
+
+
 def _operation_target_key(operation: Mapping[str, Any]) -> tuple[str, str]:
     operation_name = str(operation["op"])
     if operation_name == "create_concept":

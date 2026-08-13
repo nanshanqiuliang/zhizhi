@@ -16,9 +16,7 @@ def test_non_user_patch_never_enters_history(actor_type: str) -> None:
     patch["actor"] = {"type": actor_type, "id": f"{actor_type}-actor"}
     patch["operations"][0]["edge"]["origin"] = actor_type
     if actor_type == "ai":
-        patch["operations"][0]["edge"]["evidence_ids"] = [
-            "00000000-0000-7000-8300-000000000001"
-        ]
+        patch["operations"][0]["edge"]["evidence_ids"] = ["00000000-0000-7000-8300-000000000001"]
     graph_before = deepcopy(graph)
     history = GraphHistory.start(graph)
 

@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from knowledge_tree_domain import (
     GraphHistory,
     GraphHistoryError,
@@ -170,6 +172,26 @@ def test_replay_two_records_reconstructs_applied_business_semantics() -> None:
     assert replayed.redo_records == ()
 
 
+def test_snapshot_return_value_cannot_mutate_history_state() -> None:
+    history = GraphHistory.start(valid_graph())
+    escaped = history.snapshot
+
+    escaped["concepts"][0]["label"] = "外部尝试修改"
+    escaped["revision_no"] = 99
+
+    assert history.snapshot == valid_graph()
+
+
+def test_history_rejects_invalid_initial_graph() -> None:
+    graph = valid_graph()
+    graph["concepts"].append(deepcopy(graph["concepts"][0]))
+
+    with pytest.raises(GraphHistoryError) as raised:
+        GraphHistory.start(graph)
+
+    assert raised.value.code == "validation_failed"
+
+
 def test_all_six_operations_round_trip_through_undo_and_redo() -> None:
     initial = valid_graph()
     applied = GraphHistory.start(initial).apply_patch(
@@ -181,7 +203,11 @@ def test_all_six_operations_round_trip_through_undo_and_redo() -> None:
 
     assert semantic_graph_hash(undone.snapshot) == semantic_graph_hash(initial)
     assert semantic_graph_hash(redone.snapshot) == semantic_graph_hash(applied.snapshot)
-    assert [applied.snapshot["revision_no"], undone.snapshot["revision_no"], redone.snapshot["revision_no"]] == [1, 2, 3]
+    assert [
+        applied.snapshot["revision_no"],
+        undone.snapshot["revision_no"],
+        redone.snapshot["revision_no"],
+    ] == [1, 2, 3]
     assert len(undone.redo_records) == 1
     assert redone.redo_records == ()
 
@@ -200,6 +226,32 @@ def test_undo_then_new_apply_clears_redo_branch() -> None:
     with pytest.raises(GraphHistoryError) as raised:
         branched.redo()
     assert raised.value.code == "history_empty"
+
+
+def test_multiple_undo_and_redo_actions_follow_lifo_order() -> None:
+    initial = valid_graph()
+    first = GraphHistory.start(initial).apply_patch(confirmed_patch(), trusted_actor=TRUSTED_USER)
+    second = first.apply_patch(
+        annotation_patch(base_revision=1, target_revision=1, value="important"),
+        trusted_actor=TRUSTED_USER,
+    )
+
+    undo_second = second.undo()
+    undo_first = undo_second.undo()
+    redo_first = undo_first.redo()
+    redo_second = redo_first.redo()
+
+    assert semantic_graph_hash(undo_second.snapshot) == semantic_graph_hash(first.snapshot)
+    assert semantic_graph_hash(undo_first.snapshot) == semantic_graph_hash(initial)
+    assert semantic_graph_hash(redo_first.snapshot) == semantic_graph_hash(first.snapshot)
+    assert semantic_graph_hash(redo_second.snapshot) == semantic_graph_hash(second.snapshot)
+    assert [
+        second.snapshot["revision_no"],
+        undo_second.snapshot["revision_no"],
+        undo_first.snapshot["revision_no"],
+        redo_first.snapshot["revision_no"],
+        redo_second.snapshot["revision_no"],
+    ] == [2, 3, 4, 5, 6]
 
 
 @pytest.mark.parametrize("action", ["undo", "redo"])
@@ -235,9 +287,7 @@ def test_replay_rejects_reordered_and_duplicate_records() -> None:
 
 def test_replay_rejects_tampered_delta_and_drifted_initial_snapshot() -> None:
     initial = valid_graph()
-    applied = GraphHistory.start(initial).apply_patch(
-        confirmed_patch(), trusted_actor=TRUSTED_USER
-    )
+    applied = GraphHistory.start(initial).apply_patch(confirmed_patch(), trusted_actor=TRUSTED_USER)
     record = applied.undo_records[0]
     tampered_delta = replace(record.deltas[0], after_json=record.deltas[0].before_json)
     tampered_record = replace(record, deltas=(tampered_delta, *record.deltas[1:]))
@@ -269,3 +319,23 @@ def test_history_memory_path_works_with_common_io_entry_points_disabled(
         confirmed_patch(), trusted_actor=TRUSTED_USER
     )
     assert semantic_graph_hash(applied.undo().snapshot) == semantic_graph_hash(valid_graph())
+
+
+@given(
+    value=st.text(
+        alphabet=st.characters(blacklist_categories=("Cs",)),
+        min_size=1,
+        max_size=64,
+    )
+)
+@settings(max_examples=30, deadline=None)
+def test_annotation_apply_undo_redo_property(value: str) -> None:
+    initial = valid_graph()
+    patch = annotation_patch(base_revision=0, target_revision=0, value=value)
+
+    applied = GraphHistory.start(initial).apply_patch(patch, trusted_actor=TRUSTED_USER)
+    undone = applied.undo()
+    redone = undone.redo()
+
+    assert semantic_graph_hash(undone.snapshot) == semantic_graph_hash(initial)
+    assert semantic_graph_hash(redone.snapshot) == semantic_graph_hash(applied.snapshot)

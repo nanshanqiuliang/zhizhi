@@ -166,3 +166,23 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - No history implementation exists yet. The exact next action is to run the
   isolated tests and preserve their expected collection failure, then commit the
   red baseline before adding `graph_history.py` or exports.
+
+## Step 2B implementation checkpoint — 2026-08-14 01:44 +08:00
+
+- Red baseline: `2425718` failed during collection with two expected ImportErrors
+  because the GraphHistory API did not exist.
+- Implemented a pure immutable `GraphHistory`, `GraphChangeRecord`, `EntityDelta`,
+  semantic graph hashing, sequential replay, and LIFO undo/redo. History accepts
+  only a confirmed user patch that GraphPatch preview marks `ready_to_apply`.
+- Records hold only changed concept/edge/layout before/after canonical JSON,
+  indices, revisions, hashes, and a content digest; they do not hold a whole
+  graph, patch reason, or actor credential.
+- Public GraphPatch schema remains unchanged. Creation reversal is an internal
+  trusted delta, not a new AI/import/system delete capability.
+- A shared `validate_course_graph()` entry now lets GraphPatch and history enforce
+  the same schema plus cross-entity semantics without duplicating business rules.
+- Target results: history/security/property 18/18; existing graph contract/domain
+  50/50; Ruff, strict contracts/domain mypy, and diff hygiene pass.
+- Exact next action: freeze the implementation commit, run all repository gates,
+  then update evidence/status and request role-separated QA against the immutable
+  SHA.
