@@ -1,6 +1,6 @@
-# WORK-2026-004 recovery checkpoint
+# Knowledge Tree App development checkpoint
 
-Updated: 2026-08-13 (Asia/Shanghai)
+Updated: 2026-08-14 (Asia/Shanghai)
 
 ## Original objective
 
@@ -8,17 +8,27 @@ Continue the repository's current active development work after reading the gove
 
 The user has now defined a persistent communication convention: future requests such as “继续推进” must use `docs/USER_FACING_DEVELOPMENT_ROADMAP.md`, state the current natural-language step and progress at the beginning/end, then continue actual implementation rather than returning only a plan.
 
+The current user request is “继续开发”. Work has resumed at natural-language Step 1 (MVP scope decisions), with intent to enter Step 2 (Anchor/GraphPatch contracts) once those decisions are frozen and verified.
+
 ## Recovered completion state
 
-- Branch: `feature/WORK-2026-004-calculus-gold`.
+- WORK-2026-004 is closed by commits `90e13d0` and `ae834d9`; its final evidence is `TR-20260813-005`.
+- The user-facing roadmap was committed at `5b0bc1c`.
+- Current branch: `feature/WORK-2026-002-mvp-decisions`.
+- Current natural-language step: Step 1, decision verification, approximately 90%; overall personal MVP approximately 15%.
+- WORK-2026-002, PRD v0.3, and ADR-0016 now freeze the safe-default MVP boundaries; they are uncommitted and awaiting gates plus role-separated QA.
+- The ten architecture section 21 questions are mapped 10/10; real DeepSeek remains disabled and Embedding remains unresolved.
+
+Historical WORK-2026-004 implementation chain:
+
 - Committed implementation chain:
   - `73a74da` — deterministic AI review v2 prototype.
   - `3f9b637` — replay evidence, claim/position binding, adjudication evidence, and assurance hardening.
   - `db0831b` — subject-evidence assurance and adjudication-position bypass closure.
 - The deterministic harness, review policy v2, machine-review/review-policy schemas, repository validator integration, and contract tests are present.
 - The independent subject reviewer accepted `db0831b` after three attempts.
-- Four uncommitted immutable-handoff summaries exist under `evidence/TR-20260813-005/` (three subject attempts and one QA attempt).
-- The independent QA attempt reran the repository gates successfully but returned FAIL because of three P1 and three P2 semantic bypasses.
+- Five committed immutable-handoff summaries exist under `evidence/TR-20260813-005/` (three subject attempts and two QA attempts).
+- The first QA attempt returned FAIL because of three P1 and three P2 semantic bypasses; the preserved second attempt passed the frozen fix.
 - Eight regression tests for those findings were added to `tests/contract/test_ai_review_harness.py`; the recovered red baseline was 8 failed, 31 passed.
 - All six findings are now closed in commit `ae834d9051553aa02a079e72ce2bf6bd8955c081`; the targeted harness suite passes 39/39.
 
@@ -40,14 +50,16 @@ The user has now defined a persistent communication convention: future requests 
 
 ## Remaining work
 
-- No implementation, verification, QA, evidence, or documentation work remains in WORK-2026-004 scope.
-- The closure changes are ready for their final Conventional Commit; after that, only confirm HEAD and a clean worktree.
+- Run the full gates and commit the WORK-2026-002 / PRD v0.3 / ADR-0016 decision baseline.
+- Obtain role-separated QA for the immutable decision commit; close Step 1 only if it passes.
+- Create a Ready WORK-2026-005, then begin Step 2 with failing Anchor/GraphPatch contract tests.
 
 ## Current risks or blockers
 
-- No blocker remains for WORK-2026-004 closure.
+- No blocker remains for the local, offline contract path.
 - Real-provider execution and owner authentication are explicitly out of scope and must remain disabled.
 - Subject and QA attestations may be correlated because the available agents can share a model/provider family; the evidence must disclose that correlation and cannot impersonate a human signature.
+- Repository ownership/public license and monetary LLM budgets remain unresolved; neither is required for the offline Step 2 contract, and both must remain gated rather than guessed.
 
 ## Verification after recovery
 
@@ -59,4 +71,4 @@ The user has now defined a persistent communication convention: future requests 
 
 ## Exact next action
 
-On recovery, verify the WORK-2026-004 closure commits and read `docs/USER_FACING_DEVELOPMENT_ROADMAP.md`. The current natural-language stage is Step 1 (“把第一版到底做什么说清楚”), about 40% complete; overall personal MVP progress is roughly 10%–15%. For a “继续推进” request, report that status and continue WORK-2026-002 decisions/defaults, followed by the Step 2 GraphPatch/Anchor contract; keep real Provider/Web and owner acceptance disabled meanwhile.
+Create and verify WORK-2026-002 plus the MVP scope decision record using the already-declared safe defaults. Commit that closure, then create/switch to `feature/WORK-2026-005-anchor-graphpatch-v1`, make WORK-2026-005 Ready, and start with failing contract tests. Keep real Provider/Web and owner acceptance disabled.
