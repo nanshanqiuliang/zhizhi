@@ -1,7 +1,7 @@
 # WORK-2026-002：冻结个人笔记 App 首版范围
 
 ```yaml
-status: verification
+status: in_progress
 type: docs
 owner: workspace_owner / product role
 reviewers: [technical_owner, qa]
@@ -69,9 +69,9 @@ updated_at: 2026-08-14T00:00:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：待本轮提交；无远端 PR。
+- Commit/PR：决策基线 `8ff376d0aa339143332a47500646b455148b1169`；本 superseding 提交包含 QA 修复候选，完整 SHA 由复审证据绑定；无远端 PR。
 - Contract/ADR/migration/prompt：ADR-0016；REQ-2026-006..010；无 migration/prompt。
-- Test Run：默认仓库门与文档一致性检查待提交前执行。
+- Test Run：决策映射 10/10；基线及本次 superseding 修正的完整仓库门均通过（84 Python / 1 Web）；隔离 QA attempt 001 为 FAIL（1 P1 / 2 P2），复审待完成。
 - Release：无；纯产品边界决策。
-- 观察结果：不产生用户可见功能，不增加 live 权限或费用。
+- 观察结果：内容边界完整且足以作为 WORK-2026-005 离线输入；未认证 owner 批准、冻结状态陈旧和 correlated-review 状态语义需在关闭前修复。不产生用户可见功能，不增加 live 权限或费用。
 - 未完成项的新 ID：预算/Provider 为 WORK-2026-007/008；Embedding 为 WORK-2026-009；owner auth/harness 为 WORK-2026-010；仓库/许可证为 WORK-2026-003。

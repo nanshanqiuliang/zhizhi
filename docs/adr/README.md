@@ -12,6 +12,6 @@
 新增提案：
 
 7. [ADR-0015：以确定性 Harness 编排 AI 学科复核与 AI QA](ADR-0015-ai-review-harness.md)。产品方向已确认；在 v2 contract 和安全 fixture 形成证据前保持 `proposed`。
-8. [ADR-0016：个人 MVP 采用 Windows 本地优先、人工确认优先的边界](ADR-0016-personal-mvp-boundaries.md)。首版产品范围已接受；真实 Provider、预算、Embedding 和发布治理仍由独立 gate 控制。
+8. [ADR-0016：个人 MVP 采用 Windows 本地优先、人工确认优先的边界](ADR-0016-personal-mvp-boundaries.md)。安全默认值用于离线 prototype，精确内容仍待 workspace owner 确认；真实 Provider、预算、Embedding 和发布治理仍由独立 gate 控制。
 
 使用 `docs/templates/ADR_TEMPLATE.md`。只有 `accepted` ADR 才是正式决策；架构总纲中的摘要目前仍是建议基线。

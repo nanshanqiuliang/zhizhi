@@ -122,6 +122,17 @@
 - 回滚：范围改变必须新建 superseding ADR/CHG，不原位把已接受默认值改成另一含义。
 - 遗留风险与下一步：完成独立一致性复核并提交 WORK-2026-002；随后进入自然语言第 2 步，创建 Ready 的 WORK-2026-005 并从失败契约测试开始。
 
+## 2026-08-14 — 修正首版边界的 owner 批准与证据状态
+
+- 关联 ID：WORK-2026-002、ADR-0016、REQ-2026-001、REQ-2026-006..010。
+- 实际变化：隔离 QA 对冻结提交 `8ff376d` 返回 FAIL（1 P1/2 P2）；产品边界本身 10/10 完整，但 PRD/ADR 把 workspace owner 的正式批准写得过早，提交中的工作项/计划/追踪状态仍写“待提交/待验证”，且 correlated-review 描述与当前失败关闭策略不一致。
+- 影响模块/接口/schema/migration/prompt：将 PRD v0.3 恢复为 `in_review`、ADR-0016 恢复为 `proposed`，明确安全默认值只授权可回滚离线 prototype；同步工作项、工程计划、路线图、追踪矩阵、checkpoint 和 QA 证据。不修改运行 contract、migration 或 prompt。
+- 兼容性：保留 `8ff376d` 作为不可变决策基线和首次 FAIL，不改写历史证明；后续通过 superseding 提交与 QA attempt 002 收口。
+- 验证与证据：`evidence/TR-20260814-001/ai-product-qa-attempt-001.md`；修正后的 repository validator、Ruff、mypy、84/84 Python、pnpm frozen install/peers、Web 1/1 和生产构建通过，复审待执行。
+- 性能/安全/运维影响：无运行时影响；真实 Provider/Web、用户数据、数据库与 owner 风险接受继续关闭。
+- 回滚：不得回到伪造 owner 批准语义；若默认边界改变，应创建 superseding ADR/CHG。
+- 遗留风险与下一步：要求同一 QA 角色审查本 superseding 提交的完整 SHA；通过后将 WORK-2026-005 改为 Ready 并以失败契约测试启动第 2 步。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

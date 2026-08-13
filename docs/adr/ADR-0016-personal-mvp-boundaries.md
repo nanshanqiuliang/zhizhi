@@ -1,9 +1,9 @@
 # ADR-0016：个人 MVP 采用 Windows 本地优先、人工确认优先的边界
 
 ```yaml
-status: accepted
+status: proposed
 date: 2026-08-14
-decision_owner: workspace_owner
+decision_owner: workspace_owner (explicit confirmation pending)
 related_ids: [WORK-2026-002, REQ-2026-001, REQ-2026-006, REQ-2026-007, REQ-2026-008, REQ-2026-009, REQ-2026-010]
 supersedes: null
 ```
@@ -53,5 +53,5 @@ supersedes: null
 ## Evidence and Review
 
 - Prototype/Test：WORK-2026-004 已证明离线 fixture/审查路径；产品功能仍待 WORK-2026-005 及后续工作项。
-- 批准：workspace owner 已认可带上述默认边界的自然语言路线，并随后要求继续开发。
+- 批准：workspace owner 已认可包含安全默认值的自然语言路线并随后要求继续开发，足以将这些值作为离线 prototype 的可回滚开发假设；尚无绑定本 ADR 精确内容的 owner 批准证明，因此保持 `proposed`，不得解释为正式风险接受或阶段出口批准。
 - 复审条件/日期：第一个手工 Alpha 验收、引入真实 Provider、增加非 Windows 平台或云端协作前复审。

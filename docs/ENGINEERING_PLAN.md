@@ -3,20 +3,20 @@
 > document_id: PLAN-ROOT  
 > status: draft  
 > current_stage: `阶段 -1：架构与证据准备`  
-> updated_at: 2026-08-13
+> updated_at: 2026-08-14
 
 ## 当前结论
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。当前处于其中的第 1 步验证阶段（约 90%），个人可用 MVP 粗略完成度约 15%；百分比只反映已提交、可验证的产品能力，不以计划或测试数量代替功能完成度。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。当前处于其中的第 1 步 QA 修正阶段（约 85%），个人可用 MVP 粗略完成度约 15%；百分比只反映已提交、可验证的产品能力，不以计划或测试数量代替功能完成度。
 
 ## 当前阶段出口门
 
 - [x] Proposal 存在；
 - [x] 总体架构技术基线存在；
 - [x] 开发、测试、发布和运维流程基线存在；
-- [x] 用户批准个人 AI Agent App、AI 子 Agent复核/QA、机器证明与用户最终控制的产品方向；个人 MVP 默认边界已在 WORK-2026-002 / ADR-0016 冻结并待验证；
+- [x] 用户批准个人 AI Agent App、AI 子 Agent复核/QA、机器证明与用户最终控制的产品方向；个人 MVP 安全默认值已在 WORK-2026-002 / PRD v0.3 / ADR-0016 记录，可支持可回滚离线开发，精确文档内容仍待 owner 确认；
 - [x] 架构基线第 21 节十项问题已有决定、延期责任或失败关闭边界；金额预算、Embedding 和发布治理不被伪造为已批准；
 - [ ] 确定仓库归属、公开性和许可证；
 - [x] 复核执行角色确定为 `ai_subject_reviewer`、`ai_qa_auditor` 和按需 `ai_dispute_adjudicator`；技术/发布 Owner 仍待定；
@@ -30,10 +30,10 @@
 | ID | 工作项 | 状态 | Owner | 依赖 | 交付物 | 验证证据 |
 |---|---|---|---|---|---|---|
 | WORK-2026-001 | 审阅并批准架构与开发运维基线 | 待验收 | 项目负责人 | 无 | 批准记录/修订意见 | 文档状态变更 |
-| WORK-2026-002 | 回答编码前待决问题 | 验证中 | 产品+技术 | 用户认可自然语言路线及安全默认值；完整架构基线仍待 WORK-2026-001 验收 | PRD v0.3、ADR-0016、决策清单 | 10/10 问题已映射；独立一致性复核待完成 |
+| WORK-2026-002 | 回答编码前待决问题 | 进行中（QA 复审） | 产品+技术 | 用户认可自然语言路线及安全默认值；精确 owner 批准和完整架构基线仍待验收 | PRD v0.3、ADR-0016、决策清单 | `8ff376d`；10/10 映射、84/84 Python、Web 1/1；QA attempt 001 FAIL（1 P1/2 P2），本提交修正候选待复审 |
 | WORK-2026-003 | 确定仓库、许可证与分支保护 | 未开始 | 项目负责人 | WORK-2026-001 | 仓库治理记录 | 本地/远端检查 |
 | WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 已完成 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 `73a74da..ae834d9` + TR-005，84/84 Python、QA PASS（correlated） |
-| WORK-2026-005 | 冻结 Anchor/GraphPatch v1 | 未开始 | 总工程师 | WORK-2026-002 | JSON Schema、ADR | 契约测试设计 |
+| WORK-2026-005 | 冻结 Anchor/GraphPatch v1 | 拟议 | 总工程师 | WORK-2026-002 QA 通过后 Ready | JSON Schema、纯领域 validator、ADR | Ready 草稿和 TC-GRAPH/TC-ANCH 设计已建；尚未实现 |
 | WORK-2026-006 | 建仓和最小 CI/证据骨架 | 待验收 | 开发+QA+运维 | WORK-2026-003（远端治理仍待定） | 本地 Git、CI workflow、锁文件、状态页 | `TR-20260813-002` CONDITIONAL GO；独立 QA/远端 CI 待验收 |
 | WORK-2026-007 | 冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约 | 规划完成/待实现 | AI+后端+QA+运维 | WORK-2026-001 | 多 LLM 基线、配置 v1、错误与 Runbook | TC-LLM-001..009 待执行 |
 | WORK-2026-008 | DeepSeek 真实兼容验证与金标评测 | 未开始 | AI+QA | WORK-2026-004/006/007 | live smoke、EVAL-LLM-001、成本/延迟报告 | 受控 Key + 报告 + QA 签字 |
@@ -44,9 +44,9 @@
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 后续技术尖峰 | WORK-2026-004 已完成；WORK-2026-002 已冻结默认值并待验证；完整架构验收、Anchor/GraphPatch contract、预算、真实 API Key 仍未完成 | 完成 WORK-2026-002 复核后离线推进 WORK-2026-005；完整阶段出口仍需 WORK-2026-001 owner 验收；不得直接跳到 live |
+| 后续技术尖峰 | WORK-2026-004 已完成；WORK-2026-002 首次 QA 发现 1 个 P1 和 2 个 P2 证据/状态缺陷，本提交已形成修正候选；完整架构验收、Anchor/GraphPatch contract、预算、真实 API Key 仍未完成 | 对 superseding 修正执行复审；通过后只离线推进 WORK-2026-005；不得直接跳到 live |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门
 
-`Gate A：阶段 -1 出口验收`。WORK-2026-004 已以 `TR-20260813-005` 完成离线 prototype 收口；WORK-2026-002 已将第 21 节问题映射到 PRD v0.3 / ADR-0016，当前先做独立一致性复核。复核通过后可在阶段 -1 内启动 WORK-2026-005 的离线 Anchor/GraphPatch contract spike；阶段整体出口仍需 workspace owner 验收 WORK-2026-001。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭；owner 风险接受在 WORK-2026-010 建立认证边界前也保持拒绝。
+`Gate A：阶段 -1 出口验收`。WORK-2026-004 已以 `TR-20260813-005` 完成离线 prototype 收口；WORK-2026-002 的 `8ff376d` 首次独立一致性复核为 FAIL，当前先形成可重放修正提交并复审。复审通过后可在阶段 -1 内把 WORK-2026-005 改为 Ready，并从失败测试启动离线 Anchor/GraphPatch contract spike；阶段整体出口和 PRD/ADR 的正式接受仍需 workspace owner 精确确认。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭；owner 风险接受在 WORK-2026-010 建立认证边界前也保持拒绝。

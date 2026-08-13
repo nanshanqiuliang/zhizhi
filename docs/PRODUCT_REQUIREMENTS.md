@@ -3,11 +3,11 @@
 ```yaml
 document_id: PRD-KTA
 version: 0.3
-status: approved
+status: in_review
 owner_role: workspace_owner
 created_at: 2026-08-13T21:05:00+08:00
 updated_at: 2026-08-14T00:00:00+08:00
-approved_by: workspace_owner
+approved_by: null
 scope: personal AI-agent knowledge-tree application
 related_ids: [CHG-2026-001, ADR-0015, ADR-0016, WORK-2026-002, WORK-2026-004, WORK-2026-010]
 supersedes: proposal v0.1 assumptions where this document is more specific
@@ -65,7 +65,7 @@ supersedes: proposal v0.1 assumptions where this document is more specific
 | 条件 | 记录状态 | 放行语义 |
 |---|---|---|
 | 不同 run、prompt、context，且不同模型家族或 Provider | `separated_review` | 可以通过机器验证门，仍不声称真人审查 |
-| 不同 run/prompt/context，但相同 Provider 或模型家族 | `correlated_review` | 自动降级；只能进入 `machine_verified`，需要用户接受同源风险才能继续 |
+| 不同 run/prompt/context，但相同 Provider 或模型家族 | `correlated_review` | 当前策略返回 `inconclusive`，不得进入 `machine_verified`；未来只有另行接受的认证 owner policy 才能定义更高状态转换 |
 | 共享 run、共享可变上下文、共享隐藏推理或 QA 未绑定冻结产物 | `invalid_review` | 硬失败，不可风险豁免 |
 
 ## Harness 安全不变量
@@ -88,7 +88,7 @@ machine_verified -> accepted_with_owner_risk（仅在策略要求/允许时）
 
 用户风险接受至少记录 `owner_id`、原因、风险码、scope、dataset/version/hash、policy version、时间和到期时间。输入漂移、工具越权、证据伪造、未解决分歧、秘密泄漏和审计链缺失不可通过风险接受绕过。
 
-## 个人 MVP 已冻结边界
+## 个人 MVP 开发默认边界（待 workspace owner 精确确认）
 
 - 平台：Windows 10/11 x64；先提供同源 Web UI，再封装 Tauri。
 - 数据：本地单用户；核心笔记/图/查看/备份离线可用，AI 为可选联网能力。
@@ -100,6 +100,6 @@ machine_verified -> accepted_with_owner_risk（仅在策略要求/允许时）
 
 ## 当前实现边界
 
-- 本文件批准产品方向和个人 MVP 默认边界，不代表对应用户功能已经实现。
+- 本文件中的产品方向来自 workspace owner；v0.3 具体默认边界由 AI 根据已认可路线记录，当前状态为 `in_review`，不冒充 owner 对精确文档内容的批准，也不代表对应用户功能已经实现。
 - 当前 `calculus-independent-review.v1` 是真人签字语义的历史 contract，不能用 AI 名称伪签。
 - WORK-2026-004 的 v2 离线机器审查 prototype 已完成；下一实现门是 WORK-2026-005 的 Anchor/GraphPatch v1。真实联网搜索与真实 LLM 运行另受 WORK-2026-007/008 门约束。
