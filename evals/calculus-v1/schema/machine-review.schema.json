@@ -226,6 +226,8 @@
         },
         "tool_trace": {
           "type": "array",
+          "minItems": 120,
+          "maxItems": 120,
           "items": {"$ref": "#/$defs/toolCall"}
         },
         "artifact_sha256": {"$ref": "#/$defs/sha256"}
@@ -268,6 +270,8 @@
         },
         "tool_trace": {
           "type": "array",
+          "minItems": 120,
+          "maxItems": 120,
           "items": {"$ref": "#/$defs/toolCall"}
         },
         "artifact_sha256": {"$ref": "#/$defs/sha256"}

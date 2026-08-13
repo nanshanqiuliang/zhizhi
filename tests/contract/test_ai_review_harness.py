@@ -174,6 +174,26 @@ def test_controlled_live_cannot_be_product_eligible_without_subject_evidence() -
         validate_machine_review(ROOT, changed, dataset, policy, provider)
 
 
+def test_mock_artifacts_cannot_be_relabelled_as_controlled_live() -> None:
+    review, dataset, provider = _review(same_model=False)
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    changed["assurance"] = {
+        "execution_mode": "controlled_live",
+        "evidence_basis": "controlled_sources",
+        "subject_evidence_established": True,
+        "product_eligible": True,
+    }
+    changed["machine_state"] = "machine_verified"
+    changed["failure"] = None
+    qa = changed["qa_artifact"]
+    qa["decision"] = "pass"
+    qa["artifact_sha256"] = _artifact_hash(qa)
+
+    with pytest.raises(MachineReviewValidationError, match="controlled_live.*not implemented"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
 def test_accept_requires_evidence_and_minimum_confidence() -> None:
     review, dataset, provider = _review()
     policy = load_review_policy(ROOT)
@@ -238,6 +258,37 @@ def test_tool_call_outside_role_allowlist_fails_closed() -> None:
         validate_machine_review(ROOT, changed, dataset, policy, provider)
 
     assert captured.value.code == "review_tool_denied"
+
+
+@pytest.mark.parametrize("role", ["subject_artifact", "qa_artifact"])
+def test_tool_trace_is_required_for_every_replayed_claim(role: str) -> None:
+    review, dataset, provider = _review()
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    changed[role]["tool_trace"] = []
+    changed[role]["artifact_sha256"] = _artifact_hash(changed[role])
+    if role == "subject_artifact":
+        qa = changed["qa_artifact"]
+        qa["subject_artifact_sha256"] = changed[role]["artifact_sha256"]
+        qa["artifact_sha256"] = _artifact_hash(qa)
+
+    with pytest.raises(MachineReviewValidationError, match="audit trace.*coverage|too short"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
+def test_tool_trace_hashes_and_status_bind_replay_results() -> None:
+    review, dataset, provider = _review()
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    trace = changed["subject_artifact"]["tool_trace"][0]
+    trace.update({"query_sha256": "0" * 64, "result_sha256": "f" * 64, "status": "denied"})
+    changed["subject_artifact"]["artifact_sha256"] = _artifact_hash(changed["subject_artifact"])
+    qa = changed["qa_artifact"]
+    qa["subject_artifact_sha256"] = changed["subject_artifact"]["artifact_sha256"]
+    qa["artifact_sha256"] = _artifact_hash(qa)
+
+    with pytest.raises(MachineReviewValidationError, match="tool audit trace mismatch"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
 
 
 def test_dataset_input_drift_fails_closed() -> None:
@@ -338,17 +389,54 @@ def test_owner_risk_acceptance_cannot_make_mock_only_review_product_eligible() -
     review, dataset, provider = _review()
     policy = load_review_policy(ROOT)
     review["owner_risk_acceptance"] = {
-        "owner_id": "workspace_owner",
+        "owner_id": "untrusted_ai",
         "risk_codes": ["review_correlated_agents"],
         "scope": "calculus-v1 mock review only",
         "content_sha256": review["input_manifest"]["dataset_sha256"],
         "policy_sha256": review["input_manifest"]["policy_sha256"],
-        "accepted_at": "2026-08-13T14:00:00Z",
-        "expires_at": "2026-08-20T14:00:00Z",
+        "accepted_at": "2000-01-01T00:00:00Z",
+        "expires_at": "2000-01-02T00:00:00Z",
     }
     review["machine_state"] = "accepted_with_owner_risk"
-    with pytest.raises(MachineReviewValidationError, match="mock-only|subject evidence"):
+    with pytest.raises(MachineReviewValidationError, match="authenticated owner boundary"):
         validate_machine_review(ROOT, review, dataset, policy, provider)
+
+
+def test_finding_claim_id_is_derived_from_item_identity() -> None:
+    review, dataset, provider = _review()
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    second = changed["subject_artifact"]["findings"][1]
+    first = changed["subject_artifact"]["findings"][0]
+    first["claim_id"] = second["claim_id"]
+    first["evidence_ids"] = list(second["evidence_ids"])
+
+    with pytest.raises(MachineReviewValidationError, match="claim_id.*item identity"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
+def test_tool_policy_provenance_must_bind_effective_role_policy() -> None:
+    review, dataset, provider = _review()
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    value = changed["subject_artifact"]["provenance"]["tool_policy"]
+    value["version"] = "attacker-policy"
+    value["sha256"] = hashlib.sha256(b"attacker-policy").hexdigest()
+
+    with pytest.raises(MachineReviewValidationError, match="tool_policy.*mismatch"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
+def test_adjudicator_session_is_isolated_from_subject_and_qa() -> None:
+    review, dataset, provider = _review(scenario="dispute")
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    changed["adjudication_artifact"]["provenance"]["session_id"] = changed["subject_artifact"][
+        "provenance"
+    ]["session_id"]
+
+    with pytest.raises(MachineReviewValidationError, match="adjudication.*distinct session"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
 
 
 def test_coverage_must_match_all_30_40_50_dataset_items() -> None:

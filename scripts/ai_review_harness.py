@@ -262,7 +262,7 @@ class ReplaySearchProvider:
     def search(self, role_id: str, claim_id: str) -> tuple[JsonObject, JsonObject]:
         """Return a frozen result and one immutable trace item."""
 
-        call_id = f"call-{role_id.removeprefix('ai_').replace('_', '-')}-{claim_id}"
+        call_id = _tool_call_id(role_id, claim_id)
         if call_id not in self._seen_calls:
             self._seen_calls.add(call_id)
             self.calls.append(call_id)
@@ -309,6 +309,31 @@ def _build_evidence(
         evidence.append(record)
         traces.append(trace)
     return evidence, traces
+
+
+def _tool_call_id(role_id: str, claim_id: str) -> str:
+    return f"call-{role_id.removeprefix('ai_').replace('_', '-')}-{claim_id}"
+
+
+def _expected_replay_trace(
+    role_id: str,
+    claim_id: str,
+    provider: ReplaySearchProvider,
+) -> JsonObject:
+    try:
+        result = provider.records[claim_id]
+    except KeyError as error:
+        raise MachineReviewValidationError(
+            f"{role_id}: audit trace references unknown claim: {claim_id}",
+            code="review_evidence_invalid",
+        ) from error
+    return {
+        "call_id": _tool_call_id(role_id, claim_id),
+        "tool_id": "replay_search",
+        "query_sha256": _sha256(claim_id),
+        "result_sha256": _sha256(result),
+        "status": "succeeded",
+    }
 
 
 def _build_findings(
@@ -550,16 +575,22 @@ def _assert_provenance(role: str, artifact: JsonObject, policy: JsonObject) -> J
             }
         if value.get("version") != expected_version or value.get("sha256") != _sha256(hash_payload):
             raise MachineReviewValidationError(f"{role}: {provenance_field} version/hash mismatch")
-    for provenance_field in ("tool_policy", "harness"):
-        value = cast(JsonObject, provenance[provenance_field])
-        if value.get("sha256") != _sha256(value.get("version")):
-            raise MachineReviewValidationError(f"{role}: {provenance_field} sha256 mismatch")
-    if cast(JsonObject, provenance["harness"])["version"] != HARNESS_VERSION:
-        raise MachineReviewValidationError(f"{role}: harness version mismatch")
+    expected_tool_policy_version = (
+        f"{policy['policy_id']}:{role}:{','.join(cast(list[str], role_policy['allowed_tools']))}"
+    )
+    if provenance["tool_policy"] != _versioned_hash(expected_tool_policy_version):
+        raise MachineReviewValidationError(f"{role}: tool_policy version/hash mismatch")
+    if provenance["harness"] != _versioned_hash(HARNESS_VERSION):
+        raise MachineReviewValidationError(f"{role}: harness version/hash mismatch")
     return provenance
 
 
-def _validate_tool_trace(role: str, artifact: JsonObject, policy: JsonObject) -> None:
+def _validate_tool_trace(
+    role: str,
+    artifact: JsonObject,
+    policy: JsonObject,
+    provider: ReplaySearchProvider,
+) -> None:
     allowed = set(
         cast(
             list[str],
@@ -583,6 +614,26 @@ def _validate_tool_trace(role: str, artifact: JsonObject, policy: JsonObject) ->
                 f"{role}: duplicate tool call: {call['call_id']}", code="review_tool_denied"
             )
         call_ids.add(cast(str, call["call_id"]))
+    claim_ids = {
+        cast(str, evidence["claim_id"])
+        for evidence in cast(list[JsonObject], artifact["evidence_ledger"])
+    }
+    expected_trace = {
+        _tool_call_id(role, claim_id): _expected_replay_trace(role, claim_id, provider)
+        for claim_id in claim_ids
+    }
+    if len(trace) != len(expected_trace) or call_ids != set(expected_trace):
+        raise MachineReviewValidationError(
+            f"{role}: audit trace coverage mismatch",
+            code="review_evidence_invalid",
+        )
+    for call in trace:
+        call_id = cast(str, call["call_id"])
+        if call != expected_trace[call_id]:
+            raise MachineReviewValidationError(
+                f"{role}: tool audit trace mismatch: {call_id}",
+                code="review_evidence_invalid",
+            )
 
 
 def _validate_evidence(
@@ -626,6 +677,14 @@ def _validate_findings(
     }
     threshold = cast(float, policy["minimum_accept_confidence"])
     for finding in findings:
+        expected_claim_id = _claim_id(
+            cast(str, finding["item_kind"]), cast(str, finding["item_id"])
+        )
+        if finding["claim_id"] != expected_claim_id:
+            raise MachineReviewValidationError(
+                f"claim_id does not match item identity: {finding['claim_id']}",
+                code="review_evidence_invalid",
+            )
         if finding["decision"] == "accept":
             if not finding["evidence_ids"]:
                 raise MachineReviewValidationError(
@@ -731,6 +790,20 @@ def validate_machine_review(
         )
     if manifest != expected_manifest:
         raise MachineReviewValidationError("review input manifest mismatch")
+    if review["owner_risk_acceptance"] is not None:
+        raise MachineReviewValidationError(
+            "owner risk acceptance requires an authenticated owner boundary; "
+            "not implemented in this prototype"
+        )
+    assurance = cast(JsonObject, review["assurance"])
+    if assurance["product_eligible"] and not assurance["subject_evidence_established"]:
+        raise MachineReviewValidationError(
+            "product eligibility requires established subject evidence"
+        )
+    if assurance["execution_mode"] != "deterministic_mock_replay":
+        raise MachineReviewValidationError(
+            "controlled_live execution is not implemented in this prototype"
+        )
 
     subject = cast(JsonObject, review["subject_artifact"])
     qa = cast(JsonObject, review["qa_artifact"])
@@ -773,11 +846,6 @@ def validate_machine_review(
         raise MachineReviewValidationError(
             "machine_verified requires independent provider/model review"
         )
-    assurance = cast(JsonObject, review["assurance"])
-    if assurance["product_eligible"] and not assurance["subject_evidence_established"]:
-        raise MachineReviewValidationError(
-            "product eligibility requires established subject evidence"
-        )
     if review["machine_state"] in {"machine_reviewed", "machine_verified"} and not (
         assurance["subject_evidence_established"] and assurance["product_eligible"]
     ):
@@ -804,8 +872,8 @@ def validate_machine_review(
                 "mock-only subject evidence cannot produce a product-eligible machine state"
             )
 
-    _validate_tool_trace("ai_subject_reviewer", subject, policy)
-    _validate_tool_trace("ai_qa_auditor", qa, policy)
+    _validate_tool_trace("ai_subject_reviewer", subject, policy, provider)
+    _validate_tool_trace("ai_qa_auditor", qa, policy, provider)
     _validate_evidence("ai_subject_reviewer", subject, provider)
     _validate_evidence("ai_qa_auditor", qa, provider)
     _validate_findings(subject, dataset, policy)
@@ -831,9 +899,14 @@ def validate_machine_review(
             qa_provenance["agent_run_id"],
         }:
             raise MachineReviewValidationError("adjudication requires a distinct agent run")
+        if adjudication_provenance["session_id"] in {
+            subject_provenance["session_id"],
+            qa_provenance["session_id"],
+        }:
+            raise MachineReviewValidationError("adjudication requires a distinct session")
         if adjudication["subject_artifact_sha256"] != subject["artifact_sha256"]:
             raise MachineReviewValidationError("adjudication subject artifact binding mismatch")
-        _validate_tool_trace("ai_dispute_adjudicator", adjudication, policy)
+        _validate_tool_trace("ai_dispute_adjudicator", adjudication, policy, provider)
         _validate_evidence("ai_dispute_adjudicator", adjudication, provider)
         adjudication_evidence = {
             evidence["evidence_id"]: evidence
