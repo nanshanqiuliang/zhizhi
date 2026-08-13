@@ -1,0 +1,15 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run ruff format --check scripts tests
+uv run ruff check .
+uv run mypy scripts
+uv run pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+pnpm --filter @knowledge-tree/web test
+pnpm --filter @knowledge-tree/web check
+pnpm --filter @knowledge-tree/web build
+Browser 1440x900: DOM/overflow/edit/undo/redo/drag/lock/layout/add/delete/reset/console verification
+Browser 390x844: DOM/overflow/selected-node-centering/compact-disclosure/computed-style/console verification

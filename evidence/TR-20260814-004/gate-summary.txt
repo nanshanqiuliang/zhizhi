@@ -1,0 +1,22 @@
+TR-20260814-004 / WORK-2026-012
+reviewed commit: fff1ce697cf3524fb7622f36cedfc63136e990f2
+original implementation: 5aab0e378a44086cfe16b0e19eea8f6ca93b9b47
+original red baseline: 4caa76aa9858d609b364146f1877be48062fdadd
+QA regression red: c8c6bf99d8cb008c111ed4918320c58b2f8074fe
+ready commit: 87fb4020d3f1adecf5a2592ede32ea169ee09548
+repository validator: PASS
+ruff format/lint: PASS
+mypy scripts: PASS (9 source files)
+pytest: PASS (154/154)
+pnpm frozen install and peer check: PASS
+TypeScript/Python generation drift and tsc: PASS
+web check/test: PASS (6/6)
+web production build: PASS
+browser desktop 1440x900: PASS (page overflow 0; core interactions; console errors 0)
+browser mobile 390x844: PASS (page overflow 0; boundary visible; console errors 0)
+QA attempt 001: FAIL (0 P0 / 1 P1 / 0 P2)
+QA attempt 002: PASS (0 P0 / 0 P1 / 0 P2 / no new findings)
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data/database/browser storage: none

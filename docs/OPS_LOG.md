@@ -158,6 +158,19 @@
 - 缓解/回滚：prototype 可整体禁用；不得把内存证明写成跨进程恢复/数据已持久化。记录未来落盘前需版本化 schema、迁移、隐私和损坏恢复门。
 - 遗留风险/Owner/期限：ADR-0005/owner、SQLite operation log、periodic snapshot、crash recovery 和 UI 未完成；由后续工作项承接。
 
+## 2026-08-14 03:04 — 本地知识树 Web Demo 验证
+
+- 关联 ID：WORK-2026-012、TR-20260814-004。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；实现 `5aab0e3`；Vite 本地开发服务仅绑定 `127.0.0.1:4173` 用于浏览器验收。
+- 操作者：Codex（实现、自动门与浏览器验证）；职责隔离 QA 正在只读审查冻结提交。
+- 变更或症状：没有部署/发布；只启动短期本地预览。1440×900 document 为 1440×900，390×844 document client width 375/scroll width 375；画布自身承担 1000px 内部滚动。
+- 时间线：Ready `87fb402` → 红灯 `4caa76a` → 实现 `5aab0e3` → QA-001 P1 → `c8c6bf9` 红灯 → `fff1ce6` 修复 → QA-002 PASS → 证据收口。
+- 影响：无数据库、文件/浏览器持久化、网络模型、secret、真实用户数据或费用；不应输入需要保留的内容。
+- 证据：`evidence/TR-20260814-004/`；Web 6/6、Python 154/154、完整门 PASS；桌面/手机截图及交互 metrics；浏览器 warning/error 0；职责隔离 QA PASS。
+- 缓解/回滚：异常时停止本地 Vite 进程并回退 `5aab0e3`；因无持久状态，不存在数据 migration 或回滚数据。
+- 验证：编辑/undo/redo、drag、lock-preserving layout、add/delete、reset、无 page-level 横溢、selection-only 不创建 history。
+- 遗留风险/Owner/期限：没有托管可用性或安装包；持久化、备份/恢复和桌面生命周期由第 4/10 步承接。
+
 ---
 
 ## 新条目模板

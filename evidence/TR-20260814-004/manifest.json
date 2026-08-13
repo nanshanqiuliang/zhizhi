@@ -1,0 +1,41 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-004",
+  "created_at": "2026-08-14T03:12:00+08:00",
+  "reviewed_commit": "fff1ce697cf3524fb7622f36cedfc63136e990f2",
+  "original_implementation_commit": "5aab0e378a44086cfe16b0e19eea8f6ca93b9b47",
+  "qa_regression_red_commit": "c8c6bf99d8cb008c111ed4918320c58b2f8074fe",
+  "original_red_baseline_commit": "4caa76aa9858d609b364146f1877be48062fdadd",
+  "ready_commit": "87fb4020d3f1adecf5a2592ede32ea169ee09548",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "failed_attempt": {
+      "path": "ai-web-qa-attempt-001.md",
+      "reviewed_commit": "5aab0e378a44086cfe16b0e19eea8f6ca93b9b47",
+      "decision": "fail",
+      "finding_counts": {"p0": 0, "p1": 1, "p2": 0}
+    },
+    "passing_attempt": {
+      "path": "ai-web-qa-attempt-002.md",
+      "reviewed_commit": "fff1ce697cf3524fb7622f36cedfc63136e990f2",
+      "decision": "pass",
+      "finding_counts": {"p0": 0, "p1": 0, "p2": 0}
+    }
+  },
+  "files": [
+    "ai-web-qa-attempt-001.md",
+    "ai-web-qa-attempt-002.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt",
+    "screenshots/desktop-1440x900.png",
+    "screenshots/mobile-390x844.png"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "persistent_data_written": false
+}

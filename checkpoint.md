@@ -364,3 +364,33 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: freeze the minimal fix commit, rerun full repository gates,
   then request role-separated QA attempt 002 against that exact SHA with the P1
   as the primary regression target.
+
+## Step 3A closure checkpoint — 2026-08-14 03:12 +08:00
+
+- Frozen final implementation: `fff1ce697cf3524fb7622f36cedfc63136e990f2`;
+  QA regression red: `c8c6bf99d8cb008c111ed4918320c58b2f8074fe`;
+  original implementation: `5aab0e3`; original product red: `4caa76a`;
+  Ready boundary: `87fb402`.
+- Role-separated QA attempt 002 returned PASS with no P0/P1/P2 or new finding.
+  It independently verified the direct red/fix chain, compact boundary contents
+  and mobile CSS override, Web 6/6, production build, eight DOM mutations, the
+  8-node fixture, history/lock/delete/reset behavior, and absence of network or
+  browser-storage APIs.
+- Final full gates pass: repository validator, Ruff, scripts mypy, Python
+  154/154, peer check, generated contract drift/tsc, Web 6/6, and production
+  build. Locked uv/pnpm installs were also current and passed in this run.
+- Browser evidence: desktop 1440×900 and mobile 390×844 have zero document
+  horizontal overflow and zero console warnings/errors. The mobile disclosure
+  is visible in the first viewport while the save control remains available.
+- Evidence/report: `evidence/TR-20260814-004/` and
+  `docs/test-reports/TR-20260814-004_knowledge-tree-web-demo.md`. Attempt 001
+  remains preserved and superseded, never rewritten.
+- Natural-language Step 3 is complete (100%) as a verified developer demo;
+  overall personal MVP is approximately 35%. This does not claim persistence,
+  imports, source navigation, AI, Tauri, installation, or release.
+- Exact next action on the next “继续推进”: enter natural-language Step 4 by
+  creating a separate Ready local-workspace/SQLite persistence item with data
+  directory, schema/migration, restart survival, backup/export/delete, rollback,
+  and failure evidence; start from failing persistence/restart tests.
+- Current blocker: none for offline Step 4 preparation. Real Provider/Web and
+  owner acceptance remain separately gated and disabled.

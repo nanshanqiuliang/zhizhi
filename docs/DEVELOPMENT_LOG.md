@@ -188,6 +188,17 @@
 - 回滚：回退独立 history 模块/export 即可禁用，不能回退 GraphPatch 锁/DAG/确认门；失败红灯和 QA 证据保留。
 - 遗留风险与下一步：ADR-0005 owner 接受、持久 operation log/周期快照、崩溃恢复和 UI history 面板未完成。自然语言第 2 步底层 prototype 收口，下一主项进入第 3 步示例数据知识树网页。
 
+## 2026-08-14 — 实现会话内可操作知识树 Web Demo
+
+- 关联 ID：WORK-2026-012、REQ-2026-001、REQ-2026-006、REQ-2026-008、TR-20260814-004。
+- 实际变化：在 `4caa76a` 的 5/5 红灯后，`5aab0e3` 把工程状态页替换为“知枝”三栏工作台；提供 8 节点示例树、节点/笔记编辑、添加子概念、叶节点删除、pointer 拖动、自动排布、位置锁、重置和会话内 undo/redo。
+- 影响模块/接口/schema/migration/prompt：仅修改 `apps/web` 和用户/工程文档；不改 canonical graph schema、Python domain、API、migration 或 prompt。Web 内存历史不冒充 WORK-2026-011 持久产品集成。
+- 兼容性：桌面保持三栏，窄屏按课程→画布→详情堆叠；画布内部可横向滚动但 document 不横溢；首次移动视图居中当前节点。
+- 验证与证据：Web 6/6、全仓 Python 154/154、repository validator/Ruff/mypy/locked dependencies/peers/contracts generation/check/build 全通过；浏览器 1440×900 和 390×844 的编辑/历史/拖动/锁/layout/增删/重置、溢出和 console 验证 PASS。QA attempt 001 的移动端能力边界 P1 由 `c8c6bf9`/`fff1ce6` 关闭；attempt 002 PASS，见 `TR-20260814-004`。
+- 性能/安全/运维影响：仅 8–12 节点演示规模；无网络、Provider、secret、真实用户数据、浏览器存储、文件或数据库写。界面明确“示例数据 / 仅本次会话 / AI 未连接”。
+- 回滚：回退 `5aab0e3` 恢复状态页；不影响 contracts/domain 或历史证据。
+- 遗留风险与下一步：刷新/关闭会丢失修改；无导入、来源跳转、AI 或安装包。QA 通过后关闭本项，并以独立 Ready 工作项从持久化/restart 红灯进入自然语言第 4 步。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

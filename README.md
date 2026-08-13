@@ -4,11 +4,17 @@
 
 ## 当前状态
 
-当前处于“阶段 -1：架构与证据准备”。仓库已建立本地 Git、模块目录、校验脚本、最小前端壳和 CI 证据骨架，并完成微积分 30/40/50 金标 fixture 与离线 AI 机器复核 v2 prototype。该 prototype 只做确定性 mock/replay，最终 QA 证明标记为 `correlated_review`，输出始终是 `inconclusive`/非产品可用。Anchor/GraphPatch v1 尚未冻结，真实 LLM/Web 与 owner 风险接受均未启用，也没有可发布桌面安装包。
+当前仍处于早期工程阶段。仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了可操作的“知枝”知识树 Web developer demo。Demo 可编辑 8 节点示例树、增删叶节点、拖动/排布/锁定并在本会话撤销/重做；`TR-20260814-004` 已通过职责隔离 QA。真实 LLM/Web、资料导入、本地持久化、owner 风险接受和桌面安装包仍未启用。
 
 不要把当前骨架当作 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
 
 如果只想了解“现在做到哪一步、什么时候能看到可用网页或 App”，请查看 [自然语言开发路线](docs/USER_FACING_DEVELOPMENT_ROADMAP.md)。
+
+本地查看当前 Demo：
+
+```powershell
+pnpm --filter @knowledge-tree/web dev
+```
 
 ## 结构
 

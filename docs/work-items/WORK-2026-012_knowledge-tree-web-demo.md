@@ -1,7 +1,7 @@
 # WORK-2026-012：交付可操作的示例数据知识树 Web Demo
 
 ```yaml
-status: ready
+status: verified_demo
 type: feature
 owner: Codex (web frontend role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -9,7 +9,7 @@ related_ids: [REQ-2026-001, REQ-2026-006, REQ-2026-008, NFR-2026-001, WORK-2026-
 target_stage: "阶段 1 / 自然语言第 3 步"
 risk: medium
 created_at: 2026-08-14T02:00:00+08:00
-updated_at: 2026-08-14T02:00:00+08:00
+updated_at: 2026-08-14T03:12:00+08:00
 ```
 
 ## 问题与结果
@@ -44,25 +44,25 @@ updated_at: 2026-08-14T02:00:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：第一屏显示“微积分”课程、至少 6 个树节点和方向连线，节点可键盘/鼠标选择，详情与笔记联动。
-- [ ] AC-2：编辑标题/笔记、添加子概念、删除叶节点均有组件测试；删除非叶节点失败且不丢数据。
-- [ ] AC-3：pointer 拖动改变节点位置；自动排布恢复树状层级并保留 position-locked 节点。
-- [ ] AC-4：undo/redo 覆盖编辑、添加、删除和位置变化；新操作清空 redo；按钮 disabled 状态正确。
-- [ ] AC-5：桌面 1440×900 与移动 390×844 无横向页面溢出，主要操作可见，focus/aria/contrast 基本合格。
-- [ ] AC-6：界面明确“示例数据 / 仅本次会话 / AI 未连接”，不声称保存、导入、来源回跳或 AI 构图已可用。
-- [ ] 错误和恢复路径：无选择、非叶删除、空标题以可见状态提示；可撤销或重新载入示例。
-- [ ] 回滚/禁用方法：回退 WORK-2026-012 提交恢复工程状态页；不影响 contracts/domain evidence。
+- [x] AC-1：第一屏显示“微积分”课程、至少 6 个树节点和方向连线，节点可键盘/鼠标选择，详情与笔记联动。
+- [x] AC-2：编辑标题/笔记、添加子概念、删除叶节点均有组件测试；删除非叶节点失败且不丢数据。
+- [x] AC-3：pointer 拖动改变节点位置；自动排布恢复树状层级并保留 position-locked 节点。
+- [x] AC-4：undo/redo 覆盖编辑、添加、删除和位置变化；新操作清空 redo；按钮 disabled 状态正确。
+- [x] AC-5：桌面 1440×900 与移动 390×844 无横向页面溢出，主要操作可见，focus/aria/contrast 基本合格。
+- [x] AC-6：界面明确“示例数据 / 仅本次会话 / AI 未连接”，不声称保存、导入、来源回跳或 AI 构图已可用。
+- [x] 错误和恢复路径：非叶删除、空标题以可见状态提示；可撤销或重新载入示例。初始始终有选中节点，因此“无选择”不可达。
+- [x] 回滚/禁用方法：回退 WORK-2026-012 提交恢复工程状态页；不影响 contracts/domain evidence。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-WEB-001 | component | 初始三栏/示例树/状态边界 | 结构和免责声明可读 | 待红灯/TR |
-| TC-WEB-002 | interaction | select/edit/add/delete | state 与 UI 一致，限制失败关闭 | 待红灯/TR |
-| TC-WEB-003 | interaction | drag/auto layout/lock | 位置改变，locked 保留 | 待红灯/TR |
-| TC-WEB-004 | reducer | undo/redo/branch/reset | 栈语义正确 | 待红灯/TR |
-| TC-WEB-005 | accessibility | keyboard/labels/focus/disabled | 关键控制可达 | 待红灯/TR |
-| TC-WEB-006 | browser | 1440×900/390×844 | 无页面横溢，布局可用 | 待截图/TR |
+| TC-WEB-001 | component | 初始三栏/示例树/状态边界 | 结构和免责声明可读 | 5/5 Web PASS / TR-004 |
+| TC-WEB-002 | interaction | select/edit/add/delete | state 与 UI 一致，限制失败关闭 | 5/5 Web + browser PASS / TR-004 |
+| TC-WEB-003 | interaction | drag/auto layout/lock | 位置改变，locked 保留 | component/browser PASS / TR-004 |
+| TC-WEB-004 | reducer | undo/redo/branch/reset | 栈语义正确 | component/browser PASS / TR-004 |
+| TC-WEB-005 | accessibility | keyboard/labels/focus/disabled | 关键控制可达 | component DOM/ARIA PASS / TR-004 |
+| TC-WEB-006 | browser | 1440×900/390×844 | 无页面横溢，布局可用 | 两尺寸截图/metrics PASS / TR-004 |
 
 ## 交付物与关闭
 
@@ -70,5 +70,5 @@ updated_at: 2026-08-14T02:00:00+08:00
 - Contract/ADR/migration/prompt：复用现有 contracts-ts enum；无新 contract/ADR/migration/prompt。
 - Test Run：Vitest、TypeScript、ESLint、production build、浏览器 desktop/mobile；全仓门按 DoD 执行。
 - Release：无托管发布；本地 `pnpm --filter @knowledge-tree/web dev` 可预览。
-- 观察结果：待实现，不提前声明 App 已完成。
+- 观察结果：实现 `5aab0e3`；QA P1 由 `c8c6bf9` 红灯与 `fff1ce6` 修复关闭；全仓门、浏览器验收和职责隔离 QA attempt 002 PASS。不声明 App、持久化或 AI 已完成。
 - 未完成项的新 ID：API/SQLite persistence、文件导入、viewer/source resolver、真实 GraphPatch bridge、AI 草案分别后续建项。
