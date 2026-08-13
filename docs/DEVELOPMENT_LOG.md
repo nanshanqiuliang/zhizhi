@@ -100,6 +100,17 @@
 - 回滚：回退 `ae834d9` 会重新暴露 QA 已证明的状态/证据绕过，不得用于放行；如需禁用，整体关闭 v2 policy/harness 并保留所有失败/通过 artifact。
 - 遗留风险与下一步：WORK-2026-004 的离线 prototype 已完成；真实 Provider/live eval 归 WORK-2026-007/008，认证 owner/产品状态机/通用 harness 归 WORK-2026-010，Anchor/GraphPatch 产品 contract 归 WORK-2026-005。RISK-2026-010..012 保持 open。
 
+## 2026-08-13 — 建立面向用户的自然语言开发路线与进度口径
+
+- 关联 ID：PLAN-ROOT、WORK-2026-002、WORK-2026-005、WORK-2026-007、WORK-2026-010。
+- 实际变化：将 Proposal/架构中的技术阶段转换为第 0–11 步用户路线，分别描述产品目标、完成标志、当前状态和可见里程碑；约定用户说“继续推进”时固定报告当前自然语言步骤、本步进度、MVP 粗略进度、本轮成果、验证和下一动作。
+- 影响模块/接口/schema/migration/prompt：仅新增 `docs/USER_FACING_DEVELOPMENT_ROADMAP.md` 并链接工程计划、README 与恢复检查点；无产品代码、schema、migration 或 prompt 变化。
+- 兼容性：技术事实仍以工程计划、工作项、提交和测试报告为准；百分比只依据已提交且可验证的产品能力，不把文档/测试数量误算为 App 功能。
+- 验证与证据：路线与 Proposal 的 2 周尖峰、8–12 周个人 MVP、16–24 周 Beta，以及架构阶段 0–3/实现顺序逐项对齐；仓库文档链接和默认门复验。
+- 性能/安全/运维影响：无运行时影响；真实 Provider/Web 与未认证 owner acceptance 保持关闭。
+- 回滚：回退本条文档提交即可；不影响已冻结的 WORK-2026-004 证据。
+- 遗留风险与下一步：当前为自然语言第 1 步（约 40%），MVP 粗略 10%–15%；下一次“继续推进”先完成 WORK-2026-002 的首版决策记录，再进入第 2 步 Anchor/GraphPatch contract。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

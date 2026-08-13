@@ -8,6 +8,8 @@
 
 不要把当前骨架当作 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
 
+如果只想了解“现在做到哪一步、什么时候能看到可用网页或 App”，请查看 [自然语言开发路线](docs/USER_FACING_DEVELOPMENT_ROADMAP.md)。
+
 ## 结构
 
 - `apps/`：桌面、Web、API 与 Worker 组合入口；

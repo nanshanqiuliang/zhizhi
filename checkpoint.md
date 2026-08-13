@@ -6,6 +6,8 @@ Updated: 2026-08-13 (Asia/Shanghai)
 
 Continue the repository's current active development work after reading the governing documents and engineering logs. The recovered active scope is `WORK-2026-004_calculus-gold-dataset`: deliver the smallest deterministic, role-separated AI review v2 prototype and its contracts/evidence without enabling a real provider or live test.
 
+The user has now defined a persistent communication convention: future requests such as “继续推进” must use `docs/USER_FACING_DEVELOPMENT_ROADMAP.md`, state the current natural-language step and progress at the beginning/end, then continue actual implementation rather than returning only a plan.
+
 ## Recovered completion state
 
 - Branch: `feature/WORK-2026-004-calculus-gold`.
@@ -57,4 +59,4 @@ Continue the repository's current active development work after reading the gove
 
 ## Exact next action
 
-On recovery, first verify the closure commit exists and `git status --short` is empty. Do not start a new main stage automatically: follow `docs/ENGINEERING_PLAN.md`, where the next dependency is workspace-owner review of WORK-2026-001/002 decisions; keep real Provider/Web and owner acceptance disabled meanwhile.
+On recovery, verify the WORK-2026-004 closure commits and read `docs/USER_FACING_DEVELOPMENT_ROADMAP.md`. The current natural-language stage is Step 1 (“把第一版到底做什么说清楚”), about 40% complete; overall personal MVP progress is roughly 10%–15%. For a “继续推进” request, report that status and continue WORK-2026-002 decisions/defaults, followed by the Step 2 GraphPatch/Anchor contract; keep real Provider/Web and owner acceptance disabled meanwhile.
