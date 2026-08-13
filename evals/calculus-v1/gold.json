@@ -1,0 +1,352 @@
+{
+  "schema_version": "calculus-gold.v1",
+  "dataset_id": "calculus-continuity-differentiability-v1",
+  "dataset_version": "1.0.0-draft.1",
+  "status": "author_reviewed",
+  "language": "zh-CN",
+  "license": {
+    "spdx": "CC-BY-NC-SA-4.0",
+    "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "commercial_use": "prohibited",
+    "share_alike": true,
+    "attribution_required": true,
+    "changes_indicated": true
+  },
+  "source": {
+    "resource_id": "mit_ocw_res_18_001_ch02",
+    "title": "Calculus, Chapter 2: Derivatives",
+    "creator": "Gilbert Strang",
+    "publisher": "MIT OpenCourseWare",
+    "course": "RES.18-001 Calculus Open Textbook",
+    "resource_page_url": "https://ocw.mit.edu/courses/res-18-001-calculus-fall-2023/resources/mitres_18_001_f17_ch02_pdf/",
+    "download_url": "https://ocw.mit.edu/courses/res-18-001-calculus-fall-2023/mitres_18_001_f17_ch02.pdf",
+    "local_path": "source/mit-ocw-res-18-001-chapter-02-derivatives.pdf",
+    "sha256": "c6a89688e956bc83c75c073068e9be3e7e8317377bd34e2a9d905fcb1af119fb",
+    "byte_size": 736149,
+    "page_count": 52,
+    "retrieved_at": "2026-08-13T18:47:20+08:00"
+  },
+  "scope": {
+    "title_zh": "连续性与可导性及其前置概念",
+    "included_sections": ["2.1", "2.3", "2.6", "2.7"],
+    "excluded": ["完整课程覆盖", "习题答案", "区域级锚点", "自动模型标注", "商业使用"]
+  },
+  "concepts": [
+    {
+      "id": "independent_variable",
+      "preferred_label_zh": "自变量",
+      "preferred_label_en": "independent variable",
+      "definition_zh": "作为函数输入、可在定义域内选取数值的变量。",
+      "anchor_ids": ["a005"]
+    },
+    {
+      "id": "dependent_variable",
+      "preferred_label_zh": "因变量",
+      "preferred_label_en": "dependent variable",
+      "definition_zh": "由函数规则和自变量取值共同确定的输出变量。",
+      "anchor_ids": ["a005"]
+    },
+    {
+      "id": "function",
+      "preferred_label_zh": "函数",
+      "preferred_label_en": "function",
+      "definition_zh": "把定义域中的每个允许输入映射到确定输出的规则。",
+      "anchor_ids": ["a005", "a041"]
+    },
+    {
+      "id": "increment",
+      "preferred_label_zh": "增量",
+      "preferred_label_en": "increment",
+      "definition_zh": "输入或输出从一个取值到邻近取值所发生的变化量。",
+      "anchor_ids": ["a001", "a002"]
+    },
+    {
+      "id": "difference_quotient",
+      "preferred_label_zh": "差商",
+      "preferred_label_en": "difference quotient",
+      "definition_zh": "函数输出增量除以对应输入增量所得的比值。",
+      "anchor_ids": ["a001", "a020"]
+    },
+    {
+      "id": "average_rate_of_change",
+      "preferred_label_zh": "平均变化率",
+      "preferred_label_en": "average rate of change",
+      "definition_zh": "函数在一个非零区间上的总变化量与区间长度之比。",
+      "anchor_ids": ["a001", "a019"]
+    },
+    {
+      "id": "limit",
+      "preferred_label_zh": "极限",
+      "preferred_label_en": "limit",
+      "definition_zh": "当输入按指定方式逼近时，函数值或数列项所逼近的目标值。",
+      "anchor_ids": ["a037", "a041"]
+    },
+    {
+      "id": "one_sided_limit",
+      "preferred_label_zh": "单侧极限",
+      "preferred_label_en": "one-sided limit",
+      "definition_zh": "输入仅从目标点左侧或右侧逼近时得到的极限。",
+      "anchor_ids": ["a042", "a045"]
+    },
+    {
+      "id": "two_sided_limit",
+      "preferred_label_zh": "双侧极限",
+      "preferred_label_en": "two-sided limit",
+      "definition_zh": "输入从目标点两侧逼近且获得相同目标值时的普通极限。",
+      "anchor_ids": ["a041", "a042"]
+    },
+    {
+      "id": "epsilon",
+      "preferred_label_zh": "ε 容差",
+      "preferred_label_en": "epsilon tolerance",
+      "definition_zh": "极限定义中对输出与目标值之间允许距离的任意正上界。",
+      "anchor_ids": ["a038", "a041"]
+    },
+    {
+      "id": "delta",
+      "preferred_label_zh": "δ 邻域",
+      "preferred_label_en": "delta neighborhood",
+      "definition_zh": "为满足给定输出容差而选取的输入邻域半径。",
+      "anchor_ids": ["a041", "a042"]
+    },
+    {
+      "id": "epsilon_delta_limit",
+      "preferred_label_zh": "ε-δ 极限定义",
+      "preferred_label_en": "epsilon-delta definition of limit",
+      "definition_zh": "对每个正 ε 都存在正 δ，使足够接近目标输入的函数值落入 ε 邻域。",
+      "anchor_ids": ["a041", "a050"]
+    },
+    {
+      "id": "slope",
+      "preferred_label_zh": "斜率",
+      "preferred_label_en": "slope",
+      "definition_zh": "图像纵向变化与横向变化之比，用于描述方向和陡峭程度。",
+      "anchor_ids": ["a004", "a017"]
+    },
+    {
+      "id": "secant_line",
+      "preferred_label_zh": "割线",
+      "preferred_label_en": "secant line",
+      "definition_zh": "通过曲线上两个不同点的直线，其斜率等于区间平均变化率。",
+      "anchor_ids": ["a019", "a020"]
+    },
+    {
+      "id": "derivative",
+      "preferred_label_zh": "导数",
+      "preferred_label_en": "derivative",
+      "definition_zh": "差商在输入增量趋于零时的极限，存在时给出局部变化率。",
+      "anchor_ids": ["a001", "a020"]
+    },
+    {
+      "id": "instantaneous_rate_of_change",
+      "preferred_label_zh": "瞬时变化率",
+      "preferred_label_en": "instantaneous rate of change",
+      "definition_zh": "函数在单个输入位置附近的局部变化率，由该点导数表示。",
+      "anchor_ids": ["a001", "a005"]
+    },
+    {
+      "id": "differentiability",
+      "preferred_label_zh": "可导性",
+      "preferred_label_en": "differentiability",
+      "definition_zh": "函数在指定点的有限双侧差商极限存在这一性质。",
+      "anchor_ids": ["a003", "a048"]
+    },
+    {
+      "id": "tangent_line",
+      "preferred_label_zh": "切线",
+      "preferred_label_en": "tangent line",
+      "definition_zh": "在给定点与曲线具有相同局部斜率的直线，可视为割线的极限。",
+      "anchor_ids": ["a016", "a020"]
+    },
+    {
+      "id": "point_slope_form",
+      "preferred_label_zh": "点斜式",
+      "preferred_label_en": "point-slope form",
+      "definition_zh": "利用直线上一点和斜率表达直线方程的形式。",
+      "anchor_ids": ["a017"]
+    },
+    {
+      "id": "power_rule",
+      "preferred_label_zh": "幂函数求导法则",
+      "preferred_label_en": "power rule",
+      "definition_zh": "把幂指数乘到系数并将指数减一的求导规则。",
+      "anchor_ids": ["a008", "a009"]
+    },
+    {
+      "id": "sum_rule",
+      "preferred_label_zh": "和差求导法则",
+      "preferred_label_en": "sum rule",
+      "definition_zh": "有限个可导函数之和或差的导数等于各导数的相应和或差。",
+      "anchor_ids": ["a010"]
+    },
+    {
+      "id": "constant_multiple_rule",
+      "preferred_label_zh": "常数倍求导法则",
+      "preferred_label_en": "constant multiple rule",
+      "definition_zh": "函数乘常数后，其导数等于原导数乘同一常数。",
+      "anchor_ids": ["a010"]
+    },
+    {
+      "id": "product_rule",
+      "preferred_label_zh": "乘积求导法则",
+      "preferred_label_en": "product rule",
+      "definition_zh": "两个可导函数乘积的导数由两个交叉乘积项相加得到。",
+      "anchor_ids": ["a030", "a031"]
+    },
+    {
+      "id": "quotient_rule",
+      "preferred_label_zh": "商求导法则",
+      "preferred_label_en": "quotient rule",
+      "definition_zh": "分母非零时，函数之商的导数由乘积和倒数规则组合得到。",
+      "anchor_ids": ["a032", "a033"]
+    },
+    {
+      "id": "continuity_at_point",
+      "preferred_label_zh": "点连续",
+      "preferred_label_en": "continuity at a point",
+      "definition_zh": "函数在该点有定义、双侧极限存在且极限等于函数值。",
+      "anchor_ids": ["a045", "a046"]
+    },
+    {
+      "id": "continuous_function",
+      "preferred_label_zh": "连续函数",
+      "preferred_label_en": "continuous function",
+      "definition_zh": "在其所讨论定义域的每个点都满足相应连续条件的函数。",
+      "anchor_ids": ["a046", "a047"]
+    },
+    {
+      "id": "removable_discontinuity",
+      "preferred_label_zh": "可去间断点",
+      "preferred_label_en": "removable discontinuity",
+      "definition_zh": "极限存在但函数值缺失或不匹配，可通过重新定义单点值修复的间断。",
+      "anchor_ids": ["a045", "a046"]
+    },
+    {
+      "id": "jump_discontinuity",
+      "preferred_label_zh": "跳跃间断点",
+      "preferred_label_en": "jump discontinuity",
+      "definition_zh": "左右单侧极限存在但不相等，从而双侧极限不存在的间断。",
+      "anchor_ids": ["a045"]
+    },
+    {
+      "id": "infinite_discontinuity",
+      "preferred_label_zh": "无穷间断点",
+      "preferred_label_en": "infinite discontinuity",
+      "definition_zh": "函数在目标点附近无界增长，不能取得有限双侧极限的间断。",
+      "anchor_ids": ["a045", "a046"]
+    },
+    {
+      "id": "differentiability_implies_continuity",
+      "preferred_label_zh": "可导必连续",
+      "preferred_label_en": "differentiability implies continuity",
+      "definition_zh": "函数在一点可导时必在该点连续，但连续并不保证可导。",
+      "anchor_ids": ["a048"]
+    }
+  ],
+  "relations": [
+    {"id": "r001", "type": "prerequisite_of", "source_concept_id": "independent_variable", "target_concept_id": "function", "rationale_zh": "理解输入变量后才能准确解释函数如何接受输入。", "evidence_anchor_ids": ["a005"]},
+    {"id": "r002", "type": "prerequisite_of", "source_concept_id": "dependent_variable", "target_concept_id": "function", "rationale_zh": "理解输出依赖输入后才能把函数看成确定映射。", "evidence_anchor_ids": ["a005"]},
+    {"id": "r003", "type": "prerequisite_of", "source_concept_id": "function", "target_concept_id": "increment", "rationale_zh": "函数值变化必须相对于同一函数的两个输入取值定义。", "evidence_anchor_ids": ["a001", "a005"]},
+    {"id": "r004", "type": "prerequisite_of", "source_concept_id": "increment", "target_concept_id": "difference_quotient", "rationale_zh": "差商由输出增量和非零输入增量相除构成。", "evidence_anchor_ids": ["a001", "a002"]},
+    {"id": "r005", "type": "prerequisite_of", "source_concept_id": "function", "target_concept_id": "difference_quotient", "rationale_zh": "差商的分子来自函数在两个输入处的值之差。", "evidence_anchor_ids": ["a001", "a005"]},
+    {"id": "r006", "type": "prerequisite_of", "source_concept_id": "difference_quotient", "target_concept_id": "average_rate_of_change", "rationale_zh": "区间平均变化率就是相应函数差商。", "evidence_anchor_ids": ["a001", "a019"]},
+    {"id": "r007", "type": "prerequisite_of", "source_concept_id": "function", "target_concept_id": "limit", "rationale_zh": "函数极限描述输入逼近时函数值的行为。", "evidence_anchor_ids": ["a041"]},
+    {"id": "r008", "type": "prerequisite_of", "source_concept_id": "epsilon", "target_concept_id": "epsilon_delta_limit", "rationale_zh": "ε 给出极限定义要求满足的输出误差。", "evidence_anchor_ids": ["a038", "a041"]},
+    {"id": "r009", "type": "prerequisite_of", "source_concept_id": "delta", "target_concept_id": "epsilon_delta_limit", "rationale_zh": "δ 给出为了控制输出误差而限制输入的邻域。", "evidence_anchor_ids": ["a041"]},
+    {"id": "r010", "type": "prerequisite_of", "source_concept_id": "limit", "target_concept_id": "epsilon_delta_limit", "rationale_zh": "ε-δ 语言是对函数极限概念的严格化。", "evidence_anchor_ids": ["a041"]},
+    {"id": "r011", "type": "prerequisite_of", "source_concept_id": "limit", "target_concept_id": "one_sided_limit", "rationale_zh": "单侧极限是在一般极限概念上限制逼近方向。", "evidence_anchor_ids": ["a042"]},
+    {"id": "r012", "type": "prerequisite_of", "source_concept_id": "one_sided_limit", "target_concept_id": "two_sided_limit", "rationale_zh": "双侧极限要求左右单侧极限都存在且相等。", "evidence_anchor_ids": ["a042", "a045"]},
+    {"id": "r013", "type": "prerequisite_of", "source_concept_id": "epsilon_delta_limit", "target_concept_id": "two_sided_limit", "rationale_zh": "双侧函数极限可用完整的 ε-δ 邻域条件判定。", "evidence_anchor_ids": ["a041"]},
+    {"id": "r014", "type": "prerequisite_of", "source_concept_id": "function", "target_concept_id": "slope", "rationale_zh": "曲线斜率描述函数图像相对于输入的变化。", "evidence_anchor_ids": ["a005", "a016"]},
+    {"id": "r015", "type": "prerequisite_of", "source_concept_id": "slope", "target_concept_id": "secant_line", "rationale_zh": "割线由两点确定，其核心数值特征是两点间斜率。", "evidence_anchor_ids": ["a019"]},
+    {"id": "r016", "type": "prerequisite_of", "source_concept_id": "difference_quotient", "target_concept_id": "secant_line", "rationale_zh": "割线斜率可直接写成两个函数值构成的差商。", "evidence_anchor_ids": ["a019"]},
+    {"id": "r017", "type": "prerequisite_of", "source_concept_id": "secant_line", "target_concept_id": "tangent_line", "rationale_zh": "切线可通过第二个割线点向基点靠拢的极限获得。", "evidence_anchor_ids": ["a020"]},
+    {"id": "r018", "type": "prerequisite_of", "source_concept_id": "limit", "target_concept_id": "tangent_line", "rationale_zh": "从割线得到切线需要对割线斜率取极限。", "evidence_anchor_ids": ["a020"]},
+    {"id": "r019", "type": "prerequisite_of", "source_concept_id": "slope", "target_concept_id": "tangent_line", "rationale_zh": "切线在接触点的斜率应与曲线局部斜率相同。", "evidence_anchor_ids": ["a016", "a017"]},
+    {"id": "r020", "type": "prerequisite_of", "source_concept_id": "difference_quotient", "target_concept_id": "derivative", "rationale_zh": "导数由差商在输入增量趋零时的极限定义。", "evidence_anchor_ids": ["a001", "a020"]},
+    {"id": "r021", "type": "prerequisite_of", "source_concept_id": "limit", "target_concept_id": "derivative", "rationale_zh": "判断导数是否存在必须理解并计算差商极限。", "evidence_anchor_ids": ["a001"]},
+    {"id": "r022", "type": "prerequisite_of", "source_concept_id": "average_rate_of_change", "target_concept_id": "derivative", "rationale_zh": "导数是越来越短区间上的平均变化率之极限。", "evidence_anchor_ids": ["a001", "a020"]},
+    {"id": "r023", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "instantaneous_rate_of_change", "rationale_zh": "瞬时变化率在教材中由函数在该点的导数表示。", "evidence_anchor_ids": ["a001", "a005"]},
+    {"id": "r024", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "differentiability", "rationale_zh": "可导性就是指定点的导数存在这一性质。", "evidence_anchor_ids": ["a003", "a048"]},
+    {"id": "r025", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "tangent_line", "rationale_zh": "切线方程使用目标点导数作为斜率。", "evidence_anchor_ids": ["a016", "a020"]},
+    {"id": "r026", "type": "prerequisite_of", "source_concept_id": "tangent_line", "target_concept_id": "point_slope_form", "rationale_zh": "写切线方程时需要把接触点和切线斜率代入点斜式。", "evidence_anchor_ids": ["a017"]},
+    {"id": "r027", "type": "prerequisite_of", "source_concept_id": "slope", "target_concept_id": "point_slope_form", "rationale_zh": "点斜式的两个基本输入之一是直线斜率。", "evidence_anchor_ids": ["a017"]},
+    {"id": "r028", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "power_rule", "rationale_zh": "幂函数求导法则是导数定义计算结果的概括。", "evidence_anchor_ids": ["a008", "a009"]},
+    {"id": "r029", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "sum_rule", "rationale_zh": "和差法则描述导数算子如何作用于函数相加。", "evidence_anchor_ids": ["a010"]},
+    {"id": "r030", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "constant_multiple_rule", "rationale_zh": "常数倍法则描述导数算子与常数乘法的关系。", "evidence_anchor_ids": ["a010"]},
+    {"id": "r031", "type": "prerequisite_of", "source_concept_id": "derivative", "target_concept_id": "product_rule", "rationale_zh": "乘积法则以两个函数及其导数构造乘积的导数。", "evidence_anchor_ids": ["a030", "a031"]},
+    {"id": "r032", "type": "prerequisite_of", "source_concept_id": "product_rule", "target_concept_id": "quotient_rule", "rationale_zh": "商法则可由乘积法则结合倒数函数的导数推导。", "evidence_anchor_ids": ["a032"]},
+    {"id": "r033", "type": "prerequisite_of", "source_concept_id": "function", "target_concept_id": "continuity_at_point", "rationale_zh": "点连续比较的是函数值与同一函数在该点附近的极限。", "evidence_anchor_ids": ["a005", "a045"]},
+    {"id": "r034", "type": "prerequisite_of", "source_concept_id": "two_sided_limit", "target_concept_id": "continuity_at_point", "rationale_zh": "点连续要求双侧函数极限存在并等于该点函数值。", "evidence_anchor_ids": ["a045", "a046"]},
+    {"id": "r035", "type": "prerequisite_of", "source_concept_id": "continuity_at_point", "target_concept_id": "continuous_function", "rationale_zh": "连续函数由其定义域各相关点的点连续性组成。", "evidence_anchor_ids": ["a046"]},
+    {"id": "r036", "type": "prerequisite_of", "source_concept_id": "continuity_at_point", "target_concept_id": "removable_discontinuity", "rationale_zh": "识别可去间断需比较点连续的三项条件并找出函数值失配。", "evidence_anchor_ids": ["a045", "a046"]},
+    {"id": "r037", "type": "prerequisite_of", "source_concept_id": "one_sided_limit", "target_concept_id": "jump_discontinuity", "rationale_zh": "跳跃间断由左右单侧极限不同来识别。", "evidence_anchor_ids": ["a045"]},
+    {"id": "r038", "type": "prerequisite_of", "source_concept_id": "limit", "target_concept_id": "infinite_discontinuity", "rationale_zh": "无穷间断需要理解函数值无界时不存在有限极限。", "evidence_anchor_ids": ["a037", "a045", "a046"]},
+    {"id": "r039", "type": "prerequisite_of", "source_concept_id": "differentiability", "target_concept_id": "differentiability_implies_continuity", "rationale_zh": "定理的前件是函数在目标点可导。", "evidence_anchor_ids": ["a048"]},
+    {"id": "r040", "type": "prerequisite_of", "source_concept_id": "continuity_at_point", "target_concept_id": "differentiability_implies_continuity", "rationale_zh": "理解结论及其逆命题失败需要先掌握点连续。", "evidence_anchor_ids": ["a048"]}
+  ],
+  "anchors": [
+    {"id": "a001", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 1}, "heading_path": ["Chapter 2", "2.1 The Derivative of a Function"], "topic_zh": "导数、差商与平均速度的定义", "concept_ids": ["increment", "difference_quotient", "average_rate_of_change", "limit", "derivative", "instantaneous_rate_of_change"]},
+    {"id": "a002", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 2}, "heading_path": ["Chapter 2", "2.1 The Derivative of a Function"], "topic_zh": "先化简差商再令增量趋零", "concept_ids": ["increment", "difference_quotient", "derivative"]},
+    {"id": "a003", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 3}, "heading_path": ["Chapter 2", "2.1 The Derivative of a Function"], "topic_zh": "拐角处左右斜率不同导致不可导", "concept_ids": ["derivative", "differentiability"]},
+    {"id": "a004", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 4}, "heading_path": ["Chapter 2", "2.1 The Derivative of a Function"], "topic_zh": "递增递减与斜率正负", "concept_ids": ["slope", "derivative"]},
+    {"id": "a005", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 5}, "heading_path": ["Chapter 2", "2.1 The Derivative of a Function"], "topic_zh": "自变量、因变量、函数与变化率", "concept_ids": ["independent_variable", "dependent_variable", "function", "slope", "instantaneous_rate_of_change"]},
+    {"id": "a006", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 6}, "heading_path": ["Chapter 2", "2.1 The Derivative of a Function"], "topic_zh": "导数记号与历史说明", "concept_ids": ["derivative"]},
+    {"id": "a007", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 7}, "heading_path": ["Chapter 2", "2.1 Exercises"], "topic_zh": "导数定义与图像练习", "concept_ids": ["derivative", "difference_quotient"]},
+    {"id": "a008", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 8}, "heading_path": ["Chapter 2", "2.2 Powers and Polynomials"], "topic_zh": "从差商推导整数幂求导", "concept_ids": ["difference_quotient", "power_rule"]},
+    {"id": "a009", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 9}, "heading_path": ["Chapter 2", "2.2 Powers and Polynomials"], "topic_zh": "二项展开与幂函数导数模式", "concept_ids": ["power_rule", "derivative"]},
+    {"id": "a010", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 10}, "heading_path": ["Chapter 2", "2.2 Powers and Polynomials"], "topic_zh": "常数倍法则、和差法则与多项式", "concept_ids": ["constant_multiple_rule", "sum_rule", "derivative"]},
+    {"id": "a011", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 11}, "heading_path": ["Chapter 2", "2.2 Powers and Polynomials"], "topic_zh": "函数与导数共同出现的方程", "concept_ids": ["function", "derivative"]},
+    {"id": "a012", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 12}, "heading_path": ["Chapter 2", "2.2 Powers and Polynomials"], "topic_zh": "平均量与边际变化率示例", "concept_ids": ["average_rate_of_change", "derivative"]},
+    {"id": "a013", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 13}, "heading_path": ["Chapter 2", "2.2 Powers and Polynomials"], "topic_zh": "幂函数变化与斜率示例", "concept_ids": ["power_rule", "slope"]},
+    {"id": "a014", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 14}, "heading_path": ["Chapter 2", "2.2 Exercises"], "topic_zh": "幂函数与导数运算练习", "concept_ids": ["power_rule", "derivative"]},
+    {"id": "a015", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 15}, "heading_path": ["Chapter 2", "2.2 Exercises"], "topic_zh": "多项式函数与相切条件练习", "concept_ids": ["function", "derivative", "tangent_line"]},
+    {"id": "a016", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 16}, "heading_path": ["Chapter 2", "2.3 The Slope and the Tangent Line"], "topic_zh": "局部线性、导数斜率与切线", "concept_ids": ["function", "slope", "derivative", "tangent_line"]},
+    {"id": "a017", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 17}, "heading_path": ["Chapter 2", "2.3 The Slope and the Tangent Line"], "topic_zh": "直线斜率与点斜式", "concept_ids": ["slope", "tangent_line", "point_slope_form"]},
+    {"id": "a018", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 18}, "heading_path": ["Chapter 2", "2.3 The Slope and the Tangent Line"], "topic_zh": "用切线解决局部方向问题", "concept_ids": ["tangent_line", "point_slope_form"]},
+    {"id": "a019", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 19}, "heading_path": ["Chapter 2", "2.3 The Slope and the Tangent Line"], "topic_zh": "两点割线、差商与平均斜率", "concept_ids": ["difference_quotient", "average_rate_of_change", "slope", "secant_line"]},
+    {"id": "a020", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 20}, "heading_path": ["Chapter 2", "2.3 The Slope and the Tangent Line"], "topic_zh": "割线逼近切线与导数极限", "concept_ids": ["difference_quotient", "limit", "secant_line", "derivative", "tangent_line"]},
+    {"id": "a021", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 21}, "heading_path": ["Chapter 2", "2.3 The Slope and the Tangent Line"], "topic_zh": "导数和切线的应用示例", "concept_ids": ["derivative", "tangent_line"]},
+    {"id": "a022", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 22}, "heading_path": ["Chapter 2", "2.3 Exercises"], "topic_zh": "切线、法线和最短距离练习", "concept_ids": ["slope", "tangent_line"]},
+    {"id": "a023", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 23}, "heading_path": ["Chapter 2", "2.4 The Derivative of the Sine and Cosine"], "topic_zh": "三角函数导数中的关键极限", "concept_ids": ["limit", "derivative"]},
+    {"id": "a024", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 24}, "heading_path": ["Chapter 2", "2.4 The Derivative of the Sine and Cosine"], "topic_zh": "零比零形式与三角极限", "concept_ids": ["limit", "derivative"]},
+    {"id": "a025", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 25}, "heading_path": ["Chapter 2", "2.4 The Derivative of the Sine and Cosine"], "topic_zh": "夹逼思想证明基本极限", "concept_ids": ["limit"]},
+    {"id": "a026", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 26}, "heading_path": ["Chapter 2", "2.4 The Derivative of the Sine and Cosine"], "topic_zh": "几何面积关系与三角极限", "concept_ids": ["limit"]},
+    {"id": "a027", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 27}, "heading_path": ["Chapter 2", "2.4 The Derivative of the Sine and Cosine"], "topic_zh": "导函数继续求导的概念", "concept_ids": ["function", "derivative"]},
+    {"id": "a028", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 28}, "heading_path": ["Chapter 2", "2.4 The Derivative of the Sine and Cosine"], "topic_zh": "三角函数导数的运动应用", "concept_ids": ["derivative", "instantaneous_rate_of_change"]},
+    {"id": "a029", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 29}, "heading_path": ["Chapter 2", "2.4 Exercises"], "topic_zh": "中心差分与导数练习", "concept_ids": ["difference_quotient", "derivative"]},
+    {"id": "a030", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 30}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "乘积、商和复合幂求导概览", "concept_ids": ["product_rule", "quotient_rule", "power_rule"]},
+    {"id": "a031", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 31}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "乘积法则的计算结构", "concept_ids": ["product_rule", "derivative"]},
+    {"id": "a032", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 32}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "倒数求导与商法则推导", "concept_ids": ["product_rule", "quotient_rule"]},
+    {"id": "a033", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 33}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "乘积法则和商法则公式复核", "concept_ids": ["product_rule", "quotient_rule"]},
+    {"id": "a034", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 34}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "乘积法则推广幂函数求导", "concept_ids": ["product_rule", "power_rule"]},
+    {"id": "a035", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 35}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "分数幂在零点的无穷或零斜率", "concept_ids": ["power_rule", "slope", "differentiability"]},
+    {"id": "a036", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 36}, "heading_path": ["Chapter 2", "2.5 Exercises"], "topic_zh": "复合求导法则综合练习", "concept_ids": ["product_rule", "quotient_rule", "power_rule"]},
+    {"id": "a037", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 37}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "数列趋近与极限概念的引入", "concept_ids": ["limit"]},
+    {"id": "a038", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 38}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "ε 容差与最终保持在邻域内", "concept_ids": ["limit", "epsilon"]},
+    {"id": "a039", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 39}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "收敛到一般目标值与必要条件", "concept_ids": ["limit"]},
+    {"id": "a040", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 40}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "充分条件、必要条件与极限逻辑", "concept_ids": ["limit"]},
+    {"id": "a041", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 41}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "函数极限的 ε-δ 定义", "concept_ids": ["function", "limit", "two_sided_limit", "epsilon", "delta", "epsilon_delta_limit"]},
+    {"id": "a042", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 42}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "跳跃、函数值无关性与单侧极限", "concept_ids": ["limit", "one_sided_limit", "two_sided_limit", "delta"]},
+    {"id": "a043", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 43}, "heading_path": ["Chapter 2", "2.6 Exercises"], "topic_zh": "数列与函数极限练习", "concept_ids": ["limit", "one_sided_limit"]},
+    {"id": "a044", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 44}, "heading_path": ["Chapter 2", "2.6 Exercises"], "topic_zh": "多项式和无穷远极限练习", "concept_ids": ["function", "limit"]},
+    {"id": "a045", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 45}, "heading_path": ["Chapter 2", "2.7 Continuous Functions"], "topic_zh": "点连续三条件与四类间断示例", "concept_ids": ["one_sided_limit", "two_sided_limit", "continuity_at_point", "removable_discontinuity", "jump_discontinuity", "infinite_discontinuity"]},
+    {"id": "a046", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 46}, "heading_path": ["Chapter 2", "2.7 Continuous Functions"], "topic_zh": "点连续、连续函数与可延拓讨论", "concept_ids": ["continuity_at_point", "continuous_function", "removable_discontinuity", "infinite_discontinuity"]},
+    {"id": "a047", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 47}, "heading_path": ["Chapter 2", "2.7 Continuous Functions"], "topic_zh": "连续图像直观与可延拓极限", "concept_ids": ["limit", "continuous_function", "removable_discontinuity"]},
+    {"id": "a048", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 48}, "heading_path": ["Chapter 2", "2.7 Continuous Functions"], "topic_zh": "可导推出连续但连续不推出可导", "concept_ids": ["derivative", "differentiability", "continuity_at_point", "differentiability_implies_continuity"]},
+    {"id": "a049", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 49}, "heading_path": ["Chapter 2", "2.7 Exercises"], "topic_zh": "连续、单侧极限与不可导练习", "concept_ids": ["one_sided_limit", "continuity_at_point", "differentiability"]},
+    {"id": "a050", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 50}, "heading_path": ["Chapter 2", "2.7 Exercises"], "topic_zh": "连续性、介值性质与 ε-δ 练习", "concept_ids": ["epsilon_delta_limit", "continuity_at_point", "continuous_function"]}
+  ],
+  "review": {
+    "author": {
+      "reviewer_role": "dataset_author",
+      "reviewer": "Codex",
+      "status": "complete"
+    },
+    "independent": {
+      "reviewer_role": "independent_subject_reviewer",
+      "reviewer": "pending_assignment",
+      "status": "pending"
+    }
+  }
+}

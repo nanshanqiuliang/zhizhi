@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-tree-agent.local/schema/calculus-gold.v1.json",
+  "title": "Knowledge Tree Agent Calculus Gold Dataset v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "dataset_version",
+    "status",
+    "language",
+    "license",
+    "source",
+    "scope",
+    "concepts",
+    "relations",
+    "anchors",
+    "review"
+  ],
+  "properties": {
+    "schema_version": {"const": "calculus-gold.v1"},
+    "dataset_id": {"const": "calculus-continuity-differentiability-v1"},
+    "dataset_version": {"const": "1.0.0-draft.1"},
+    "status": {"enum": ["draft", "author_reviewed", "approved"]},
+    "language": {"const": "zh-CN"},
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spdx", "url", "commercial_use", "share_alike", "attribution_required", "changes_indicated"],
+      "properties": {
+        "spdx": {"const": "CC-BY-NC-SA-4.0"},
+        "url": {"const": "https://creativecommons.org/licenses/by-nc-sa/4.0/"},
+        "commercial_use": {"const": "prohibited"},
+        "share_alike": {"const": true},
+        "attribution_required": {"const": true},
+        "changes_indicated": {"const": true}
+      }
+    },
+    "source": {"$ref": "#/$defs/source"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title_zh", "included_sections", "excluded"],
+      "properties": {
+        "title_zh": {"type": "string", "minLength": 1},
+        "included_sections": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"type": "string"}},
+        "excluded": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}
+      }
+    },
+    "concepts": {"type": "array", "minItems": 30, "maxItems": 30, "items": {"$ref": "#/$defs/concept"}},
+    "relations": {"type": "array", "minItems": 40, "maxItems": 40, "items": {"$ref": "#/$defs/relation"}},
+    "anchors": {"type": "array", "minItems": 50, "maxItems": 50, "items": {"$ref": "#/$defs/anchor"}},
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["author", "independent"],
+      "properties": {
+        "author": {"$ref": "#/$defs/reviewEntry"},
+        "independent": {"$ref": "#/$defs/reviewEntry"}
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource_id", "title", "creator", "publisher", "course", "resource_page_url", "download_url", "local_path", "sha256", "byte_size", "page_count", "retrieved_at"],
+      "properties": {
+        "resource_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+        "title": {"type": "string", "minLength": 1},
+        "creator": {"const": "Gilbert Strang"},
+        "publisher": {"const": "MIT OpenCourseWare"},
+        "course": {"const": "RES.18-001 Calculus Open Textbook"},
+        "resource_page_url": {"type": "string", "format": "uri", "pattern": "^https://ocw\\.mit\\.edu/"},
+        "download_url": {"type": "string", "format": "uri", "pattern": "^https://ocw\\.mit\\.edu/"},
+        "local_path": {"type": "string", "pattern": "^source/.+\\.pdf$"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "byte_size": {"type": "integer", "minimum": 1},
+        "page_count": {"const": 52},
+        "retrieved_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "preferred_label_zh", "preferred_label_en", "definition_zh", "anchor_ids"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]+$"},
+        "preferred_label_zh": {"type": "string", "minLength": 1},
+        "preferred_label_en": {"type": "string", "minLength": 1},
+        "definition_zh": {"type": "string", "minLength": 8, "maxLength": 180},
+        "anchor_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^a[0-9]{3}$"}}
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "source_concept_id", "target_concept_id", "rationale_zh", "evidence_anchor_ids"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^r[0-9]{3}$"},
+        "type": {"const": "prerequisite_of"},
+        "source_concept_id": {"type": "string"},
+        "target_concept_id": {"type": "string"},
+        "rationale_zh": {"type": "string", "minLength": 8, "maxLength": 180},
+        "evidence_anchor_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^a[0-9]{3}$"}}
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "resource_id", "selector", "heading_path", "topic_zh", "concept_ids"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^a[0-9]{3}$"},
+        "resource_id": {"type": "string"},
+        "selector": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "page"],
+          "properties": {
+            "type": {"const": "page"},
+            "page": {"type": "integer", "minimum": 1, "maximum": 52}
+          }
+        },
+        "heading_path": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}},
+        "topic_zh": {"type": "string", "minLength": 4, "maxLength": 120},
+        "concept_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}
+      }
+    },
+    "reviewEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer_role", "reviewer", "status"],
+      "properties": {
+        "reviewer_role": {"enum": ["dataset_author", "independent_subject_reviewer"]},
+        "reviewer": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pending", "in_progress", "complete"]}
+      }
+    }
+  }
+}

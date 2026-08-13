@@ -5,6 +5,7 @@ description = "Repository validation tooling for Knowledge Tree Agent"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "jsonschema[format]>=4.25,<5",
+  "pypdf>=6.10,<7",
   "pyyaml>=6.0,<7",
 ]
 
