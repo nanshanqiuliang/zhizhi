@@ -17,7 +17,7 @@ describe("knowledge tree workspace", () => {
     expect(screen.getAllByRole("button", { name: /概念：/ })).toHaveLength(8);
     expect(screen.getByText("示例数据")).toBeInTheDocument();
     expect(screen.getByText(/仅保留在本次会话/)).toBeInTheDocument();
-    expect(screen.getByText(/AI 未连接/)).toBeInTheDocument();
+    expect(screen.getAllByText(/AI 未连接/)).not.toHaveLength(0);
   });
 
   it("selects a node and edits its title and note with undo and redo", () => {

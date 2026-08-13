@@ -400,6 +400,11 @@ export function App() {
         </div>
       </header>
 
+      <aside className="compact-boundary" aria-label="演示能力边界">
+        <span aria-hidden="true">演示</span>
+        <p>示例数据 · 仅本次会话 · AI 未连接 · 无资料导入 · 未连接数据库</p>
+      </aside>
+
       <div id="workspace" className="workspace">
         <nav className="sidebar" aria-label="课程与笔记">
           <div className="side-heading">

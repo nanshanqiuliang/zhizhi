@@ -347,3 +347,20 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: run and commit the expected failing regression, add an
   always-visible mobile capability-boundary strip, verify its computed mobile
   display in the browser, rerun gates, and submit a superseding frozen SHA.
+
+## Step 3A mobile-boundary fix checkpoint — 2026-08-14 03:11 +08:00
+
+- Red regression commit: `c8c6bf9`; Web result was the expected 1 failure and
+  5 passes because no `演示能力边界` element existed.
+- Fix: a compact sticky disclosure is rendered at the mobile breakpoint and
+  states `示例数据 · 仅本次会话 · AI 未连接 · 无资料导入 · 未连接数据库`.
+  Desktop retains its existing header/sidebar/footer disclosures.
+- Focused green results: TypeScript, ESLint, component tests 6/6, production
+  build, and diff hygiene pass.
+- Real-browser 390×844 verification: computed display is `flex`, visibility is
+  `visible`, the complete disclosure rectangle is inside the viewport at
+  top 68/bottom 106, the save control remains present, document overflow is 0,
+  and browser warning/error count is 0. The mobile screenshot was superseded.
+- Exact next action: freeze the minimal fix commit, rerun full repository gates,
+  then request role-separated QA attempt 002 against that exact SHA with the P1
+  as the primary regression target.

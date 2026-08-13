@@ -196,6 +196,10 @@ a:focus-visible {
   background: #a2aba5;
 }
 
+.compact-boundary {
+  display: none;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 250px minmax(470px, 1fr) 300px;
@@ -794,6 +798,34 @@ a:focus-visible {
   .brand > span:last-child { display: none; }
   .course-path { display: none; }
   .mode-badges { display: none; }
+  .compact-boundary {
+    position: sticky;
+    top: 68px;
+    z-index: 19;
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 14px;
+    border-bottom: 1px solid #dfd3bd;
+    background: #fff8e9;
+    color: #715f45;
+  }
+  .compact-boundary span {
+    flex: 0 0 auto;
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: #e9c98f;
+    color: #694b23;
+    font-size: 0.56rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+  }
+  .compact-boundary p {
+    margin: 0;
+    font-size: 0.58rem;
+    line-height: 1.35;
+  }
   .workspace { display: flex; min-height: auto; flex-direction: column; }
   .sidebar {
     overflow: visible;
