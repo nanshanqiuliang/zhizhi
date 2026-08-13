@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-tree-agent.local/schema/calculus-independent-review.v1.json",
+  "title": "Calculus Gold Independent Review Packet v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "review_id",
+    "dataset_id",
+    "dataset_version",
+    "review_subject_sha256",
+    "license_notice_seen",
+    "concept_reviews",
+    "relation_reviews",
+    "anchor_reviews",
+    "subject_signoff",
+    "qa_signoff"
+  ],
+  "properties": {
+    "schema_version": {"const": "calculus-independent-review.v1"},
+    "review_id": {"const": "calculus-v1-independent-review"},
+    "dataset_id": {"const": "calculus-continuity-differentiability-v1"},
+    "dataset_version": {"const": "1.0.0-draft.1"},
+    "review_subject_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "license_notice_seen": {"type": "boolean"},
+    "concept_reviews": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {"$ref": "#/$defs/itemReview"}
+    },
+    "relation_reviews": {
+      "type": "array",
+      "minItems": 40,
+      "maxItems": 40,
+      "items": {"$ref": "#/$defs/itemReview"}
+    },
+    "anchor_reviews": {
+      "type": "array",
+      "minItems": 50,
+      "maxItems": 50,
+      "items": {"$ref": "#/$defs/itemReview"}
+    },
+    "subject_signoff": {"$ref": "#/$defs/signoff"},
+    "qa_signoff": {"$ref": "#/$defs/signoff"}
+  },
+  "$defs": {
+    "itemReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "decision", "comment", "proposed_change", "resolution", "resolution_comment", "resolution_by", "resolved_at"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "decision": {"enum": ["pending", "accept", "dispute"]},
+        "comment": {"type": ["string", "null"], "minLength": 1},
+        "proposed_change": {"type": ["string", "null"], "minLength": 1},
+        "resolution": {"enum": ["not_applicable", "pending", "accept_proposed", "reject_proposed"]},
+        "resolution_comment": {"type": ["string", "null"], "minLength": 1},
+        "resolution_by": {"type": ["string", "null"], "minLength": 1},
+        "resolved_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "signoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer_role", "reviewer", "status", "completed_at"],
+      "properties": {
+        "reviewer_role": {"enum": ["independent_subject_reviewer", "qa"]},
+        "reviewer": {"type": ["string", "null"], "minLength": 1},
+        "status": {"enum": ["pending", "in_progress", "complete"]},
+        "completed_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  }
+}

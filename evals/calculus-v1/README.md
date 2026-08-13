@@ -17,6 +17,8 @@
 - `DATASET_CARD.md`：范围、标注方法、已知限制和使用门；
 - `NOTICE.md`：署名、许可、修改与商用限制；
 - `REVIEW.md`：作者复核和独立学科复核状态；
+- `independent-review.json`：绑定数据摘要的 30/40/50 逐条待签复核包；
+- `INDEPENDENT_REVIEW_GUIDE.md`：独立学科和 QA 的分离复核步骤；
 - `source/`：哈希固定的上游第 2 章 PDF。
 
 ## 验证
@@ -24,6 +26,7 @@
 ```powershell
 uv run python -m scripts.validate_calculus_dataset
 uv run pytest tests/contract/test_calculus_dataset.py
+uv run python -m scripts.validate_calculus_review
 ```
 
-任何 hash、许可、计数、引用或 DAG 校验失败都会阻断后续 parser/AI eval。`review.independent.status` 在独立复核者签字前必须保持 `pending`，因此本数据集当前不能成为批准的质量基线。
+任何 hash、许可、计数、引用、DAG 或复核覆盖校验失败都会阻断后续 parser/AI eval。`--require-complete` 在独立学科和 QA 双签前应稳定失败，因此本数据集当前不能成为批准的质量基线。

@@ -9,18 +9,18 @@ related_ids: [NFR-2026-002, NFR-2026-008, RISK-2026-001, RISK-2026-005]
 target_stage: "阶段 -1 / 阶段 0 入口准备"
 risk: high
 created_at: 2026-08-13T18:25:00+08:00
-updated_at: 2026-08-13T19:48:00+08:00
+updated_at: 2026-08-13T20:05:00+08:00
 ```
 
 ## 问题与结果
 
 - 用户/工程问题：Anchor、解析器和 AI 质量没有合法、冻结、可复跑的微积分样本，不能开始高风险原型或评测。
-- 期望结果：以用户指定的 MIT OCW RES.18-001 教材第 2 章建立 v1 金标包，含 dataset card、许可/署名、30 概念、40 先修关系、50 PDF 页级锚点和校验脚本。
+- 期望结果：以用户指定的 MIT OCW RES.18-001 教材第 2 章建立 v1 金标包，含 dataset card、许可/署名、30 概念、40 先修关系、50 PDF 页级锚点、校验脚本和可逐条签字的独立复核执行包。
 - 成功如何被观察：原始 PDF 哈希固定；fixture 通过 schema、引用、DAG、计数、许可和页面边界校验；抽样页面渲染清晰；作者复核完成并明确独立复核未完成。
 
 ## 范围
 
-- In scope：MIT OCW RES.18-001《Calculus》Chapter 2: Derivatives；重点覆盖 2.1、2.3、2.6、2.7 的导数、切线、极限、连续性与可导性；使用其他 2.x 小节补足先修规则上下文。
+- In scope：MIT OCW RES.18-001《Calculus》Chapter 2: Derivatives；重点覆盖 2.1、2.3、2.6、2.7 的导数、切线、极限、连续性与可导性；使用其他 2.x 小节补足先修规则上下文；提供固定数据摘要、30/40/50 条目清单、学科复核与 QA 分离签字门。
 - Out of scope：整站镜像、完整教材再发布、习题答案、中文翻译、自动 LLM 标注、GraphPatch/Anchor 正式 contract、真实 Provider eval、商业使用。
 - 受影响模块/接口/数据：`evals/calculus-v1` 测试数据与 dataset schema；不接入产品数据库。
 - 依赖和假设：用户批准 MIT OCW 资料；OCW 页面和教材适用 CC BY-NC-SA 4.0，MIT 名称仅用于必要署名；项目用途保持非商业研发。
@@ -44,6 +44,7 @@ updated_at: 2026-08-13T19:48:00+08:00
 - [x] AC-6：schema/语义/许可/计数自动校验及失败变异测试通过；页 1/16/37/41/45/48/51 渲染抽检通过。
 - [x] 错误和恢复路径：CLI 返回稳定 `calculus_dataset_invalid` 和非零；校验失败不得进入 parser/AI eval；远端资源变化时保留旧 hash，创建新 dataset 版本。
 - [x] 回滚/禁用方法：回退实现提交 `e918fdf`；不得删除上游许可/来源记录来“消除”限制。
+- [ ] AC-7：独立复核执行包通过 schema、dataset ID/version/hash、30/40/50 精确覆盖和签字状态校验；待签模板可通过普通门，但 `require complete` 硬门在学科复核与 QA 均签字前必须稳定失败。
 
 ## 验证计划
 
@@ -54,6 +55,7 @@ updated_at: 2026-08-13T19:48:00+08:00
 | TC-DATA-003 | contract | PDF hash/页数/anchor 边界 | 全部匹配 | TR-20260813-003 |
 | TC-DATA-004 | security/legal | 署名、许可、非商业与 ShareAlike 元数据 | 缺失时失败 | TR-20260813-003 |
 | TC-DATA-005 | visual | 代表页面 Poppler render | 清晰、页码/章节可辨 | TR-20260813-003 |
+| TC-DATA-006 | contract/review | 独立复核包绑定、覆盖、分歧与双签门 | 待签模板合法；缺项/重复/hash 漂移/伪签字失败 | 待生成增量报告 |
 
 ## 交付物与关闭
 
@@ -62,4 +64,4 @@ updated_at: 2026-08-13T19:48:00+08:00
 - Test Run：`TR-20260813-003`，CONDITIONAL GO；自动校验和作者复核通过，独立复核待完成。
 - Release：无；仅非商业研发 fixture。
 - 观察结果：14/14 金标合同/失败变异、24/24 Python、1/1 Web 通过；7 张代表页清晰可辨。
-- 未完成项：独立学科复核和独立 QA 是本工作项最终完成门，不由作者自签替代；复核任务仍归属本 WORK，不另行伪造已完成 ID。
+- 未完成项：独立学科复核和独立 QA 是本工作项最终完成门，不由作者自签替代；本轮先补齐机器可验的待签执行包，真实签字任务仍归属本 WORK。
