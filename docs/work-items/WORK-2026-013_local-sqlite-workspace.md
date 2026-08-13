@@ -1,15 +1,15 @@
 # WORK-2026-013：本地 SQLite 持久化工作区 prototype
 
 ```yaml
-status: ready
+status: verified_prototype
 type: feature
 owner: Codex (local persistence role)
 reviewers: [ai_qa_auditor, workspace_owner]
-related_ids: [REQ-2026-006, REQ-2026-008, NFR-2026-001, ADR-0005, WORK-2026-005, WORK-2026-011, WORK-2026-012]
+related_ids: [REQ-2026-006, REQ-2026-008, NFR-2026-001, ADR-0005, WORK-2026-005, WORK-2026-011, WORK-2026-012, TR-20260814-005]
 target_stage: "阶段 1 / 自然语言第 4 步"
 risk: high
 created_at: 2026-08-14T07:24:00+08:00
-updated_at: 2026-08-14T07:24:00+08:00
+updated_at: 2026-08-14T07:45:00+08:00
 ```
 
 ## 问题与结果
@@ -36,30 +36,30 @@ updated_at: 2026-08-14T07:24:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：数据目录可创建/复用，非法目录或缺失必要文件时稳定失败；目录内布局（db 文件、backups/、exports/）与文档一致。
-- [ ] AC-2：已确认 CourseGraph 保存后可重新加载，语义等价且 revision 保留；加载时先做 canonical schema 校验。
-- [ ] AC-3：版本化 migration 可从空库按序建到 v1；重复/乱序迁移稳定失败；迁移失败可回滚且不留半初始化状态。
-- [ ] AC-4：备份生成校验和，可从备份恢复库；导出 JSON 通过 graph contract 校验；删除走 purge manifest 语义，删除后数据库与目录状态一致。
-- [ ] AC-5：故障注入（截断 db、垃圾字节、断电式中断写入、重复 replay 历史）均以稳定错误失败关闭，不产生部分图或伪成功。
-- [ ] 错误和恢复路径：损坏库可被检测并提示重新创建/恢复备份；调用方基于 code/details 决定处理，不自动猜测。
-- [ ] 回滚/禁用方法：回退本工作项提交即可禁用持久化；不得复用内存 Demo 冒充保存能力。
+- [x] AC-1：数据目录可创建/复用，非法目录或缺失必要文件时稳定失败；目录内布局（db 文件、backups/、exports/）与文档一致。
+- [x] AC-2：已确认 CourseGraph 保存后可重新加载，语义等价且 revision 保留；加载时先做 canonical schema 校验。
+- [x] AC-3：版本化 migration 可从空库按序建到 v1；重复/乱序迁移稳定失败；迁移失败可回滚且不留半初始化状态。
+- [x] AC-4：备份生成校验和，可从备份恢复库；导出 JSON 通过 graph contract 校验；删除走 purge manifest 语义，删除后数据库与目录状态一致。
+- [x] AC-5：故障注入（截断 db、垃圾字节、断电式中断写入、重复 replay 历史）均以稳定错误失败关闭，不产生部分图或伪成功。
+- [x] 错误和恢复路径：损坏库可被检测并提示重新创建/恢复备份；调用方基于 code/details 决定处理，不自动猜测。
+- [x] 回滚/禁用方法：回退本工作项提交即可禁用持久化；不得复用内存 Demo 冒充保存能力。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-PERS-001 | integration | 目录创建/复用/校验 | 布局正确，非法路径失败 | 红灯→绿灯 |
-| TC-PERS-002 | integration | save→close→reopen | 语义等价、revision 保留 | 红灯→绿灯 |
-| TC-PERS-003 | integration | migration v1 建库/重复/乱序/回滚 | 版本正确，冲突失败 | 红灯→绿灯 |
-| TC-PERS-004 | integration | backup/export/delete | 校验和匹配、契约校验通过、purge 一致 | 红灯→绿灯 |
-| TC-PERS-005 | security/integration | 截断/垃圾字节/中断写入/重复 replay | 稳定错误，无部分状态 | 红灯→绿灯 |
-| TC-PERS-006 | unit | history record JSON 往返 | 与 WORK-2026-011 语义一致 | 红灯→绿灯 |
+| TC-PERS-001 | integration | 目录创建/复用/校验 | 布局正确，非法路径失败 | 21/21 PASS / TR-005 |
+| TC-PERS-002 | integration | save→close→reopen | 语义等价、revision 保留 | 21/21 PASS / TR-005 |
+| TC-PERS-003 | integration | migration v1 建库/重复/乱序/回滚 | 版本正确，冲突失败 | 21/21 PASS / TR-005 |
+| TC-PERS-004 | integration | backup/export/delete | 校验和匹配、契约校验通过、purge 一致 | 21/21 PASS / TR-005 |
+| TC-PERS-005 | security/integration | 截断/垃圾字节/中断写入/重复 replay | 稳定错误，无部分状态 | 21/21 PASS / TR-005 |
+| TC-PERS-006 | unit | history record JSON 往返 | 与 WORK-2026-011 语义一致 | 21/21 PASS / TR-005 |
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-013-local-sqlite-workspace`；先提交失败 persistence/restart 测试，再实现最小 adapter。
-- Contract/ADR/migration/prompt：新增 workspace 相关 schema（如需要）；无 prompt 变化。
-- Test Run：全仓门（repository validator、Ruff、mypy、pytest、pnpm）按 DoD 执行；职责隔离 QA 对冻结 SHA 复核。
+- Commit/PR：分支 `feature/WORK-2026-013-local-sqlite-workspace`；红灯 `1420b68`，实现 `8e34a40`。
+- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；SQLite schema v1 以 `PRAGMA user_version` 版本化。
+- Test Run：目标 21/21、全仓 Python 175/175、Web 6/6、Ruff、strict mypy、repository validator、frozen installs/peers/check/build 全通过；职责隔离 QA attempt 001 PASS（0 P0/P1/P2）；live 变异重放 8/8 PASS；证据为 `TR-20260814-005`。
 - Release：无托管发布；本地 CLI/测试可演示。
-- 观察结果：本轮只交付持久化 prototype，不接入浏览器；重启存活与备份/导出/删除必须可重复验证。
+- 观察结果：持久化内核 prototype 已验证，浏览器自动保存/API/UI 尚未接入，不得把 prototype 冒充浏览器已保存。
 - 未完成项的新 ID：UI/API 接入、自动保存、FTS5 搜索、文件导入、加密与多进程分别后续建项。

@@ -20,6 +20,7 @@
 | RISK-2026-010..012 | 同源偏差、搜索污染、harness 共同缺陷 | WORK-2026-004/010 | ADR-0015 / v2 replay source + tool policy prototype | `ae834d9` | TR-005：correlation/injection/false-citation/binding/replay 与 3 P1/3 P2 校准通过；真实搜索/跨实现仍待 | — | RB-AIREV-001 待建 | partially_verified |
 | REQ-2026-008 / ADR-0005 | 修改可追溯并最终可撤销 | WORK-2026-005/011 | GraphPatch v1 prototype；ADR-0005 proposed | `4fc8e60` | TR-20260814-002/003：安全 preview、minimal delta、replay、LIFO undo/redo、篡改/权限、全仓 154/154、QA PASS；持久化/UI 待建 | — | DB/history Runbook 待建 | prototype_verified |
 | REQ-2026-001/006/008 | 无 AI 也能人工查看、编辑知识树并撤销 | WORK-2026-012 | session-only React/SVG Demo；不改 canonical contract | `4caa76a` 原红灯；`5aab0e3` 实现；`c8c6bf9` QA P1 红灯；`fff1ce6` 修复 | TC-WEB-001..006 / TR-20260814-004：Web 6/6、全仓 154/154、desktop/mobile browser、QA attempt 002 PASS | — | `USER_MANUAL.md`；无运行 Runbook（无部署/持久状态） | verified_demo |
+| REQ-2026-006/008 / ADR-0005 | 修改可追溯、可撤销且重启后内容仍在 | WORK-2026-013 | stdlib `sqlite3` workspace adapter；复用 graph v1 契约与 GraphHistory 语义 | `1420b68` 红灯；`8e34a40` 实现 | TC-PERS-001..006 / TR-20260814-005：目标 21/21、全仓 175/175、Web 6/6、QA PASS + live 变异 8/8；浏览器自动保存/API/UI 待接入 | — | 本地持久化 Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

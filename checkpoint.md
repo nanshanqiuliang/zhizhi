@@ -416,3 +416,30 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: commit this Ready boundary, then add failing
   persistence/restart tests (expected ImportError/collection failure) before
   any SQLite implementation.
+
+## Step 4A closure checkpoint — 2026-08-14 07:45 +08:00
+
+- Active branch: `feature/WORK-2026-013-local-sqlite-workspace`.
+- Frozen implementation: `8e34a40f02de8d94ad6db3927cf8b189e9caee03`;
+  red baseline: `1420b68fd8eb4f4bea82e217140af2efcd820447`;
+  Ready boundary: `ec8005e1527b223fee043f2c1bffe718e1bede5b`.
+- Role-separated QA (`graph_qa_fresh`) returned PASS with 0 P0/P1/P2 and no
+  new finding. Its environment had no shell executor, so mutations were traced
+  statically; this session then live re-ran all eight mutation classes (digest
+  tamper, truncated/garbage db, migration conflict, duplicate replay, checksum
+  tamper, invalid graph overwrite, purge) and all failed closed.
+- Full gates pass at `8e34a40`: repository validator, Ruff, scripts + strict
+  package mypy (contracts-py/domain/infrastructure), pytest 175/175 (target
+  21/21), locked pnpm install/peers, Web 6/6, TypeScript check, and production
+  build.
+- Evidence/report: `evidence/TR-20260814-005/` and
+  `docs/test-reports/TR-20260814-005_local-sqlite-workspace.md`.
+- Natural-language Step 4 progress: persistence kernel prototype done
+  (approximately 45% of Step 4); overall personal MVP approximately 40%.
+  This does not claim browser auto-save, API/UI hookup, FTS5 search, imports,
+  encryption, multi-process, or cloud.
+- Exact next action on the next "继续推进": create a separate Ready work item
+  for browser/API persistence hookup (auto-save, workspace selection UI,
+  save-status), starting from failing persistence-API red tests.
+- Current blocker: none for offline Step 4 preparation. Real Provider/Web and
+  owner acceptance remain separately gated and disabled.

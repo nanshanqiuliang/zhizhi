@@ -1,0 +1,19 @@
+{
+  "schema_version": "test-environment.v1",
+  "test_run_id": "TR-20260814-005",
+  "recorded_at": "2026-08-14T07:45:00+08:00",
+  "os": "Windows 11 x64 10.0.26200",
+  "timezone": "Asia/Shanghai",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "git": "2.53.0.windows.2",
+  "reviewed_commit": "8e34a40f02de8d94ad6db3927cf8b189e9caee03",
+  "red_baseline_commit": "1420b68fd8eb4f4bea82e217140af2efcd820447",
+  "ready_commit": "ec8005e1527b223fee043f2c1bffe718e1bede5b",
+  "network_used": false,
+  "provider": "none",
+  "user_data": false,
+  "database": "sqlite3 (stdlib, local test dirs only)"
+}

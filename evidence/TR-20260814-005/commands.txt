@@ -1,0 +1,13 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run ruff format --check packages scripts tests
+uv run ruff check .
+uv run mypy scripts
+uv run mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src
+uv run pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+uv run pytest tests/integration/test_workspace_persistence.py tests/unit/test_workspace_records.py -q
+uv run python tmp/qa_live_mutations.py

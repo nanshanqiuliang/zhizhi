@@ -171,6 +171,19 @@
 - 验证：编辑/undo/redo、drag、lock-preserving layout、add/delete、reset、无 page-level 横溢、selection-only 不创建 history。
 - 遗留风险/Owner/期限：没有托管可用性或安装包；持久化、备份/恢复和桌面生命周期由第 4/10 步承接。
 
+## 2026-08-14 07:45 — 本地 SQLite 持久化 prototype 验证
+
+- 关联 ID：WORK-2026-013、TR-20260814-005。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；sqlite3 3.45.3（stdlib）；commit `8e34a40`。
+- 操作者：Codex（实现与 live 变异重放）；职责隔离 `graph_qa_fresh`（只读机器证明，非真人签字/owner 接受）。
+- 变更或症状：新增本地 SQLite workspace prototype（数据目录、migration v1、save/load、backup/restore/export/purge、history records 落盘）；无部署或常驻服务变化。
+- 时间线：`ec8005e` Ready → `1420b68` 红灯（2 个预期 ImportError）→ `8e34a40` 实现 → QA attempt 001 PASS → live 变异重放 8/8 PASS。
+- 影响：无部署、端口、进程、网络、Provider、真实用户数据、秘密或费用；仅测试目录写 SQLite。
+- 证据：`evidence/TR-20260814-005/` 与 `docs/test-reports/TR-20260814-005_local-sqlite-workspace.md`；目标 21/21、全仓 175/175、Web 6/6、完整本地门 PASS。
+- 缓解/回滚：回退 `8e34a40` 禁用 prototype；不得复用内存 Demo 冒充保存。
+- 验证：目录/重启存活/migration/备份导出删除/故障注入（截断、垃圾字节、非法图、重复 replay、digest 篡改、checksum 篡改、purge）全部失败关闭。
+- 遗留风险/Owner/期限：浏览器自动保存/API/UI 接入、FTS5 搜索、导入、加密、多进程、云端与真实 Provider 保持关闭，由后续工作项承接。
+
 ---
 
 ## 新条目模板

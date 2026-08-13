@@ -199,6 +199,17 @@
 - 回滚：回退 `5aab0e3` 恢复状态页；不影响 contracts/domain 或历史证据。
 - 遗留风险与下一步：刷新/关闭会丢失修改；无导入、来源跳转、AI 或安装包。QA 通过后关闭本项，并以独立 Ready 工作项从持久化/restart 红灯进入自然语言第 4 步。
 
+## 2026-08-14 — 实现本地 SQLite 持久化工作区 prototype
+
+- 关联 ID：WORK-2026-013、ADR-0005、REQ-2026-006、REQ-2026-008、TR-20260814-005。
+- 实际变化：新增 `packages/infrastructure` 的 stdlib `sqlite3` workspace adapter：数据目录布局/校验、版本化 migration v1（`PRAGMA user_version`）、CourseGraph 原子保存/加载（复用 `validate_course_graph`）、备份（在线备份 + sha256 sidecar）、恢复（校验和 + WAL 侧车清理）、导出 JSON、purge manifest 删除、history records 落盘与 digest 防篡改 JSON 往返；CI mypy 覆盖 infrastructure。
+- 影响模块/接口/schema/migration/prompt：新增 workspace adapter 与 `tests/integration|unit` 持久化测试；复用 `knowledge-tree-graph.v1` canonical schema 与 `GraphHistory` 记录语义；不修改既有 domain/contract 公共 API 语义；无 prompt 变化。
+- 兼容性：Python 3.12 标准库 sqlite3 3.45.3；`_connect` 上下文管理器确保提交并关闭句柄，避免 Windows 文件锁；WAL 侧车在 restore/purge 时清理。
+- 验证与证据：红灯 `1420b68`（2 个预期 collection ImportError）；实现 `8e34a40` 后目标 21/21、全仓 Python 175/175、Web 6/6、Ruff、strict mypy（contracts/domain/infrastructure）、repository validator、pnpm frozen install/peers/check/build 全通过；QA attempt 001 PASS（0 P0/P1/P2，静态推演）；本会话 live 重放八类变异全部失败关闭。
+- 性能/安全/运维影响：仅测试目录写 SQLite；无网络、Provider、secret、真实用户数据或费用；错误 details 只含 rule/版本号/ID，不含正文。
+- 回滚：回退 `8e34a40` 可禁用持久化 prototype；红灯测试保留，不得以删除测试替代不变量。
+- 遗留风险与下一步：浏览器自动保存/API/UI 接入、FTS5 搜索、导入、加密、多进程、云端与真实 Provider 仍关闭；下一工作项从失败 persistence API 红灯进入第 4 步 UI/API 接入。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
