@@ -80,4 +80,33 @@ Historical WORK-2026-004 implementation chain:
 
 ## Exact next action
 
-Freeze the current Anchor/GraphPatch implementation commit and request role-separated QA against its full SHA. Keep real Provider/Web, user data, database writes, API/UI work, and owner acceptance disabled.
+Role-separated QA attempt 001 reviewed frozen commit
+`a25470c1a25bedaf57ff4beba9204bd255d75a2a` and returned FAIL. Preserve that
+attempt, add a failing regression proving contract/domain validation does not
+read the repository schema at runtime, then generate a Python schema artifact
+from the canonical JSON Schema and make runtime validation use the generated
+artifact. Correct the test accounting to 49 target tests plus 4 repository
+integration tests. Re-run the proportional gates, freeze the fix, and request a
+superseding QA review. Keep real Provider/Web, user data, database writes,
+API/UI work, and owner acceptance disabled.
+
+## Recovery checkpoint — 2026-08-14 01:21 +08:00
+
+- Current natural-language position: Step 2A, independent QA and evidence
+  closure; Step 2 remains approximately 70% and the personal MVP approximately
+  20% until a passing review exists.
+- Frozen implementation: `a25470c`; red parent: `44b6233`; worktree was clean at
+  handoff.
+- QA outcome: FAIL with one P1 (runtime repository-schema file I/O) and one P2
+  (49 target tests were reported as 53 without separating four repository
+  integration tests). No P0 was found.
+- Verified by QA: red/green commit binding, 49 target tests, repository gate,
+  strict package mypy, TypeScript generation/typecheck, core security mutations,
+  deterministic output, and input immutability.
+- Preserved evidence:
+  `evidence/TR-20260814-002/ai-graph-qa-attempt-001.md`.
+- Current risk: installed contracts must not depend on the repository layout;
+  QA remains correlated machine review and cannot accept owner residual risk.
+- Next exact action: commit a red zero-runtime-file-I/O regression, then make a
+  generated Python schema artifact the runtime source while retaining the JSON
+  Schema as the only hand-edited contract source.

@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from jsonschema import Draft202012Validator
 from knowledge_tree_contracts import ContractValidationError, validate_contract
+from knowledge_tree_contracts import graph_v1 as graph_contract_module
 
 JsonObject = dict[str, Any]
 
@@ -202,6 +203,19 @@ def test_contract_rejects_invalid_content_hash() -> None:
         validate_contract("anchor", anchor)
 
     assert raised.value.code == "validation_failed"
+
+
+def test_runtime_contract_validation_does_not_read_repository_schema(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    graph_contract_module._load_graph_contract_document.cache_clear()
+
+    def reject_runtime_file_read(*_args: object, **_kwargs: object) -> str:
+        raise AssertionError("runtime contract validation must not read repository files")
+
+    monkeypatch.setattr(Path, "read_text", reject_runtime_file_read)
+
+    validate_contract("course_graph", valid_graph())
 
 
 @pytest.mark.parametrize(
