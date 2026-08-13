@@ -231,3 +231,13 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: commit the Ready boundary, replace the old status-page test
   with failing product-workspace tests, and preserve the red baseline before UI
   implementation.
+
+## Step 3A red-test checkpoint — 2026-08-14 02:04 +08:00
+
+- Replaced the engineering-status assertion with five product-workspace tests:
+  sample tree/non-capability labels; select/edit/save/undo/redo; add child and
+  leaf-only deletion; pointer movement/position lock/auto-layout/reset; and
+  toolbar/detail/navigation accessibility.
+- Existing App still renders the engineering preview, so these tests are
+  expected to fail. Exact next action: run and commit this red baseline before
+  replacing the UI.
