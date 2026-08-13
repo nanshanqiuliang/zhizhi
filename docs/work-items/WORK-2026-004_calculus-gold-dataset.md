@@ -9,7 +9,7 @@ related_ids: [NFR-2026-002, NFR-2026-008, RISK-2026-001, RISK-2026-005]
 target_stage: "阶段 -1 / 阶段 0 入口准备"
 risk: high
 created_at: 2026-08-13T18:25:00+08:00
-updated_at: 2026-08-13T20:05:00+08:00
+updated_at: 2026-08-13T20:28:00+08:00
 ```
 
 ## 问题与结果
@@ -44,7 +44,7 @@ updated_at: 2026-08-13T20:05:00+08:00
 - [x] AC-6：schema/语义/许可/计数自动校验及失败变异测试通过；页 1/16/37/41/45/48/51 渲染抽检通过。
 - [x] 错误和恢复路径：CLI 返回稳定 `calculus_dataset_invalid` 和非零；校验失败不得进入 parser/AI eval；远端资源变化时保留旧 hash，创建新 dataset 版本。
 - [x] 回滚/禁用方法：回退实现提交 `e918fdf`；不得删除上游许可/来源记录来“消除”限制。
-- [ ] AC-7：独立复核执行包通过 schema、dataset ID/version/hash、30/40/50 精确覆盖和签字状态校验；待签模板可通过普通门，但 `require complete` 硬门在学科复核与 QA 均签字前必须稳定失败。
+- [x] AC-7：独立复核执行包通过 schema、dataset ID/version/hash、30/40/50 精确覆盖和签字状态校验；待签模板通过普通门，`require complete` 硬门在学科复核与 QA 均签字前以稳定错误和非零退出阻断。
 
 ## 验证计划
 
@@ -55,13 +55,13 @@ updated_at: 2026-08-13T20:05:00+08:00
 | TC-DATA-003 | contract | PDF hash/页数/anchor 边界 | 全部匹配 | TR-20260813-003 |
 | TC-DATA-004 | security/legal | 署名、许可、非商业与 ShareAlike 元数据 | 缺失时失败 | TR-20260813-003 |
 | TC-DATA-005 | visual | 代表页面 Poppler render | 清晰、页码/章节可辨 | TR-20260813-003 |
-| TC-DATA-006 | contract/review | 独立复核包绑定、覆盖、分歧与双签门 | 待签模板合法；缺项/重复/hash 漂移/伪签字失败 | 待生成增量报告 |
+| TC-DATA-006 | contract/review | 独立复核包绑定、覆盖、分歧与双签门 | 待签模板合法；缺项/重复/hash 漂移/伪签字失败 | TR-20260813-004 |
 
 ## 交付物与关闭
 
-- Commit/PR：`e918fdf915d635760a86842ba1ccee933f962ed1`；无远端 PR。
+- Commit/PR：数据集 `e918fdf915d635760a86842ba1ccee933f962ed1`；复核门 `232d0cdc48c25d8cd986013ea21b8060fd37336f`；无远端 PR。
 - Contract/ADR/migration/prompt：eval fixture schema v1；无产品 migration/prompt。
-- Test Run：`TR-20260813-003`，CONDITIONAL GO；自动校验和作者复核通过，独立复核待完成。
+- Test Run：`TR-20260813-003`（数据集作者验证）与 `TR-20260813-004`（独立复核门验证）均为 CONDITIONAL GO；真实独立复核待完成。
 - Release：无；仅非商业研发 fixture。
-- 观察结果：14/14 金标合同/失败变异、24/24 Python、1/1 Web 通过；7 张代表页清晰可辨。
-- 未完成项：独立学科复核和独立 QA 是本工作项最终完成门，不由作者自签替代；本轮先补齐机器可验的待签执行包，真实签字任务仍归属本 WORK。
+- 观察结果：复核门实现提交上 43/43 Python、1/1 Web 及完整本地门通过；待签包普通门通过，完成门按预期以 `calculus_review_invalid`/退出 1 阻断；此前 7 张代表页清晰可辨。
+- 未完成项：独立学科复核和独立 QA 是本工作项最终完成门，不由作者自签或自动化替代；项目负责人需把执行包交给两名不同人员完成真实签字。

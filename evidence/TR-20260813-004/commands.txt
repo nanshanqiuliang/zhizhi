@@ -1,0 +1,16 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run python -m scripts.validate_calculus_dataset
+uv run python -m scripts.validate_calculus_review
+uv run ruff format --check scripts tests
+uv run ruff check .
+uv run mypy scripts
+uv run pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+git diff --check
+
+# Negative completion gate; expected exit code 1 while independent review is pending.
+uv run python -m scripts.validate_calculus_review --require-complete

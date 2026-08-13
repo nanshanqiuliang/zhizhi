@@ -59,6 +59,18 @@
 - 验证：来源/hash/页数/元数据/活动内容、schema、引用、DAG、许可、审批状态和视觉抽检通过。
 - 遗留风险/Owner/期限：项目负责人待指派 independent_subject_reviewer 与 QA；签字前 dataset 不得标 `approved`，DeepSeek 保持禁用。
 
+## 2026-08-13 20:28 — 独立复核门进入待签状态
+
+- 关联 ID：WORK-2026-004、TR-20260813-004。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；commit `232d0cd`；review schema `independent-review.v1`。
+- 操作者：Codex（门禁实现与分时验证；非独立学科复核者或 QA）。
+- 变更或症状：新增待签复核执行包和完成硬门；当前 subject/QA 均为 `pending`，数据集保持 `author_reviewed`。
+- 影响：无部署和常驻服务变化；普通仓库门为绿，关闭工作项所需的完成门按设计为红，稳定错误为 `calculus_review_invalid`。
+- 证据：`evidence/TR-20260813-004/` 含环境、命令、门禁摘要、manifest 和校验和；完整本地门通过。
+- 缓解/回滚：复核中可保存未完成包并运行普通门；不得关闭工作项。内容漂移时旧摘要失效，须重新逐条复核；回退实现不构成风险接受。
+- 验证：30/40/50 精确覆盖、内容摘要、分歧裁决、双人身份及时序、许可确认和审批同步均有正/负向合同测试。
+- 遗留风险/Owner/期限：项目负责人待指派两名不同人员；真实完成后由独立 QA 形成后续签字报告。DeepSeek 继续禁用。
+
 ---
 
 ## 新条目模板
