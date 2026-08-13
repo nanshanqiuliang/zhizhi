@@ -25,6 +25,7 @@
 | `USER_MANUAL.md` | 已实现用户行为和诊断说明 |
 | `../config/llm/providers.yaml` | 非敏感 Provider/协议/能力/端点配置 |
 | `../config/llm/model-policies.yaml` | 任务模型路由、预算、重试和回退配置 |
+| `../AGENTS.md` | 仓库级强制工作流与本地验证命令 |
 
 ## 目录
 

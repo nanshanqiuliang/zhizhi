@@ -1,7 +1,7 @@
 # WORK-2026-006：建仓和最小 CI/证据骨架
 
 ```yaml
-status: in_progress
+status: verification
 type: ops
 owner: Codex (implementation role)
 reviewers: [project_owner, qa, operations]
@@ -9,7 +9,7 @@ related_ids: [NFR-2026-005, NFR-2026-006, RISK-2026-004]
 target_stage: "阶段 -1"
 risk: medium
 created_at: 2026-08-13T17:57:12+08:00
-updated_at: 2026-08-13T17:57:12+08:00
+updated_at: 2026-08-13T18:13:00+08:00
 ```
 
 ## 问题与结果
@@ -36,13 +36,13 @@ updated_at: 2026-08-13T17:57:12+08:00
 
 ## 验收标准
 
-- [ ] AC-1：本地 Git `main` 基线提交与 `feature/WORK-2026-006-repository-skeleton` 分支存在。
-- [ ] AC-2：`uv.lock`、`pnpm-lock.yaml` 存在，锁定安装后所有本地门通过。
-- [ ] AC-3：LLM YAML 通过正式 JSON Schema 与跨引用/能力语义校验，失败 fixture 被测试覆盖。
-- [ ] AC-4：最小 React 状态页能通过类型检查、单元测试和 production build。
-- [ ] AC-5：CI 默认不访问真实 Provider，且在 Rust manifest 不存在时明确跳过而非伪报通过。
-- [ ] 错误和恢复路径：任一门失败返回非零；移除新增骨架即可回到文档基线提交。
-- [ ] 回滚/禁用方法：回退本工作项提交；保留根基线提交，不删除用户原始文档。
+- [x] AC-1：本地 Git `main` 基线提交与 `feature/WORK-2026-006-repository-skeleton` 分支存在。
+- [x] AC-2：`uv.lock`、`pnpm-lock.yaml` 存在，锁定安装后所有本地门通过。
+- [x] AC-3：LLM YAML 通过正式 JSON Schema 与跨引用/能力语义校验，失败 fixture 被测试覆盖。
+- [x] AC-4：最小 React 状态页通过类型检查、单元测试、production build 和桌面/窄屏浏览器检查。
+- [x] AC-5：CI 默认不访问真实 Provider，且在 Rust manifest 不存在时明确跳过而非伪报通过。
+- [x] 错误和恢复路径：任一门失败返回非零；移除新增骨架即可回到文档基线提交。
+- [x] 回滚/禁用方法：回退本工作项提交；保留根基线提交，不删除用户原始文档。
 
 ## 验证计划
 
@@ -56,9 +56,9 @@ updated_at: 2026-08-13T17:57:12+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：待验证后填写；远端 PR 不在授权范围。
+- Commit/PR：`bd66e8b30b958f822f0c11c871361d44337acebd`；远端 PR 不在授权范围。
 - Contract/ADR/migration/prompt：ADR-0014（工具链骨架，proposed）；无 migration/prompt 变化。
-- Test Run：待生成 `TR-20260813-002`。
+- Test Run：`TR-20260813-002` passed / CONDITIONAL GO（独立 QA pending）。
 - Release：无；本骨架不可发布。
-- 观察结果：不适用，尚无运行环境。
+- 观察结果：本地开发预览桌面/390px DOM、console 和布局通过；尚无发布运行环境。
 - 未完成项的新 ID：Rust/Tauri 环境、远端治理、许可证仍归 WORK-2026-003/006 后续验收。

@@ -4,9 +4,9 @@
 
 ## 当前运行状态
 
-- 产品代码：不存在。
-- 开发/测试/staging/production 环境：未建立。
-- CI/CD：未建立。
+- 产品代码：仅最小 Web 工程状态页与开发工具骨架；无业务能力。
+- 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
+- CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：未实现、未演练。
 - 正式发布：无。
@@ -36,6 +36,16 @@
 - 现状：DeepSeek deployment 明确关闭，尚不能处理真实流量。
 - 启用前提：受控密钥、TC-LLM-001..009、EVAL-LLM-001、Runbook 演练和 QA 批准。
 - 回滚：文档/配置回退；无运行状态和用户数据需要迁移。
+
+## 2026-08-13 — 本地开发门与环境缺口登记
+
+- 关联：WORK-2026-006、TR-20260813-002。
+- 环境/版本：Windows x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；commit `bd66e8b`。
+- 变化：新增锁定安装、配置/秘密校验、Python/TypeScript 门、Web build 和 CI workflow；`RUN_LIVE_LLM_TESTS` 在 CI 固定为 `0`。
+- 验证：本地严格链与浏览器桌面/390px 验收通过；开发服务器已关闭，无常驻进程。
+- 现状/影响：Rust/Cargo 缺失；无远端、托管 runner、制品、部署、监控或备份；workflow 存在不等于 CI 已运行。
+- 缓解/回滚：`apps/desktop/Cargo.toml` 不存在时 CI 只允许显式 skip；manifest 出现却没有 Rust job 时失败。回退 `bd66e8b`。
+- 遗留风险/Owner/期限：项目负责人确定远端/许可证；技术负责人批准 ADR-0014；运维补 Rust 与托管 CI；QA 独立复核。
 
 ---
 

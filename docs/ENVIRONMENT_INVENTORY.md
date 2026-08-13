@@ -1,14 +1,14 @@
 # 环境与版本清单
 
-> status: baseline placeholder  
-> 当前没有已建立的开发、测试、staging 或 production 环境。表格不得提前填写设计目标。
+> status: active inventory
+> 本地开发工具门已建立；测试、staging 和 production 环境仍不存在。表格只记录实测事实。
 
 ## 环境索引
 
 | Environment ID | 用途 | 状态 | Owner | OS/Region | 当前 Release/Build | Config Fingerprint | 数据分类 | 最近验证 | Runbook |
 |---|---|---|---|---|---|---|---|---|---|
-| local-dev | 未来本地开发 | not_created | 待定 | 待定 | — | — | 合成/许可 fixture | — | — |
-| ci | 未来自动测试 | not_created | 待定 | 待定 | — | — | 固定 fixture | — | — |
+| local-dev | 本地仓库校验与 Web 预览 | verified_tooling_only | Codex（实现）/项目负责人待定 | Windows x64 / Asia-Shanghai | commit `bd66e8b` / no release | `c6c44958...65e7e` | 合成配置变异；无用户数据 | 2026-08-13 / TR-20260813-002 | 根 README/AGENTS |
+| ci | 声明式 GitHub Actions 门 | declared_not_executed | 待定 | ubuntu-latest（设计值） | — | — | 固定 fixture | 无远端 run | — |
 | test | 未来集成测试 | not_created | 待定 | 待定 | — | — | 合成/脱敏 | — | — |
 | staging | 未来发布候选 | not_created | 待定 | 待定 | — | — | 受控，禁止随意复制生产 | — | — |
 | production | 未来实际运营 | not_created | 待定 | 待定 | — | — | 真实用户数据 | — | — |
