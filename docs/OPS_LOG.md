@@ -127,12 +127,24 @@
 - 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；graph contract v1；实现提交待冻结。
 - 操作者：Codex（contract/domain 实现与分时验证；职责隔离 QA 尚未执行）。
 - 变更或症状：红灯 `44b6233` 后建立 canonical schema、Python validator、生成/类型检查的 TypeScript enum 和纯 GraphPatch preview；trusted actor 从 payload 外注入并阻断身份自证。
-- 时间线：WORK-005 Ready → `44b6233` 红灯 → 21/21 最小绿灯 → 53/53 边界/属性/安全/容量绿灯 → 完整门绿。
+- 时间线：WORK-005 Ready → `44b6233` 红灯 → 21/21 最小绿灯 → 专项 49/49 + 仓库集成 4/4 绿灯（当时误合记为目标 53/53）→ 完整门绿。
 - 影响：无部署、端口、常驻进程、数据库、API、UI、网络、Provider、用户数据、秘密或费用；网页可见能力未变化。
-- 证据：目标 53/53；全仓 Python 135/135、Web 1/1；repository/schema/generation drift、Ruff、scripts/domain strict mypy、locked installs/peers 和 production build 全通过。
+- 证据：该冻结点专项 49/49、仓库集成 4/4；全仓 Python 135/135、Web 1/1；repository/schema/generation drift、Ruff、scripts/domain strict mypy、locked installs/peers 和 production build 全通过。QA 后续发现运行时文件读，故该记录不构成最终 GO。
 - 缓解/回滚：回退待冻结实现提交可禁用未接产品的 v1 prototype；保留红灯测试；不得删除锁/DAG/actor/evidence 校验作为回滚。
 - 验证：Anchor 四 selector、UUIDv7/hash、六 operation、确认门、端点/base revision、四维锁、任意长度 cycle path、AI evidence/origin/actor spoof、500 节点工程初值通过。
 - 遗留风险/Owner/期限：职责隔离 QA、正式 ADR/owner 接受、operation log/inverse/undo、持久化/API/UI/resolver 和产品性能指标待后续门。
+
+## 2026-08-14 01:26 — GraphPatch 冷启动文件 I/O 修复进入复审
+
+- 关联 ID：WORK-2026-005、TR-20260814-002。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；红灯 `1278e79`；修复 `5ff02a4`。
+- 操作者：Codex（实现）；职责隔离 `graph_qa_fresh` attempt 001（机器证明，非人类签字/owner 接受）。
+- 变更或症状：QA 证明 `a25470c` 冷启动会从仓库 `docs/contracts` 读 schema，安装布局不可靠；现在运行时使用 canonical schema 的确定性 Python 派生产物，generator drift gate 同时约束 TS/Python。
+- 时间线：`a25470c` → QA-001 FAIL → `1278e79` 单测预期失败 → `5ff02a4` 修复 → 完整门绿 → 待 QA-002。
+- 影响：无部署、端口、数据库、API、UI、网络、Provider、用户数据、秘密或费用；网页能力未变化。
+- 证据：专项 50/50、仓库集成 4/4、全仓 Python 136/136、Web 1/1；完整本地门全部通过。
+- 缓解/回滚：生成漂移立即失败关闭；不得手改生成物或恢复运行时仓库路径依赖。
+- 遗留风险/Owner/期限：QA 复审、正式 ADR/owner 接受和下一工作项的回放/撤销仍待完成。
 
 ---
 

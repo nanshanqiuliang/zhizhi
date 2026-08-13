@@ -18,7 +18,7 @@ The current user request is “继续开发”. Work has resumed at natural-lang
 - Current natural-language step: Step 2, pre-QA freeze, approximately 70%; overall personal MVP approximately 20%.
 - Commit `8ff376d0aa339143332a47500646b455148b1169` records the WORK-2026-002 / PRD v0.3 / ADR-0016 safe-default baseline. The ten architecture section 21 questions are mapped 10/10 and all repository gates passed at that commit.
 - Role-separated QA attempt 001 returned FAIL with 1 P1 and 2 P2 evidence/governance findings; commit `10f249b3021da1577aa17eb114d3b44c20a2b0a2` corrected all three. Attempt 002 passed with no P0/P1/P2 or new findings. Both attempts are preserved by `TR-20260814-001`.
-- WORK-2026-005 is in progress. Red commit `44b6233` proved the public APIs were missing. The working implementation now has a canonical JSON Schema, schema-backed Python API, generated/typechecked TypeScript enums, and a pure GraphPatch preview domain service; 53 targeted tests and all repository gates pass.
+- WORK-2026-005 is in progress. Red commit `44b6233` proved the public APIs were missing. The implementation now has a canonical JSON Schema, schema-backed Python API, generated/typechecked TypeScript enums and Python runtime schema artifact, and a pure GraphPatch preview domain service; 50 targeted tests, 4 repository integration tests, and all repository gates pass. QA re-review is pending.
 - Real DeepSeek/Web, user data, database writes, owner authentication, and Embedding remain disabled or unresolved.
 
 Historical WORK-2026-004 implementation chain:
@@ -76,7 +76,7 @@ Historical WORK-2026-004 implementation chain:
 - WORK-2026-002 decision baseline `8ff376d`: 10/10 decision mapping and the same full repository gates passed; QA attempt 001 returned FAIL solely for the 1 P1/2 P2 governance findings now being corrected.
 - Superseding correction worktree: repository validator, Ruff format/lint, mypy, pytest 84/84, frozen pnpm install, peer check, Web 1/1, and production build all pass.
 - `TR-20260814-001`: role-separated QA attempt 002 passed immutable commit `10f249b` with 0 P0/P1/P2 and no new findings; attempt 001 remains preserved; classification is `correlated_review`, not owner acceptance.
-- WORK-2026-005 implementation worktree: target 53/53; full Python 135/135; Web 1/1; graph/LLM repository validator, Ruff, scripts/domain strict mypy, TypeScript generation drift/tsc, locked dependency/peer checks and production build all pass.
+- WORK-2026-005 fix at `5ff02a4`: target 50/50 plus repository integration 4/4; full Python 136/136; Web 1/1; graph/LLM repository validator, Ruff, scripts/domain strict mypy, TypeScript/Python generation drift/tsc, locked dependency/peer checks and production build all pass.
 
 ## Exact next action
 
@@ -122,6 +122,8 @@ API/UI work, and owner acceptance disabled.
 - Proportional verification: 50/50 graph contract/domain/security tests, 4/4
   repository integration tests, strict package mypy, Ruff, TypeScript generation
   drift/tsc, and diff hygiene all pass.
-- Next exact action: freeze this minimal fix, run the mandatory full repository
-  gates, correct 53-test accounting in status documents, and send the superseding
-  frozen SHA to role-separated QA.
+- Full mandatory gates passed at `5ff02a4`: repository validator, Ruff, mypy,
+  136/136 Python, locked pnpm install/peers, TypeScript generation/typecheck,
+  Web 1/1, and production build.
+- Next exact action: commit corrected status accounting and send the resulting
+  frozen SHA to role-separated QA for a superseding review.

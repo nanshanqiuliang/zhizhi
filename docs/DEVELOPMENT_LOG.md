@@ -161,10 +161,21 @@
 - 实际变化：新增 canonical Draft 2020-12 schema、schema-backed Python contract API、schema 生成的 TypeScript enum、纯 GraphPatch preview，以及六类 operation、确认、revision、四维锁、DAG/cycle path、AI evidence/origin 防伪和输入不可变验证。
 - 影响模块/接口/schema/migration/prompt：新增 `knowledge-tree-graph.v1.schema.json` 和 GraphPatch/Anchor/CourseGraph v1 prototype；新增 Hypothesis 开发依赖与 CI schema/type drift 门；无 migration、API 或 prompt。
 - 兼容性：旧 placeholder TS contract 被生成入口替换；前端/存储尚未消费该 contract。新增边必须绑定 source/target revision；AI update 携带 operation evidence IDs。
-- 验证与证据：红灯 `44b6233`；当前目标套件 53/53，Ruff、严格 mypy、schema self-check、repository validator 和 TypeScript generation drift/tsc 通过；完整全仓门与职责隔离 QA 待执行。
-- 性能/安全/运维影响：纯内存、无网络/文件写/数据库/Provider/用户数据；错误 details 只含 rule/ID/revision/cycle path，不含正文。500 节点容量初值仍待基准测试。
+- 验证与证据：红灯 `44b6233`；该冻结点实际为专项 49/49 加仓库集成 4/4，曾误写为“目标 53/53”，由后续 QA 指出并更正；Ruff、严格 mypy、schema self-check、repository validator 和 TypeScript generation drift/tsc 通过。
+- 性能/安全/运维影响：无网络/文件写/数据库/Provider/用户数据；错误 details 只含 rule/ID/revision/cycle path，不含正文。首轮实现仍有冷启动 schema 文件读，已在后续 superseding 修复中移除；500 节点容量初值仍待产品基准测试。
 - 回滚：回退实现提交和 schema/generator 即可禁用未接入产品的 prototype；不得回退红灯测试来规避不变量。
 - 遗留风险与下一步：完整门、500 节点线性验证、冻结实现 SHA 和 QA；真正 persistence/operation log/inverse/undo/API/UI/resolver 仍后置。
+
+## 2026-08-14 — 修复 GraphPatch 运行时 schema I/O 并重交 QA
+
+- 关联 ID：WORK-2026-005、TR-20260814-002、TC-GRAPH-001。
+- 实际变化：职责隔离 QA attempt 001 对 `a25470c` 返回 FAIL（1 P1/1 P2）：合同冷启动间接读取仓库 JSON Schema，且三文件专项测试 49 项被误记为 53 项。`1278e79` 先以拦截 `Path.read_text` 的失败测试复现；`5ff02a4` 令现有 generator 从 canonical JSON Schema 生成 Python runtime artifact，并把它纳入 drift check。
+- 影响模块/接口/schema/migration/prompt：canonical JSON Schema 仍是唯一手工事实源；新增的是确定性派生产物，不新增/手写第二套 enum。Python 合同公共 API 和 GraphPatch 语义不变；无 migration/API/prompt。
+- 兼容性：安装后运行不再依赖仓库 `docs/` 布局；TypeScript 与 Python 生成物必须同时与 canonical schema 一致。
+- 验证与证据：失败 attempt 保存在 `evidence/TR-20260814-002/ai-graph-qa-attempt-001.md`；修复后专项 50/50、仓库集成 4/4、全仓 Python 136/136、Web 1/1，repository validator、Ruff、两层 mypy、生成漂移/tsc、locked installs/peers 和 build 全通过。
+- 性能/安全/运维影响：GraphPatch/contract 冷启动不再文件 I/O；仍无网络、数据库、Provider、用户数据或常驻进程。
+- 回滚：不得回退到运行时读取仓库 schema 的实现；若生成链异常，应让 drift gate 失败并停止交付，不得手改派生 schema。
+- 遗留风险与下一步：职责隔离 QA 复审通过后生成 TR-20260814-002，并把 WORK-005 移入 verification；operation log/inverse/undo 仍属于下一独立工作项。
 
 ## 2026-08-12 — 建立总体架构技术基线
 
