@@ -4,4 +4,4 @@
 
 当前 AI 自动审查产品化工作项：[WORK-2026-010](WORK-2026-010_ai-review-harness.md)。它以 WORK-2026-004 的微积分 v2 prototype 为输入，不绕过当前主工作项。
 
-当前产品主线：WORK-2026-002 完成个人 MVP 边界验证后，进入 [WORK-2026-005](WORK-2026-005_anchor-graphpatch-v1.md) 冻结 Anchor/GraphPatch v1；不得在 contract/锁/DAG 门完成前直接堆叠真实 AI 或聊天功能。
+当前产品主线：[WORK-2026-005](WORK-2026-005_anchor-graphpatch-v1.md) 的 Anchor/GraphPatch v1 prototype 已由 `TR-20260814-002` 验证；现在进入 [WORK-2026-011](WORK-2026-011_graph-replay-inverse.md) 证明纯领域回放与撤销。不得在 history/inverse 门完成前直接堆叠数据库写入、真实 AI 或聊天功能。

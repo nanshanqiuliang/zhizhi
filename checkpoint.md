@@ -138,3 +138,21 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   is the next active work.
 - Next exact action: define a Ready work item for pure deterministic replay and
   inverse patch generation, then commit its failing tests before implementation.
+
+## Step 2B Ready checkpoint — 2026-08-14 01:32 +08:00
+
+- Active branch: `feature/WORK-2026-011-graph-replay-inverse`.
+- Ready work item: `docs/work-items/WORK-2026-011_graph-replay-inverse.md`;
+  proposed decision: `docs/adr/ADR-0005-operation-log-periodic-snapshot.md`.
+- Scope: pure in-memory immutable entity deltas, deterministic replay, and LIFO
+  undo/redo for confirmed user patches. No persistence, database, API, UI,
+  Provider, network, public delete operation, or real user content.
+- Key safety decision: public GraphPatch remains the only write request language;
+  inverse delete/restore deltas are generated inside the trusted domain and are
+  not accepted from AI/import/system payloads.
+- Acceptance: two-record replay, six-operation undo/redo, monotonic revisions,
+  redo invalidation, tamper/order/empty-stack failure, input immutability, and no
+  I/O all need repeatable tests.
+- Next exact action: commit this Ready boundary, then add imports/tests for the
+  absent history API and preserve the expected failing baseline before any
+  implementation.
