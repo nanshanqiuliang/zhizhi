@@ -7,7 +7,7 @@
 
 ## 当前结论
 
-产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验与最小 React 状态页已经实现并通过本地验证；review v2/harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
+产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现并通过本地验证；正式证据/隔离 AI 复核、产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
 ## 当前阶段出口门
 
@@ -30,7 +30,7 @@
 | WORK-2026-001 | 审阅并批准架构与开发运维基线 | 待验收 | 项目负责人 | 无 | 批准记录/修订意见 | 文档状态变更 |
 | WORK-2026-002 | 回答编码前待决问题 | 未开始 | 产品+技术 | WORK-2026-001 | 决策清单 | ADR/计划更新 |
 | WORK-2026-003 | 确定仓库、许可证与分支保护 | 未开始 | 项目负责人 | WORK-2026-001 | 仓库治理记录 | 本地/远端检查 |
-| WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 进行中 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015/review v2 待实现 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 待实现，不用 AI 伪签 v1 |
+| WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 进行中 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 本地门 71 Python/1 Web 通过，提交/TR/隔离 AI 复核待完成 |
 | WORK-2026-005 | 冻结 Anchor/GraphPatch v1 | 未开始 | 总工程师 | WORK-2026-002 | JSON Schema、ADR | 契约测试设计 |
 | WORK-2026-006 | 建仓和最小 CI/证据骨架 | 待验收 | 开发+QA+运维 | WORK-2026-003（远端治理仍待定） | 本地 Git、CI workflow、锁文件、状态页 | `TR-20260813-002` CONDITIONAL GO；独立 QA/远端 CI 待验收 |
 | WORK-2026-007 | 冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约 | 规划完成/待实现 | AI+后端+QA+运维 | WORK-2026-001 | 多 LLM 基线、配置 v1、错误与 Runbook | TC-LLM-001..009 待执行 |
@@ -42,10 +42,10 @@
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 技术尖峰实施 | 个人 AI Agent/自动复核方向已批准，但 review v2、核心 contract、预算、真实 API Key 和其余 MVP 细项仍未完成 | 先在当前 WORK-2026-004 实现 v2 contract + mock harness/security fixture，再完成阶段 -1 其余出口门 |
+| 技术尖峰实施 | 个人 AI Agent/自动复核方向已批准，review v2 原型已实现但正式证据/独立机器复核、核心 contract、预算、真实 API Key 和其余 MVP 细项仍未完成 | 完成 WORK-2026-004 v2 实现提交、TR 和隔离 AI 学科/QA 复核，再完成阶段 -1 其余出口门 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
-| WORK-2026-004 关闭 | v1 作者/合同门已通过；用户要求改为 AI 子 Agent自动复核，v2 machine attestation/harness 尚未实现 | 新增 v2 schema、角色/工具策略、mock/replay 与安全 fixture；由不同 run 的 AI 学科/QA 子 Agent执行，必要时裁决；机器审查与 owner 风险接受分离 |
+| WORK-2026-004 关闭 | v1 作者/合同门和 v2 mock/replay 本地门已通过；仍缺实现提交、不可变 TR 和隔离 AI 学科/QA 复核结论 | 冻结提交和证据；由不同 run 的 AI 学科/QA 子 Agent执行，必要时裁决；机器审查与 owner 风险接受分离 |
 
 ## 下一门
 
-`Gate A：阶段 -1 出口验收`。产品方向和机器复核角色已明确；WORK-2026-004 的 v1 数据/门禁和 `TR-20260813-003/004` 保持历史证据，不改写为 AI 签字。下一动作是在同一主工作项中以失败测试起步，实现 `calculus-independent-review.v2`、确定性 mock harness、证据 ledger、同源性披露和提示注入/越权 fixture；完成后再由隔离的 AI 学科/QA 子 Agent执行机器复核。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭。
+`Gate A：阶段 -1 出口验收`。产品方向和机器复核角色已明确；WORK-2026-004 的 v1 数据/门禁和 `TR-20260813-003/004` 保持历史证据，不改写为 AI 签字。v2 contract、确定性 mock/replay harness、证据 ledger、同源披露和安全 fixture 已由失败测试驱动实现；下一动作是冻结实现提交与测试证据，再由隔离的 AI 学科/QA 子 Agent复核该不可变 artifact。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭。

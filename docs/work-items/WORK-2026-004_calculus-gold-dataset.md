@@ -9,7 +9,7 @@ related_ids: [CHG-2026-001, ADR-0015, REQ-2026-002, REQ-2026-003, REQ-2026-004, 
 target_stage: "阶段 -1 / 阶段 0 入口准备"
 risk: high
 created_at: 2026-08-13T18:25:00+08:00
-updated_at: 2026-08-13T21:05:00+08:00
+updated_at: 2026-08-13T22:15:00+08:00
 ```
 
 ## 问题与结果
@@ -45,10 +45,10 @@ updated_at: 2026-08-13T21:05:00+08:00
 - [x] 错误和恢复路径：CLI 返回稳定 `calculus_dataset_invalid` 和非零；校验失败不得进入 parser/AI eval；远端资源变化时保留旧 hash，创建新 dataset 版本。
 - [x] 回滚/禁用方法：回退实现提交 `e918fdf`；不得删除上游许可/来源记录来“消除”限制。
 - [x] AC-7：独立复核执行包通过 schema、dataset ID/version/hash、30/40/50 精确覆盖和签字状态校验；待签模板通过普通门，`require complete` 硬门在学科复核与 QA 均签字前以稳定错误和非零退出阻断。
-- [ ] AC-8：v2 machine attestation contract 完整记录 actor/run/lineage、provider/model/revision、prompt/context/tool-policy/harness/input/output hash、证据/反证、不确定性和工具轨迹。
-- [ ] AC-9：AI 学科与 QA 使用不同 run/prompt/context，QA 绑定冻结学科 artifact；共享会话硬失败，相同模型/Provider 自动标为 `correlated_review`。
-- [ ] AC-10：确定性 mock/replay harness 覆盖 accept/dispute/abstain/inconclusive、第三方裁决、30/40/50 覆盖、提示注入、工具越权、输入漂移、伪引用、超时和预算失败。
-- [ ] AC-11：机器审查只能进入 `machine_reviewed`/`machine_verified`；`accepted_with_owner_risk` 显式绑定 owner、风险、范围、内容 hash、policy、时间/期限，且不能豁免硬安全不变量。
+- [x] AC-8：v2 machine attestation contract 完整记录 actor/run/lineage、provider/model/revision、prompt/context/tool-policy/harness/input/output hash、证据/反证、不确定性和工具轨迹。
+- [x] AC-9：AI 学科与 QA 使用不同 run/prompt/context，QA 绑定冻结学科 artifact；共享会话硬失败，相同模型/Provider 自动标为 `correlated_review`。
+- [x] AC-10：确定性 mock/replay harness 覆盖 accept/dispute/abstain/inconclusive、第三方裁决、30/40/50 覆盖、提示注入、工具越权、输入漂移、伪引用、超时和预算失败。
+- [x] AC-11：机器审查只能进入 `machine_reviewed`/`machine_verified`；`accepted_with_owner_risk` 显式绑定 owner、风险、范围、内容 hash、policy、时间/期限，且不能豁免硬安全不变量。
 
 ## 验证计划
 
@@ -60,13 +60,13 @@ updated_at: 2026-08-13T21:05:00+08:00
 | TC-DATA-004 | security/legal | 署名、许可、非商业与 ShareAlike 元数据 | 缺失时失败 | TR-20260813-003 |
 | TC-DATA-005 | visual | 代表页面 Poppler render | 清晰、页码/章节可辨 | TR-20260813-003 |
 | TC-DATA-006 | contract/review | 独立复核包绑定、覆盖、分歧与双签门 | 待签模板合法；缺项/重复/hash 漂移/伪签字失败 | TR-20260813-004 |
-| TC-AIREV-001..010 | contract/security/replay | v2 provenance、隔离、证据、搜索、失败与风险接受 | mock/replay 可重跑；所有硬不变量失败关闭 | 待实现 |
+| TC-AIREV-001..010 | contract/security/replay | v2 provenance、隔离、证据、搜索、失败与风险接受 | mock/replay 可重跑；所有硬不变量失败关闭 | 实现测试 28/28；正式 TR 待独立 AI QA |
 
 ## 交付物与关闭
 
 - Commit/PR：数据集 `e918fdf915d635760a86842ba1ccee933f962ed1`；复核门 `232d0cdc48c25d8cd986013ea21b8060fd37336f`；无远端 PR。
-- Contract/ADR/migration/prompt：eval fixture schema v1；无产品 migration/prompt。
+- Contract/ADR/migration/prompt：eval fixture schema v1；v2 machine review schema + review policy/prompt/context v2；无产品 migration。
 - Test Run：`TR-20260813-003`（数据集作者验证）与 `TR-20260813-004`（独立复核门验证）均为 CONDITIONAL GO；真实独立复核待完成。
 - Release：无；仅非商业研发 fixture。
 - 观察结果：复核门实现提交上 43/43 Python、1/1 Web 及完整本地门通过；待签包普通门通过，完成门按预期以 `calculus_review_invalid`/退出 1 阻断；此前 7 张代表页清晰可辨。
-- 未完成项：按 CHG-2026-001/ADR-0015 实现 v2 contract、mock harness 和安全 fixture，并由隔离的 AI 学科/QA 子 Agent执行机器复核；v1 不接受 AI 伪签，真实联网另受 WORK-2026-007/008 门控制。
+- 未完成项：v2 contract、mock harness 和安全 fixture 已实现并通过本地完整门，仍需形成实现提交和不可变测试报告，并由隔离的 AI 学科/QA 子 Agent复核；v1 不接受 AI 伪签，真实联网另受 WORK-2026-007/008 门控制。

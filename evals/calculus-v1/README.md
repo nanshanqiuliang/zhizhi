@@ -19,6 +19,8 @@
 - `REVIEW.md`：作者复核和独立学科复核状态；
 - `independent-review.json`：绑定数据摘要的 30/40/50 逐条待签复核包；
 - `INDEPENDENT_REVIEW_GUIDE.md`：独立学科和 QA 的分离复核步骤；
+- `review-policy.v2.json`：版本化角色 prompt、context scope、工具 allowlist 和风险豁免边界；
+- `schema/machine-review.schema.json`：v2 subject/QA/裁决/evidence machine attestation contract；
 - `source/`：哈希固定的上游第 2 章 PDF。
 
 ## 验证
@@ -27,10 +29,11 @@
 uv run python -m scripts.validate_calculus_dataset
 uv run pytest tests/contract/test_calculus_dataset.py
 uv run python -m scripts.validate_calculus_review
+uv run python -m scripts.validate_ai_review_harness
 ```
 
 任何 hash、许可、计数、引用、DAG 或复核覆盖校验失败都会阻断后续 parser/AI eval。`--require-complete` 在独立学科和 QA 双签前应稳定失败，因此本数据集当前不能成为批准的质量基线。
 
 ## v2 需求迁移说明
 
-用户已在 CHG-2026-001 中明确采用 AI 子 Agent自动复核。当前 `independent-review.json` 和 `--require-complete` 属于 v1 真人签字 contract，作为历史证据保留，不得把 AI 名称填入其中伪造真人签字。下一实现将在同一工作项新增 v2 machine attestation、确定性 harness、搜索证据 ledger 和 AI 学科/QA 隔离门；v2 通过前，本数据集继续保持 `author_reviewed`。
+用户已在 CHG-2026-001 中明确采用 AI 子 Agent自动复核。当前 `independent-review.json` 和 `--require-complete` 属于 v1 真人签字 contract，作为历史证据保留，不得把 AI 名称填入其中伪造真人签字。现有 v2 原型仅使用确定性 mock/replay SearchProvider：同源模型只得到 `machine_reviewed` 并披露 `correlated_review`，跨 Provider/模型 fixture 才可得到 `machine_verified`。它不联网、不调用真实 LLM、不修改 `gold.json`，也不把数据集状态提升为真人 `approved`。

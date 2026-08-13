@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-tree-agent.local/schema/calculus-machine-review.v2.json",
+  "title": "Calculus Machine Review v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "review_id",
+    "machine_state",
+    "input_manifest",
+    "correlation",
+    "subject_artifact",
+    "adjudication_artifact",
+    "qa_artifact",
+    "failure",
+    "owner_risk_acceptance"
+  ],
+  "properties": {
+    "schema_version": {"const": "calculus-machine-review.v2"},
+    "review_id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "machine_state": {
+      "enum": ["machine_reviewed", "machine_verified", "inconclusive", "accepted_with_owner_risk"]
+    },
+    "input_manifest": {"$ref": "#/$defs/inputManifest"},
+    "correlation": {"$ref": "#/$defs/correlation"},
+    "subject_artifact": {"$ref": "#/$defs/subjectArtifact"},
+    "adjudication_artifact": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/adjudicationArtifact"}]
+    },
+    "qa_artifact": {"$ref": "#/$defs/qaArtifact"},
+    "failure": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/failure"}]
+    },
+    "owner_risk_acceptance": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/ownerRiskAcceptance"}]
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "uuid": {"type": "string", "format": "uuid"},
+    "versionedHash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sha256"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "inputManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dataset_id", "dataset_version", "dataset_sha256", "policy_sha256"],
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "dataset_version": {"type": "string", "minLength": 1},
+        "dataset_sha256": {"$ref": "#/$defs/sha256"},
+        "policy_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "shared_provider", "shared_model"],
+      "properties": {
+        "classification": {"enum": ["independent_review", "correlated_review"]},
+        "shared_provider": {"type": "boolean"},
+        "shared_model": {"type": "boolean"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_type",
+        "role_id",
+        "agent_run_id",
+        "lineage_id",
+        "session_id",
+        "provider",
+        "model_id",
+        "model_revision",
+        "prompt",
+        "context",
+        "tool_policy",
+        "harness"
+      ],
+      "properties": {
+        "actor_type": {"const": "ai_agent"},
+        "role_id": {
+          "enum": ["ai_subject_reviewer", "ai_qa_auditor", "ai_dispute_adjudicator"]
+        },
+        "agent_run_id": {"$ref": "#/$defs/uuid"},
+        "lineage_id": {"$ref": "#/$defs/uuid"},
+        "session_id": {"$ref": "#/$defs/uuid"},
+        "provider": {"type": "string", "minLength": 1},
+        "model_id": {"type": "string", "minLength": 1},
+        "model_revision": {"type": "string", "minLength": 1},
+        "prompt": {"$ref": "#/$defs/versionedHash"},
+        "context": {"$ref": "#/$defs/versionedHash"},
+        "tool_policy": {"$ref": "#/$defs/versionedHash"},
+        "harness": {"$ref": "#/$defs/versionedHash"}
+      }
+    },
+    "toolCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["call_id", "tool_id", "query_sha256", "result_sha256", "status"],
+      "properties": {
+        "call_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+        "tool_id": {"type": "string", "minLength": 1},
+        "query_sha256": {"$ref": "#/$defs/sha256"},
+        "result_sha256": {"$ref": "#/$defs/sha256"},
+        "status": {"enum": ["succeeded", "failed", "denied"]}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "claim_id",
+        "source_id",
+        "source_kind",
+        "locator",
+        "content_sha256",
+        "retrieved_at",
+        "untrusted_instructions_detected",
+        "instructions_ignored"
+      ],
+      "properties": {
+        "evidence_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+        "claim_id": {"type": "string", "minLength": 1},
+        "source_id": {"type": "string", "minLength": 1},
+        "source_kind": {"enum": ["first_party_artifact", "replay_search"]},
+        "locator": {"type": "string", "minLength": 1},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "retrieved_at": {"type": "string", "format": "date-time"},
+        "untrusted_instructions_detected": {"type": "boolean"},
+        "instructions_ignored": {"type": "boolean"}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id",
+        "item_kind",
+        "item_id",
+        "decision",
+        "evidence_ids",
+        "counterevidence_ids",
+        "confidence",
+        "rationale",
+        "uncertainty"
+      ],
+      "properties": {
+        "claim_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+        "item_kind": {"enum": ["concept", "relation", "anchor"]},
+        "item_id": {"type": "string", "minLength": 1},
+        "decision": {"enum": ["accept", "dispute", "abstain", "inconclusive"]},
+        "evidence_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "counterevidence_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "rationale": {"type": "string", "minLength": 1},
+        "uncertainty": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "subjectArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "provenance",
+        "input_manifest",
+        "findings",
+        "evidence_ledger",
+        "tool_trace",
+        "artifact_sha256"
+      ],
+      "properties": {
+        "schema_version": {"const": "ai-subject-review.v2"},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "input_manifest": {"$ref": "#/$defs/inputManifest"},
+        "findings": {
+          "type": "array",
+          "minItems": 120,
+          "maxItems": 120,
+          "items": {"$ref": "#/$defs/finding"}
+        },
+        "evidence_ledger": {
+          "type": "array",
+          "minItems": 120,
+          "maxItems": 120,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "tool_trace": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/toolCall"}
+        },
+        "artifact_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "qaArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "provenance",
+        "input_manifest",
+        "subject_artifact_sha256",
+        "adjudication_artifact_sha256",
+        "decision",
+        "mechanical_checks",
+        "evidence_ledger",
+        "tool_trace",
+        "artifact_sha256"
+      ],
+      "properties": {
+        "schema_version": {"const": "ai-qa-report.v2"},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "input_manifest": {"$ref": "#/$defs/inputManifest"},
+        "subject_artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "adjudication_artifact_sha256": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+        },
+        "decision": {"enum": ["pass", "fail", "inconclusive"]},
+        "mechanical_checks": {
+          "type": "object",
+          "additionalProperties": {"type": "boolean"},
+          "minProperties": 1
+        },
+        "evidence_ledger": {
+          "type": "array",
+          "minItems": 120,
+          "maxItems": 120,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "tool_trace": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/toolCall"}
+        },
+        "artifact_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "adjudicationArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "provenance",
+        "input_manifest",
+        "subject_artifact_sha256",
+        "resolutions",
+        "artifact_sha256"
+      ],
+      "properties": {
+        "schema_version": {"const": "ai-dispute-resolution.v2"},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "input_manifest": {"$ref": "#/$defs/inputManifest"},
+        "subject_artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "resolutions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["claim_id", "decision", "rationale"],
+            "properties": {
+              "claim_id": {"type": "string", "minLength": 1},
+              "decision": {"enum": ["accept_proposed", "reject_proposed", "inconclusive"]},
+              "rationale": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "artifact_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "retryable", "detail"],
+      "properties": {
+        "code": {"enum": ["provider_timeout", "budget_exceeded", "review_inconclusive"]},
+        "retryable": {"type": "boolean"},
+        "detail": {"type": "string", "minLength": 1}
+      }
+    },
+    "ownerRiskAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner_id",
+        "risk_codes",
+        "scope",
+        "content_sha256",
+        "policy_sha256",
+        "accepted_at",
+        "expires_at"
+      ],
+      "properties": {
+        "owner_id": {"type": "string", "minLength": 1},
+        "risk_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z0-9_]+$"}
+        },
+        "scope": {"type": "string", "minLength": 1},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "policy_sha256": {"$ref": "#/$defs/sha256"},
+        "accepted_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}

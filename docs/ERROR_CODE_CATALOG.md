@@ -45,12 +45,12 @@
 | `unsafe_path` | Security/Desktop | no | 重新选择授权路径 | security.path_rejected | RB-SEC 待建 | 待建 | planned |
 | `permission_denied` | Security | no | 请求适当权限 | security.permission_denied | RB-SEC 待建 | 待建 | planned |
 | `prompt_injection_suspected` | AI/Security | no auto retry | 审核来源 | security.prompt_injection | RB-SEC 待建 | 待建 | planned |
-| `review_input_drifted` | AI Review/Harness | no | 重新冻结输入并重跑 | ai_review.input_drifted | RB-AIREV-001 待建 | TC-AIREV-001 | planned |
-| `review_provenance_invalid` | AI Review/Harness | no | 检查 run/prompt/tool/input manifest | ai_review.provenance_invalid | RB-AIREV-001 待建 | TC-AIREV-001/002 | planned |
-| `review_tool_denied` | AI Review/Security | no | 检查角色工具策略 | ai_review.tool_denied | RB-AIREV-001 待建 | TC-AIREV-004/005 | planned |
-| `review_evidence_invalid` | AI Review/Evidence | depends | 补充或重新获取证据 | ai_review.evidence_invalid | RB-AIREV-001 待建 | TC-AIREV-003/007 | planned |
-| `review_inconclusive` | AI Review/Policy | yes with new run | 查看缺证据/冲突/预算原因 | ai_review.inconclusive | RB-AIREV-001 待建 | TC-AIREV-006 | planned |
-| `review_correlated_agents` | AI Review/Policy | no automatic strong pass | 使用不同模型或由 owner 接受残余风险 | ai_review.correlated | RB-AIREV-001 待建 | TC-AIREV-002/009 | planned |
+| `review_input_drifted` | AI Review/Harness | no | 重新冻结输入并重跑 | ai_review.input_drifted | RB-AIREV-001 待建 | TC-AIREV-001 | prototype |
+| `review_provenance_invalid` | AI Review/Harness | no | 检查 run/prompt/tool/input manifest | ai_review.provenance_invalid | RB-AIREV-001 待建 | TC-AIREV-001/002 | prototype |
+| `review_tool_denied` | AI Review/Security | no | 检查角色工具策略 | ai_review.tool_denied | RB-AIREV-001 待建 | TC-AIREV-004/005 | prototype |
+| `review_evidence_invalid` | AI Review/Evidence | depends | 补充或重新获取证据 | ai_review.evidence_invalid | RB-AIREV-001 待建 | TC-AIREV-003/007 | prototype |
+| `review_inconclusive` | AI Review/Policy | yes with new run | 查看缺证据/冲突/预算原因 | ai_review.inconclusive | RB-AIREV-001 待建 | TC-AIREV-006 | prototype |
+| `review_correlated_agents` | AI Review/Policy | no automatic strong pass | 使用不同模型或由 owner 接受残余风险 | ai_review.correlated | RB-AIREV-001 待建 | TC-AIREV-002/009 | prototype |
 | `internal_error` | Boundary | depends | 复制 ID/导出诊断包 | application.internal_error | RB-DIAG-001 | 待建 | planned |
 
 ## 新错误码 Definition of Done

@@ -14,9 +14,9 @@
 | NFR-2026-007 | DeepSeek 失败可定位、重试有界且不重复副作用 | WORK-2026-007/008 | error/config/model-policy v1 | — | TC-LLM-005..008 待建 | — | RB-PROV-001 draft | planned |
 | NFR-2026-008 | DeepSeek 进入路由前有真实质量/成本/延迟证据 | WORK-2026-004/008 | calculus-gold.v1 输入已作者复核；historical v1 门已建；machine review v2、capability snapshot + eval contract 待建 | `e918fdf`、`232d0cd`（仅 eval input/v1 gate） | TR-20260813-003/004 CONDITIONAL GO；v2 AI 学科/QA 机器复核及 EVAL-LLM-001 待建 | — | Provider SLI 待建 | partially_verified |
 | REQ-2026-001 | 个人使用、本地优先 AI Agent App | WORK-2026-002/010 | PRD v0.2；ADR-0015 proposed | — | 产品方向已确认；实现/E2E 待建 | — | 用户手册待实现 | specified |
-| REQ-2026-002..005 | Harness 自动搜索查证、AI 学科/QA/裁决子 Agent、机器证明与 owner 风险接受 | WORK-2026-004/010 | CHG-2026-001；ADR-0015；ROLE_CARDS v0.1 | — | TC-AIREV-001..010 待执行 | — | AI review runbook 待建 | specified |
-| NFR-2026-009 | AI 审查 provenance、最小权限、隔离与同源披露 | WORK-2026-004/010 | review v2/evidence ledger/tool policy 待建 | — | contract/security/replay 待执行 | — | review SLI/runbook 待建 | planned |
-| RISK-2026-010..012 | 同源偏差、搜索污染、harness 共同缺陷 | WORK-2026-004/010 | ADR-0015 / source+tool policy 待建 | — | mutation/injection/correlation tests 待执行 | — | RB-AIREV-001 待建 | planned |
+| REQ-2026-002..005 | Harness 自动搜索查证、AI 学科/QA/裁决子 Agent、机器证明与 owner 风险接受 | WORK-2026-004/010 | CHG-2026-001；ADR-0015；ROLE_CARDS v0.1；calculus machine review/policy v2 prototype | 待本轮实现提交 | TC-AIREV-001..010 mock/security/replay 28/28 本地通过；正式 TR/产品化待完成 | — | AI review runbook 待建 | partially_implemented |
+| NFR-2026-009 | AI 审查 provenance、最小权限、隔离与同源披露 | WORK-2026-004/010 | machine review v2 / evidence ledger / role tool policy prototype | 待本轮实现提交 | run/prompt/context/artifact 隔离、同源披露、越权/注入/漂移测试本地通过；正式 TR 待建 | — | review SLI/runbook 待建 | partially_implemented |
+| RISK-2026-010..012 | 同源偏差、搜索污染、harness 共同缺陷 | WORK-2026-004/010 | ADR-0015 / v2 replay source + tool policy prototype | 待本轮实现提交 | correlation/injection/false-citation/binding/replay 测试本地通过；跨实现 mutation 校准待完成 | — | RB-AIREV-001 待建 | partially_implemented |
 
 ## 完整性规则
 

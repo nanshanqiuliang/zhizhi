@@ -55,8 +55,11 @@ REQUIRED_PATHS = (
     "tests/security",
     "evals/calculus-v1/gold.json",
     "evals/calculus-v1/independent-review.json",
+    "evals/calculus-v1/review-policy.v2.json",
     "evals/calculus-v1/schema/gold.schema.json",
     "evals/calculus-v1/schema/independent-review.schema.json",
+    "evals/calculus-v1/schema/machine-review.schema.json",
+    "evals/calculus-v1/schema/review-policy.schema.json",
 )
 
 SECRET_RULES: Mapping[str, re.Pattern[str]] = {

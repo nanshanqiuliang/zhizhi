@@ -83,6 +83,18 @@
 - 验证：本轮只验证文档一致性和仓库门；不声称 harness 或自动审查已实现。
 - 遗留风险/Owner/期限：同源模型偏差、搜索提示注入/漂移和 harness 共同缺陷已登记 RISK-2026-010..012；由后续 TC-AIREV 安全/变异/eval 门处理。
 
+## 2026-08-13 22:15 — AI 机器复核 v2 离线原型进入本地门
+
+- 关联 ID：WORK-2026-004、ADR-0015、TC-AIREV-001..010。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；harness `calculus-ai-review-harness.v2.mock.1`；实现提交待冻结。
+- 操作者：Codex（实现与分时验证；正式隔离 AI 学科/QA 复核尚未执行）。
+- 变更或症状：默认离线仓库门新增 30/40/50 subject/QA ReplaySearchProvider 复放，输出 `machine_reviewed` / `correlated_review`；不解析 secret、不访问网络、不启动常驻进程。
+- 影响：无部署、数据库、真实 Provider、Web Search、用户数据或模型费用；不能用于声明产品自动复核已上线。
+- 证据：本轮工作树完整门 71/71 Python、1/1 Web 及 format/lint/mypy/peer/build 通过；正式 `TR-20260813-005` 与 checksum manifest 待提交后生成。
+- 缓解/回滚：删除/回退 v2 policy、schema、harness 和默认门集成即可禁用；v1 历史 artifact 保留。任何输入/证据/policy hash 漂移必须重放，不允许沿用旧状态。
+- 验证：同源披露、隔离、artifact 绑定、提示注入、越权、漂移、伪引用、timeout/budget、裁决和硬不变量风险豁免均有正/负向测试。
+- 遗留风险/Owner/期限：正式 QA 尚未对冻结提交复核；真实搜索的 SSRF/allowlist/版权与 Provider 失败仍未验证，继续保持关闭。
+
 ---
 
 ## 新条目模板

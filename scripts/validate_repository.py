@@ -5,6 +5,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from scripts.ai_review_harness import (
+    MachineReviewValidationError,
+    ReplaySearchProvider,
+    build_mock_machine_review,
+    load_review_policy,
+    validate_machine_review,
+)
 from scripts.calculus_dataset_validation import (
     DatasetValidationError,
     load_and_validate_dataset,
@@ -39,6 +46,10 @@ def main() -> int:
         validate_dataset_semantics(root, dataset)
         review = load_and_validate_review(root)
         validate_review_semantics(root, review, dataset)
+        review_policy = load_review_policy(root)
+        replay_provider = ReplaySearchProvider.from_dataset(dataset)
+        machine_review = build_mock_machine_review(dataset, review_policy, replay_provider)
+        validate_machine_review(root, machine_review, dataset, review_policy, replay_provider)
 
         findings = find_suspected_secrets(repository_text_files(root))
         if findings:
@@ -47,15 +58,22 @@ def main() -> int:
                 for finding in findings
             ]
             raise RepositoryValidationError(f"suspected secrets found: {locations}")
-    except (DatasetValidationError, RepositoryValidationError, ReviewValidationError) as error:
+    except (
+        DatasetValidationError,
+        MachineReviewValidationError,
+        RepositoryValidationError,
+        ReviewValidationError,
+    ) as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
 
     profiles = len(policies["task_profiles"])
     provider_count = len(providers["providers"])
     print(
-        "PASS: repository skeleton, secret scan, LLM contracts, and calculus review packet "
-        f"({provider_count} providers, {profiles} task profiles, 30/40/50 review items)"
+        "PASS: repository skeleton, secret scan, LLM contracts, calculus review packet, "
+        "and v2 mock/replay harness "
+        f"({provider_count} providers, {profiles} task profiles, 30/40/50 review items, "
+        f"{machine_review['machine_state']})"
     )
     return 0
 
