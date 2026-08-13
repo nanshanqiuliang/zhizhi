@@ -241,3 +241,86 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Existing App still renders the engineering preview, so these tests are
   expected to fail. Exact next action: run and commit this red baseline before
   replacing the UI.
+
+## Step 3A recovery checkpoint — 2026-08-14 02:13 +08:00
+
+- Original product objective remains a Windows local-first personal note App:
+  notes and imported material can be organized as a manually editable tree;
+  later AI may propose source-linked tree changes, but may not bypass preview,
+  confirmation, locks, validation, history, or the user.
+- User-facing reporting convention remains active: each “继续推进/继续开发”
+  response names the plain-language roadmap step, its progress, overall MVP
+  progress, completed work, verification result, and exact next action.
+- Workspace evidence matches the prior checkpoint. The active clean branch is
+  `feature/WORK-2026-012-knowledge-tree-web-demo`; HEAD `4caa76a` is the committed
+  five-test red baseline and its parent `87fb402` is the Ready work-item boundary.
+- Completed and verified: Step 2 pure-domain GraphPatch validation plus
+  deterministic replay/undo/redo, with 154/154 Python tests, Web 1/1, production
+  build, mandatory repository gates, and role-separated QA PASS recorded under
+  `TR-20260814-002` and `TR-20260814-003`.
+- Completed and verified as intentionally failing: Step 3A scope/non-scope,
+  acceptance/risks/rollback/evidence are explicit; all five workspace component
+  tests fail against the old engineering status page, proving the product UI is
+  absent before implementation.
+- Partially complete: natural-language Step 3 “做出真正可操作的知识树网页” is
+  approximately 15%; overall personal MVP is approximately 25%.
+- Not started in Step 3A: the three-pane workspace implementation, component
+  green run, browser desktop/mobile verification, final repository gates,
+  role-separated UI QA, evidence/log/roadmap closure.
+- Intentionally not started: persistence/API/database, refresh survival, file
+  import/source viewer, AI/provider/network, real user data, and Tauri packaging.
+- Current risks: session-only state must be labelled honestly; pointer movement
+  and responsive layout need real-browser verification; this Web demo must not
+  be reported as persistence or AI completion. No current blocker exists.
+- Exact next action: replace `apps/web/src/App.tsx` and its styles with the
+  smallest in-memory sample workspace that satisfies the five committed tests,
+  then run the focused test suite and address only evidenced failures.
+
+## Step 3A component-green checkpoint — 2026-08-14 02:54 +08:00
+
+- Replaced the engineering status page with an in-memory, three-pane “知枝”
+  calculus workspace: course/note navigation, eight-node tree canvas, node
+  detail editor, add child, leaf-only deletion, pointer movement, auto-layout,
+  position locking, reset, and session undo/redo.
+- Capability boundaries are visible in the product: the header says “示例数据”
+  and “AI 未连接”; the sidebar says changes are retained only in the current
+  session; the source panel and footer state that imports/database are absent.
+- The first implementation run showed four failures caused by test DOM leaking
+  across cases and a non-anchored node-name regex matching the root. Standard
+  `afterEach(cleanup)` and exact accessible-name matching corrected the harness;
+  no acceptance behavior was removed or weakened.
+- Focused component result: `pnpm --filter @knowledge-tree/web test` passes
+  5/5 tests. Natural-language Step 3 is approximately 55%; overall personal MVP
+  is approximately 30%.
+- Current risk: compilation/lint/production build and real-browser desktop/mobile
+  layout have not yet been verified. In-memory undo does not yet use the Python
+  domain history across an API boundary and is not crash/refresh persistent.
+- Exact next action: run Web check and production build, fix only evidenced
+  issues, then launch the local preview and verify desktop plus mobile in the
+  in-app browser, including horizontal page overflow and core interactions.
+
+## Step 3A browser-verification checkpoint — 2026-08-14 02:58 +08:00
+
+- Web static gates pass: TypeScript project build, ESLint with zero warnings,
+  component tests 5/5, and Vite production build (16 modules) are green.
+- Desktop browser at 1440×900: exactly eight nodes render; the page itself has
+  zero horizontal/vertical overflow; the canvas owns its intended horizontal
+  scroll. Browser interaction verified edit/save, undo, redo, pointer drag,
+  position lock surviving auto-layout, add/delete child, and sample reset.
+- Browser interaction values: drag changed the selected node from
+  `left: 115px; top: 205px` to `left: 210px; top: 255px`; auto-layout preserved
+  that exact locked style; reset returned status `示例已重新载入`.
+- Mobile browser at 390×844: the document has zero horizontal page overflow;
+  canvas scrolling remains contained; the detail form follows below the canvas.
+  A follow-up fix centers the selected root on first mobile load and prevents a
+  zero-distance click from creating a false history item. Reverification shows
+  the root fully visible, page overflow 0, and Undo disabled before and after a
+  selection-only click.
+- Browser console verification found zero warning/error entries. Product title
+  is now `知枝 · 知识树笔记`.
+- Natural-language Step 3 is approximately 70%; overall personal MVP is
+  approximately 32%. The implementation remains sample/session-only and does
+  not claim persistence, imports, AI, or desktop packaging.
+- Exact next action: commit the green Web implementation with its repeatable
+  tests, hand the immutable SHA to role-separated QA, preserve the review
+  evidence, then run the complete repository gate suite before closure.

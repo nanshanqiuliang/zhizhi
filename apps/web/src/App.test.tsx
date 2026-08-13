@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
 function nodeButton(name: string) {
-  return screen.getByRole("button", { name: new RegExp(`概念：${name}`) });
+  return screen.getByRole("button", { name: new RegExp(`^概念：${name}$`) });
 }
 
 describe("knowledge tree workspace", () => {
