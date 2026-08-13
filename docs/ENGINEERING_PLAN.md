@@ -42,12 +42,13 @@
 | WORK-2026-011 | 纯领域修改回放与 LIFO 撤销/重做 | 已验证 prototype（持久化/owner 待后续） | graph_revision domain + QA | WORK-2026-005 / TR-20260814-002 | immutable entity delta、history/replay/undo/redo、ADR-0005 | `2425718` 红灯；`4fc8e60` 实现；`TR-20260814-003` QA PASS；专项 18/18、既有 graph 50/50、全仓 154/154、Web 1/1 |
 | WORK-2026-012 | 示例数据知识树 Web Demo | 已验证 developer demo | Web frontend + QA | WORK-2026-005/011 prototype verified | 三栏工作台、树画布、人工编辑/拖动/layout/会话 undo | `4caa76a` 原红灯；`5aab0e3` 实现；`c8c6bf9` QA P1 红灯；`fff1ce6` 修复；`TR-20260814-004` QA PASS；Web 6/6、Python 154/154 |
 | WORK-2026-013 | 本地 SQLite 持久化工作区 prototype | 已验证 prototype（UI/API 接入待后续） | local persistence + QA | WORK-2026-005/011 prototype verified；WORK-2026-012 已收口 | 数据目录、SQLite schema/migration、save/load 重启存活、备份/导出/删除、回滚、故障注入证据 | `1420b68` 红灯；`8e34a40` 实现；`TR-20260814-005` QA PASS；目标 21/21、全仓 175/175、Web 6/6 |
+| WORK-2026-014 | 本地持久化 API sidecar 与 Web 自动保存接入 | Ready | api + web integration + QA | WORK-2026-013 prototype verified | `apps/api` FastAPI loopback、CourseGraph GET/PUT/备份、Web 自动保存与保存状态 | TC-API-001..005 待红灯→绿灯 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 4 步浏览器接入 | SQLite 持久化内核 prototype 已由 TR-20260814-005 验证；浏览器自动保存/API/UI 接入尚未建项 | 建立独立 Ready 工作项，从失败 persistence API 红灯开始；不得把 prototype 冒充浏览器已保存 |
+| 第 4 步浏览器接入 | SQLite 持久化内核 prototype 已由 TR-20260814-005 验证；浏览器自动保存/API/UI 接入已建项 | WORK-2026-014 Ready；从失败 persistence API 红灯开始；不得把 prototype 冒充浏览器已保存 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门

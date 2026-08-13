@@ -443,3 +443,25 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   save-status), starting from failing persistence-API red tests.
 - Current blocker: none for offline Step 4 preparation. Real Provider/Web and
   owner acceptance remain separately gated and disabled.
+
+## Step 4B Ready checkpoint — 2026-08-14 07:55 +08:00
+
+- Active branch: `feature/WORK-2026-014-local-persist-api`.
+- Ready work item: `docs/work-items/WORK-2026-014_local-persist-api.md`.
+- Scope: local FastAPI sidecar under `apps/api` (loopback only, CORS Origin
+  allowlist, `/api/health`, CourseGraph GET/PUT, backup endpoint) plus Web
+  hookup (load saved graph, debounced auto-save, visible save status, offline
+  degradation when the API is unreachable). New deps: fastapi, uvicorn,
+  httpx2 (test) are already resolved and locked.
+- Reuses WORK-2026-013 workspace adapter and canonical graph validation; no
+  new canonical contract, no migration, no prompt changes.
+- Explicit non-capabilities: no Tauri packaging, no auth/token (deferred to
+  ADR-0011/SPK-009), no FTS5, no import/PDF, no AI/Provider, no cloud,
+  no encryption, no browser-direct SQLite.
+- Acceptance: TC-API-001..005 — health/loopback/CORS; PUT valid graph then GET
+  equal (revision preserved); invalid graph rejected without overwrite;
+  Web load/auto-save/status transitions; API-unreachable degradation keeps
+  drafts.
+- Exact next action: commit this Ready boundary, then add failing API
+  integration tests and Web component tests (mock fetch) before any sidecar or
+  frontend implementation.
