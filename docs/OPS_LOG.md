@@ -108,6 +108,19 @@
 - 验证：trace/claim/policy/session/live/owner 变异以及原有注入、越权、漂移、伪引用、timeout/budget、裁决测试均通过；QA 未发现新 P0/P1/P2。
 - 遗留风险/Owner/期限：真实搜索 SSRF/来源/版权、跨模型独立性、认证 owner 和产品状态机仍未验证；Owner 为 WORK-2026-007/008/010 对应角色，相关 gate 完成前保持关闭。
 
+## 2026-08-14 00:23 — 个人 MVP 开发默认值通过离线 QA 门
+
+- 关联 ID：WORK-2026-002、WORK-2026-005、TR-20260814-001。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；reviewed commit `10f249b3021da1577aa17eb114d3b44c20a2b0a2`。
+- 操作者：Codex（文档修正）；职责隔离 `ai_qa_auditor`（只读机器证明，非人类签字或 owner 接受）。
+- 变更或症状：首次 QA 的 1 P1/2 P2 治理缺陷由 superseding 提交修复；attempt 002 PASS 后仅开放 WORK-2026-005 的离线 schema/领域尖峰。
+- 时间线：`8ff376d` 决策基线 → QA-001 FAIL → `10f249b` 修正 → QA-002 PASS → `TR-20260814-001` 收口。
+- 影响：无部署、端口、进程、数据库、网络、Provider、用户数据、秘密或费用变化；当前网页仍只是工程状态页。
+- 证据：`docs/test-reports/TR-20260814-001_mvp-scope-decisions.md` 与 `evidence/TR-20260814-001/`；84/84 Python、Web 1/1 和完整本地门通过。
+- 缓解/回滚：回退 Ready/证据提交可停止 WORK-2026-005；禁止删除失败 attempt、伪造 owner 批准或借此开启 live 能力。
+- 验证：10/10 决策映射；QA-002 0 P0/P1/P2、无新发现、`correlated_review`。
+- 遗留风险/Owner/期限：Gate A、PRD/ADR 精确 owner 接受、仓库/许可证、预算、Embedding 和真实网络验收继续开放；不阻塞可回滚的离线 contract 测试。
+
 ---
 
 ## 新条目模板

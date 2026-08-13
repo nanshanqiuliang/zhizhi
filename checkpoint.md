@@ -14,11 +14,11 @@ The current user request is “继续开发”. Work has resumed at natural-lang
 
 - WORK-2026-004 is closed by commits `90e13d0` and `ae834d9`; its final evidence is `TR-20260813-005`.
 - The user-facing roadmap was committed at `5b0bc1c`.
-- Current branch: `feature/WORK-2026-002-mvp-decisions`.
-- Current natural-language step: Step 1, QA correction, approximately 85%; overall personal MVP approximately 15%.
+- Current branch is being handed off from `feature/WORK-2026-002-mvp-decisions` to `feature/WORK-2026-005-anchor-graphpatch-v1`.
+- Current natural-language step: Step 2, contract foundation, approximately 5%; overall personal MVP approximately 16%.
 - Commit `8ff376d0aa339143332a47500646b455148b1169` records the WORK-2026-002 / PRD v0.3 / ADR-0016 safe-default baseline. The ten architecture section 21 questions are mapped 10/10 and all repository gates passed at that commit.
-- Role-separated QA attempt 001 returned FAIL with 1 P1 and 2 P2 evidence/governance findings: unverified exact owner approval, stale frozen status records, and correlated-review wording inconsistent with the current fail-closed validator. It did not reject the substantive MVP scope.
-- The superseding correction candidate and preserved FAIL attestation under `evidence/TR-20260814-001/` are contained in the current commit once this checkpoint is recorded; WORK-2026-005 exists only as a `proposed` draft and no Step 2 implementation has begun.
+- Role-separated QA attempt 001 returned FAIL with 1 P1 and 2 P2 evidence/governance findings; commit `10f249b3021da1577aa17eb114d3b44c20a2b0a2` corrected all three. Attempt 002 passed with no P0/P1/P2 or new findings. Both attempts are preserved by `TR-20260814-001`.
+- WORK-2026-005 is Ready for offline implementation. No schema/domain implementation existed at the Ready gate; the exact next action is the mandatory failing contract-test baseline.
 - Real DeepSeek/Web, user data, database writes, owner authentication, and Embedding remain disabled or unresolved.
 
 Historical WORK-2026-004 implementation chain:
@@ -56,13 +56,13 @@ Historical WORK-2026-004 implementation chain:
 
 ## Remaining work
 
-- The superseding WORK-2026-002 status and attempt-001 evidence are synchronized and all repository gates pass; its complete commit SHA must be bound by QA attempt 002.
-- Obtain role-separated QA against the complete correction SHA; preserve attempt 002 and issue a repeatable test report.
-- If QA passes, close the Step 1 development-default gate without impersonating owner approval, make WORK-2026-005 Ready, switch to `feature/WORK-2026-005-anchor-graphpatch-v1`, and begin Step 2 with failing Anchor/GraphPatch contract tests.
+- Commit the `TR-20260814-001` evidence and Ready-state handoff, then switch to `feature/WORK-2026-005-anchor-graphpatch-v1`.
+- Create contract tests that fail because Anchor v1, CourseGraph snapshot v1, and GraphPatch v1 schemas do not yet exist.
+- Implement the smallest schema source and pure domain validator needed to turn those tests green, without database/API/UI/provider work.
 
 ## Current risks or blockers
 
-- No substantive blocker remains for the local, offline contract path; the current gate is evidence correction plus QA re-review.
+- No substantive blocker remains for the local, offline contract path; WORK-2026-005 is Ready.
 - Real-provider execution and owner authentication are explicitly out of scope and must remain disabled.
 - Subject and QA attestations may be correlated because the available agents can share a model/provider family; the evidence must disclose that correlation and cannot impersonate a human signature.
 - Repository ownership/public license and monetary LLM budgets remain unresolved; neither is required for the offline Step 2 contract, and both must remain gated rather than guessed.
@@ -76,7 +76,8 @@ Historical WORK-2026-004 implementation chain:
 - Final post-documentation gates also passed: repository validator, Ruff format/lint, mypy, pytest 84/84, pnpm frozen install/peers/check, Web 1/1, and production build.
 - WORK-2026-002 decision baseline `8ff376d`: 10/10 decision mapping and the same full repository gates passed; QA attempt 001 returned FAIL solely for the 1 P1/2 P2 governance findings now being corrected.
 - Superseding correction worktree: repository validator, Ruff format/lint, mypy, pytest 84/84, frozen pnpm install, peer check, Web 1/1, and production build all pass.
+- `TR-20260814-001`: role-separated QA attempt 002 passed immutable commit `10f249b` with 0 P0/P1/P2 and no new findings; attempt 001 remains preserved; classification is `correlated_review`, not owner acceptance.
 
 ## Exact next action
 
-Send the current immutable HEAD SHA to `ai_qa_auditor`. If it passes, freeze the QA evidence, mark WORK-2026-005 Ready, switch to its feature branch, and create the first deliberately failing contract tests. Keep real Provider/Web, user data, database writes, and owner acceptance disabled.
+Commit the QA/Ready handoff, switch to `feature/WORK-2026-005-anchor-graphpatch-v1`, and create the first deliberately failing schema contract tests. Keep real Provider/Web, user data, database writes, API/UI work, and owner acceptance disabled.

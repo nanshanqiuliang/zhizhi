@@ -1,0 +1,11 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run ruff format --check scripts tests
+uv run ruff check .
+uv run mypy scripts
+uv run pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+git diff --check 8ff376d0aa339143332a47500646b455148b1169 10f249b3021da1577aa17eb114d3b44c20a2b0a2

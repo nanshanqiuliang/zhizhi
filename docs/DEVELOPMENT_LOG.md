@@ -133,6 +133,17 @@
 - 回滚：不得回到伪造 owner 批准语义；若默认边界改变，应创建 superseding ADR/CHG。
 - 遗留风险与下一步：要求同一 QA 角色审查本 superseding 提交的完整 SHA；通过后将 WORK-2026-005 改为 Ready 并以失败契约测试启动第 2 步。
 
+## 2026-08-14 — 首版开发默认值 QA 通过并开放离线 GraphPatch 尖峰
+
+- 关联 ID：WORK-2026-002、WORK-2026-005、ADR-0016、TR-20260814-001。
+- 实际变化：职责隔离 QA attempt 002 对 `10f249b3021da1577aa17eb114d3b44c20a2b0a2` 给出 PASS，attempt 001 的 1 P1/2 P2 全部关闭且原始失败证据保留；WORK-2026-005 由 `proposed` 提升为 `ready`，自然语言开发进入第 2 步。
+- 影响模块/接口/schema/migration/prompt：本阶段仅固化验证报告和 Ready 状态，尚未新增 Anchor/GraphPatch schema、validator、migration 或 prompt。
+- 兼容性：PRD v0.3 继续 `in_review`、ADR-0016 继续 `proposed`；QA PASS 不冒充 workspace-owner 精确批准、阶段出口或发布授权。
+- 验证与证据：`TR-20260814-001`；10/10 决策映射、84/84 Python、Web 1/1 和完整本地门通过；QA attempt 002 为 0 P0/P1/P2、无新发现、`correlated_review`。
+- 性能/安全/运维影响：无运行时影响；无网络、Provider、用户数据、数据库或费用。
+- 回滚：回退 Ready/证据收口提交即可停止尖峰；不得删除失败 attempt 或回退到伪 owner 批准表述。
+- 遗留风险与下一步：切换 `feature/WORK-2026-005-anchor-graphpatch-v1`，从失败 Anchor/GraphPatch schema 契约测试开始；Gate A 和精确 owner 验收仍开放。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

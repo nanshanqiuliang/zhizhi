@@ -1,7 +1,7 @@
 # WORK-2026-005：冻结 Anchor / GraphPatch v1 并实现纯领域验证
 
 ```yaml
-status: proposed
+status: ready
 type: spike
 owner: Codex (domain/contracts implementation role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -23,7 +23,7 @@ updated_at: 2026-08-14T00:00:00+08:00
 - In scope：JSON Schema 单一事实源；Anchor 的 source state/selectors/status；课程图最小 snapshot；GraphPatch actor/confirmation/operations；概念、边、布局和锁定操作；DAG/版本/证据/锁校验；纯 Python validator；contract/property/security tests；TypeScript 类型生成入口设计。
 - Out of scope：数据库写入与 migration、FastAPI/OpenAPI、React Flow 页面、PDF.js resolver、真正 undo/redo 持久化、merge/split/snapshot、AI/Provider、网络和用户真实内容。
 - 受影响模块/接口/数据：`packages/contracts-*`、`packages/domain`、`docs/contracts`、`tests/contract|unit|security`；不接入产品数据库。
-- 依赖和假设：WORK-2026-002 的个人 MVP 开发默认值通过 QA 后，本工作项才能改为 `ready`；ADR-0016 的正式 owner 接受不是离线 spike 的前置条件，但阶段出口前仍需确认；业务 ID 使用 UUIDv7；JSON Schema 2020-12；当前只需要内存 snapshot 证明领域语义。
+- 依赖和假设：WORK-2026-002 的个人 MVP 开发默认值已由 `TR-20260814-001` QA PASS；ADR-0016 的正式 owner 接受不是离线 spike 的前置条件，但阶段出口前仍需确认；业务 ID 使用 UUIDv7；JSON Schema 2020-12；当前只需要内存 snapshot 证明领域语义。
 
 ## v1 最小契约
 

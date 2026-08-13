@@ -1,0 +1,18 @@
+TR-20260814-001 / WORK-2026-002
+reviewed commit: 10f249b3021da1577aa17eb114d3b44c20a2b0a2
+decision mapping: 10/10
+repository validator: PASS
+ruff format: PASS (17 files)
+ruff lint: PASS
+mypy: PASS (9 source files)
+pytest: PASS (84/84)
+pnpm frozen install: PASS
+pnpm peer check: PASS
+web check/test: PASS (1/1)
+web build: PASS
+QA attempt 001: FAIL (1 P1 / 2 P2; preserved)
+QA attempt 002: PASS (0 P0 / 0 P1 / 0 P2 / no new findings)
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data/database writes: none
