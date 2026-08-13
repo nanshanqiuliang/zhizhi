@@ -1,7 +1,7 @@
 # 稳定错误码目录
 
-> status: planned  
-> 当前没有实现。本目录定义未来错误码的治理方式；正式错误码须与 API contract、日志、UI 和 Runbook 同步。
+> status: partially_implemented
+> WORK-2026-005 已在纯领域 prototype 实现五个 Graph/Anchor 校验错误；API、日志、UI 和 Runbook 传播仍待后续工作项。
 
 ## 规则
 
@@ -15,11 +15,11 @@
 
 | Code | Layer/Owner | Retryable | 用户动作 | Event/Metric | Runbook | Test | 状态 |
 |---|---|---:|---|---|---|---|---|
-| `validation_failed` | API/Domain | no | 修正输入 | validation.failed | — | 待建 | planned |
-| `revision_conflict` | Graph | maybe | 刷新并处理冲突 | graph_patch.conflicted | RB-GRAPH 待建 | 待建 | planned |
-| `target_locked` | Graph | no | 解锁或保留人工内容 | graph_patch.lock_rejected | RB-GRAPH 待建 | 待建 | planned |
-| `graph_cycle_detected` | Graph | no | 修改关系 | graph_patch.cycle_rejected | RB-GRAPH 待建 | 待建 | planned |
-| `evidence_required` | Graph/AI | no | 补证据或保持草案 | graph_patch.evidence_rejected | — | 待建 | planned |
+| `validation_failed` | API/Domain | no | 修正输入 | validation.failed | — | TC-GRAPH/ANCH | prototype |
+| `revision_conflict` | Graph | maybe | 刷新并处理冲突 | graph_patch.conflicted | RB-GRAPH 待建 | TC-GRAPH-005 | prototype |
+| `target_locked` | Graph | no | 解锁或保留人工内容 | graph_patch.lock_rejected | RB-GRAPH 待建 | TC-GRAPH-004 | prototype |
+| `graph_cycle_detected` | Graph | no | 修改关系 | graph_patch.cycle_rejected | RB-GRAPH 待建 | TC-GRAPH-003 | prototype |
+| `evidence_required` | Graph/AI | no | 补证据或保持草案 | graph_patch.evidence_rejected | — | TC-GRAPH-004 | prototype |
 | `anchor_ambiguous` | Anchor | no | 用户选择候选 | anchor.ambiguous | RB-ANCH-001 | 待建 | planned |
 | `anchor_drifted` | Anchor | no | 修复锚点 | anchor.drifted | RB-ANCH-001 | 待建 | planned |
 | `resource_missing` | Resource | maybe | 重新授权/定位文件 | resource.missing | RB-APP/ANCH | 待建 | planned |
@@ -43,7 +43,7 @@
 | `job_cancelled` | Job | no | 可重新发起 | job.cancelled | RB-JOB-001 | 待建 | planned |
 | `budget_exceeded` | Provider/Policy | no until approved | 调整预算/继续 | provider.budget_exceeded | RB-PROV-001 | 待建 | planned |
 | `unsafe_path` | Security/Desktop | no | 重新选择授权路径 | security.path_rejected | RB-SEC 待建 | 待建 | planned |
-| `permission_denied` | Security | no | 请求适当权限 | security.permission_denied | RB-SEC 待建 | 待建 | planned |
+| `permission_denied` | Security | no | 请求适当权限 | security.permission_denied | RB-SEC 待建 | TC-GRAPH-004 actor spoof | prototype |
 | `prompt_injection_suspected` | AI/Security | no auto retry | 审核来源 | security.prompt_injection | RB-SEC 待建 | 待建 | planned |
 | `review_input_drifted` | AI Review/Harness | no | 重新冻结输入并重跑 | ai_review.input_drifted | RB-AIREV-001 待建 | TC-AIREV-001 | prototype |
 | `review_provenance_invalid` | AI Review/Harness | no | 检查 run/prompt/tool/input manifest | ai_review.provenance_invalid | RB-AIREV-001 待建 | TC-AIREV-001/002 | prototype |

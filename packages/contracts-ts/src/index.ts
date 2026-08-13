@@ -1,7 +1,2 @@
-/**
- * Contract generation placeholder.
- *
- * TypeScript API types must be generated from approved JSON Schema/OpenAPI;
- * handwritten domain enums are intentionally absent.
- */
-export const contractStatus = "not_frozen" as const;
+/** Generated public graph contract types. Do not hand-edit generated/graph-v1.ts. */
+export * from "./generated/graph-v1";

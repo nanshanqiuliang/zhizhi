@@ -4,8 +4,9 @@
   "private": true,
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "build": "pnpm --filter @knowledge-tree/web build",
-    "check": "pnpm --filter @knowledge-tree/web check",
+    "build": "pnpm --filter @knowledge-tree/contracts-ts check && pnpm --filter @knowledge-tree/web build",
+    "check": "pnpm --filter @knowledge-tree/contracts-ts check && pnpm --filter @knowledge-tree/web check",
+    "contracts:generate": "pnpm --filter @knowledge-tree/contracts-ts generate",
     "test": "pnpm --filter @knowledge-tree/web test"
   },
   "engines": {

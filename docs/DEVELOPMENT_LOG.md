@@ -155,6 +155,17 @@
 - 回滚：回退本红灯提交即可移除未实现测试；不得以删除测试替代实现关键不变量。
 - 遗留风险与下一步：实现 JSON Schema 单一事实源、schema-backed Python contract API 和纯领域 preview；再补全六类 operation 与属性/容量测试。
 
+## 2026-08-14 — 实现 Anchor/GraphPatch v1 纯领域 prototype
+
+- 关联 ID：WORK-2026-005、ADR-0001、ADR-0004、ADR-0006、ADR-0012、TC-GRAPH-001..005、TC-ANCH-001。
+- 实际变化：新增 canonical Draft 2020-12 schema、schema-backed Python contract API、schema 生成的 TypeScript enum、纯 GraphPatch preview，以及六类 operation、确认、revision、四维锁、DAG/cycle path、AI evidence/origin 防伪和输入不可变验证。
+- 影响模块/接口/schema/migration/prompt：新增 `knowledge-tree-graph.v1.schema.json` 和 GraphPatch/Anchor/CourseGraph v1 prototype；新增 Hypothesis 开发依赖与 CI schema/type drift 门；无 migration、API 或 prompt。
+- 兼容性：旧 placeholder TS contract 被生成入口替换；前端/存储尚未消费该 contract。新增边必须绑定 source/target revision；AI update 携带 operation evidence IDs。
+- 验证与证据：红灯 `44b6233`；当前目标套件 53/53，Ruff、严格 mypy、schema self-check、repository validator 和 TypeScript generation drift/tsc 通过；完整全仓门与职责隔离 QA 待执行。
+- 性能/安全/运维影响：纯内存、无网络/文件写/数据库/Provider/用户数据；错误 details 只含 rule/ID/revision/cycle path，不含正文。500 节点容量初值仍待基准测试。
+- 回滚：回退实现提交和 schema/generator 即可禁用未接入产品的 prototype；不得回退红灯测试来规避不变量。
+- 遗留风险与下一步：完整门、500 节点线性验证、冻结实现 SHA 和 QA；真正 persistence/operation log/inverse/undo/API/UI/resolver 仍后置。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

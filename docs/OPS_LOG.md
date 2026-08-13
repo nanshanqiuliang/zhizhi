@@ -121,6 +121,19 @@
 - 验证：10/10 决策映射；QA-002 0 P0/P1/P2、无新发现、`correlated_review`。
 - 遗留风险/Owner/期限：Gate A、PRD/ADR 精确 owner 接受、仓库/许可证、预算、Embedding 和真实网络验收继续开放；不阻塞可回滚的离线 contract 测试。
 
+## 2026-08-14 01:04 — Anchor/GraphPatch v1 prototype 进入 QA 前冻结门
+
+- 关联 ID：WORK-2026-005、TC-GRAPH-001..005、TC-ANCH-001。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；graph contract v1；实现提交待冻结。
+- 操作者：Codex（contract/domain 实现与分时验证；职责隔离 QA 尚未执行）。
+- 变更或症状：红灯 `44b6233` 后建立 canonical schema、Python validator、生成/类型检查的 TypeScript enum 和纯 GraphPatch preview；trusted actor 从 payload 外注入并阻断身份自证。
+- 时间线：WORK-005 Ready → `44b6233` 红灯 → 21/21 最小绿灯 → 53/53 边界/属性/安全/容量绿灯 → 完整门绿。
+- 影响：无部署、端口、常驻进程、数据库、API、UI、网络、Provider、用户数据、秘密或费用；网页可见能力未变化。
+- 证据：目标 53/53；全仓 Python 135/135、Web 1/1；repository/schema/generation drift、Ruff、scripts/domain strict mypy、locked installs/peers 和 production build 全通过。
+- 缓解/回滚：回退待冻结实现提交可禁用未接产品的 v1 prototype；保留红灯测试；不得删除锁/DAG/actor/evidence 校验作为回滚。
+- 验证：Anchor 四 selector、UUIDv7/hash、六 operation、确认门、端点/base revision、四维锁、任意长度 cycle path、AI evidence/origin/actor spoof、500 节点工程初值通过。
+- 遗留风险/Owner/期限：职责隔离 QA、正式 ADR/owner 接受、operation log/inverse/undo、持久化/API/UI/resolver 和产品性能指标待后续门。
+
 ---
 
 ## 新条目模板

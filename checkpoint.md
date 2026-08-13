@@ -15,10 +15,10 @@ The current user request is “继续开发”. Work has resumed at natural-lang
 - WORK-2026-004 is closed by commits `90e13d0` and `ae834d9`; its final evidence is `TR-20260813-005`.
 - The user-facing roadmap was committed at `5b0bc1c`.
 - Current branch is being handed off from `feature/WORK-2026-002-mvp-decisions` to `feature/WORK-2026-005-anchor-graphpatch-v1`.
-- Current natural-language step: Step 2, red contract baseline, approximately 10%; overall personal MVP approximately 16%.
+- Current natural-language step: Step 2, pre-QA freeze, approximately 70%; overall personal MVP approximately 20%.
 - Commit `8ff376d0aa339143332a47500646b455148b1169` records the WORK-2026-002 / PRD v0.3 / ADR-0016 safe-default baseline. The ten architecture section 21 questions are mapped 10/10 and all repository gates passed at that commit.
 - Role-separated QA attempt 001 returned FAIL with 1 P1 and 2 P2 evidence/governance findings; commit `10f249b3021da1577aa17eb114d3b44c20a2b0a2` corrected all three. Attempt 002 passed with no P0/P1/P2 or new findings. Both attempts are preserved by `TR-20260814-001`.
-- WORK-2026-005 is in progress. No schema/domain implementation existed at the Ready gate; the mandatory red baseline now fails with three collection ImportErrors because the contract/domain public APIs do not yet exist.
+- WORK-2026-005 is in progress. Red commit `44b6233` proved the public APIs were missing. The working implementation now has a canonical JSON Schema, schema-backed Python API, generated/typechecked TypeScript enums, and a pure GraphPatch preview domain service; 53 targeted tests and all repository gates pass.
 - Real DeepSeek/Web, user data, database writes, owner authentication, and Embedding remain disabled or unresolved.
 
 Historical WORK-2026-004 implementation chain:
@@ -56,9 +56,8 @@ Historical WORK-2026-004 implementation chain:
 
 ## Remaining work
 
-- Preserve the red baseline commit, then implement the smallest schema source and pure domain validator needed to turn it green.
-- Extend the green tests across the six v1 operations, locks, revision, endpoint/course, evidence, duplicate edge, and arbitrary-length DAG invariants.
-- Keep database/API/UI/provider and real user data out of this work item.
+- Freeze the implementation commit, then hand its complete SHA to role-separated QA; add regression tests for any finding before fixing it.
+- If QA passes, preserve evidence, move WORK-2026-005 to verification, and prepare the next work item without starting DB/API/UI early.
 
 ## Current risks or blockers
 
@@ -77,7 +76,8 @@ Historical WORK-2026-004 implementation chain:
 - WORK-2026-002 decision baseline `8ff376d`: 10/10 decision mapping and the same full repository gates passed; QA attempt 001 returned FAIL solely for the 1 P1/2 P2 governance findings now being corrected.
 - Superseding correction worktree: repository validator, Ruff format/lint, mypy, pytest 84/84, frozen pnpm install, peer check, Web 1/1, and production build all pass.
 - `TR-20260814-001`: role-separated QA attempt 002 passed immutable commit `10f249b` with 0 P0/P1/P2 and no new findings; attempt 001 remains preserved; classification is `correlated_review`, not owner acceptance.
+- WORK-2026-005 implementation worktree: target 53/53; full Python 135/135; Web 1/1; graph/LLM repository validator, Ruff, scripts/domain strict mypy, TypeScript generation drift/tsc, locked dependency/peer checks and production build all pass.
 
 ## Exact next action
 
-Commit the deliberately failing schema/domain contract tests, then add the schema-backed contracts API and pure graph-patch preview implementation. Keep real Provider/Web, user data, database writes, API/UI work, and owner acceptance disabled.
+Freeze the current Anchor/GraphPatch implementation commit and request role-separated QA against its full SHA. Keep real Provider/Web, user data, database writes, API/UI work, and owner acceptance disabled.

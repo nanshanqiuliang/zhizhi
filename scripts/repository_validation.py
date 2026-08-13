@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import SchemaError
 
 JsonObject = dict[str, Any]
 
@@ -46,6 +47,7 @@ REQUIRED_PATHS = (
     "packages/application/src/knowledge_tree_application",
     "packages/contracts-py/src/knowledge_tree_contracts",
     "packages/contracts-ts/src",
+    "docs/contracts/knowledge-tree-graph.v1.schema.json",
     "packages/infrastructure/src/knowledge_tree_infrastructure",
     "packages/algorithms/src/knowledge_tree_algorithms",
     "migrations/sqlite",
@@ -143,6 +145,18 @@ def load_and_validate_llm_config(root: Path) -> tuple[JsonObject, JsonObject]:
     _validate_schema(providers, provider_schema, providers_path)
     _validate_schema(policies, policy_schema, policies_path)
     return providers, policies
+
+
+def load_graph_contract_schema(root: Path) -> JsonObject:
+    """Load and self-validate the canonical graph contract source."""
+
+    path = root / "docs/contracts/knowledge-tree-graph.v1.schema.json"
+    schema = _load_json(path)
+    try:
+        Draft202012Validator.check_schema(schema)
+    except SchemaError as error:
+        raise RepositoryValidationError(f"{path}: invalid JSON Schema: {error}") from error
+    return schema
 
 
 def _deployment(

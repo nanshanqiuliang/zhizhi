@@ -46,8 +46,8 @@ updated_at: 2026-08-14T00:00:00+08:00
 
 - 顶层绑定 patch/course/base revision/actor/reason/confirmation/operations。
 - 本 spike 白名单：`create_concept`、`update_concept`、`create_edge`、`set_lock`、`upsert_annotation`、`set_layout_item`。
-- 每个 operation 有 `op_id`；修改既有目标必须携带 `expected_updated_revision_no`。
-- user patch 默认仍要求 confirmation，只有显式 `confirmed=true` 才可进入 apply-ready；AI/import/system patch 始终 `requires_confirmation=true` 且不能在本工作项 apply。
+- 每个 operation 有 `op_id`；修改既有目标必须携带 `expected_updated_revision_no`；创建边同时绑定 source/target revision。
+- user patch 默认仍要求 confirmation，只有显式 `confirmed=true` 且 payload actor 与外部可信 actor 上下文一致才可进入 apply-ready；AI/import/system patch 始终 `requires_confirmation=true` 且不能在本工作项 apply。
 - validator 只返回预览后的新 snapshot 与 findings；不写数据库、不改变输入、不执行副作用。
 
 ## 风险影响
@@ -61,15 +61,15 @@ updated_at: 2026-08-14T00:00:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：Anchor/GraphPatch/graph snapshot schema 可由 Draft 2020-12 validator 重跑，enum 只在 schema 定义。
-- [ ] AC-2：合法 user patch 产生确定性预览，input graph/patch 不变；确认状态明确。
-- [ ] AC-3：AI/import/system patch 无法绕过 preview/confirmation 或修改任一 locked 维度。
-- [ ] AC-4：`prerequisite_of` 的自环、重复边和任意长度环返回 `graph_cycle_detected` 或稳定对应错误，并给 cycle path/op id。
-- [ ] AC-5：revision 漂移、目标缺失、端点跨 course、证据缺失、非法 selector/bbox/quote 均失败关闭。
-- [ ] AC-6：人工创建不伪造 AI confidence；AI concept 至少有 source mention/evidence reference，AI prerequisite edge 至少一个 evidence ID。
-- [ ] AC-7：属性测试覆盖任意成功 patch 后 DAG、locked 不变、输入不可变和确定性。
-- [ ] 错误和恢复路径：每个拒绝不产生部分 snapshot；调用方可基于 code/details 修正或刷新后重试。
-- [ ] 回滚/禁用方法：删除/回退未接入产品的 v1 schema/validator 即可；不得用旧草案绕过后续 accepted contract。
+- [x] AC-1：Anchor/GraphPatch/graph snapshot schema 可由 Draft 2020-12 validator 重跑，enum 只在 schema 定义。
+- [x] AC-2：合法 user patch 产生确定性预览，input graph/patch 不变；确认状态明确。
+- [x] AC-3：AI/import/system patch 无法绕过 preview/confirmation 或修改任一 locked 维度。
+- [x] AC-4：`prerequisite_of` 的自环、重复边和任意长度环返回 `graph_cycle_detected` 或稳定对应错误，并给 cycle path/op id。
+- [x] AC-5：revision 漂移、目标缺失、端点跨 course、证据缺失、非法 selector/bbox/quote 均失败关闭。
+- [x] AC-6：人工创建不伪造 AI confidence；AI concept 至少有 source mention/evidence reference，AI prerequisite edge 至少一个 evidence ID，actor 不能伪装 origin。
+- [x] AC-7：属性测试覆盖任意成功 patch 后 DAG、locked 不变、输入不可变和确定性。
+- [x] 错误和恢复路径：每个拒绝不产生部分 snapshot；调用方可基于 code/details 修正或刷新后重试。
+- [x] 回滚/禁用方法：删除/回退未接入产品的 v1 schema/validator 即可；不得用旧草案绕过后续 accepted contract。
 
 ## 验证计划
 
@@ -86,7 +86,7 @@ updated_at: 2026-08-14T00:00:00+08:00
 
 - Commit/PR：分支 `feature/WORK-2026-005-anchor-graphpatch-v1`；先提交可重放红灯测试，再提交最小实现。
 - Contract/ADR/migration/prompt：Anchor/GraphPatch/graph snapshot v1 schema；补齐 ADR-0001/0004/0006/0012；无 migration/prompt。
-- Test Run：红灯基线已建立：目标测试在收集阶段出现 3 个预期 ImportError（`ContractValidationError` / `GraphPatchError` 尚不存在），退出码 1；无实现被提前引入。
+- Test Run：红灯提交 `44b6233`（exit 1，3 个预期 ImportError）；当前实现目标测试 53/53、全仓 Python 135/135、Web 1/1 通过，repository schema 门、TypeScript generation drift/tsc、Ruff、两层 mypy、locked install/peers 和 production build 均通过；职责隔离 QA 待冻结实现提交后执行。
 - Release：无；仅阶段 0 prototype contract。
-- 观察结果：待实现与职责隔离 QA。
+- 观察结果：三份 schema 视图、六类 operation preview、确认门、四维锁、revision、DAG/cycle path、evidence/origin 防伪已可离线重放；无 DB/API/UI 副作用。职责隔离 QA 待执行。
 - 未完成项的新 ID：持久化/revision/undo、API、UI、resolver、parser 分别进入后续工作项，不在本 spike 偷跑。

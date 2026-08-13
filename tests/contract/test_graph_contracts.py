@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 import pytest
-
+from jsonschema import Draft202012Validator
 from knowledge_tree_contracts import ContractValidationError, validate_contract
 
 JsonObject = dict[str, Any]
@@ -84,6 +86,8 @@ def valid_patch() -> JsonObject:
             {
                 "op_id": OP_ID,
                 "op": "create_edge",
+                "expected_source_revision_no": 0,
+                "expected_target_revision_no": 0,
                 "edge": {
                     "id": "00000000-0000-7000-8000-000000000009",
                     "course_id": COURSE_ID,
@@ -106,9 +110,7 @@ def valid_patch() -> JsonObject:
     ("contract_name", "factory"),
     [("anchor", valid_anchor), ("course_graph", valid_graph), ("graph_patch", valid_patch)],
 )
-def test_v1_contract_accepts_minimal_valid_document(
-    contract_name: str, factory: Any
-) -> None:
+def test_v1_contract_accepts_minimal_valid_document(contract_name: str, factory: Any) -> None:
     document = factory()
     before = deepcopy(document)
 
@@ -164,3 +166,53 @@ def test_contract_rejects_unknown_fields() -> None:
         validate_contract("course_graph", graph)
 
     assert raised.value.code == "validation_failed"
+
+
+def test_canonical_schema_is_valid_draft_2020_12_and_defines_enums_once() -> None:
+    root = (
+        Path(__file__).resolve().parents[2] / "docs/contracts/knowledge-tree-graph.v1.schema.json"
+    )
+    schema = json.loads(root.read_text(encoding="utf-8"))
+
+    Draft202012Validator.check_schema(schema)
+    assert schema["$defs"]["Origin"]["enum"] == ["user", "ai", "import", "system"]
+    assert schema["$defs"]["LockDimension"]["enum"] == [
+        "content",
+        "relations",
+        "position",
+        "annotations",
+    ]
+
+
+def test_contract_rejects_non_uuidv7_business_id() -> None:
+    graph = valid_graph()
+    graph["course_id"] = "00000000-0000-4000-8000-000000000002"
+
+    with pytest.raises(ContractValidationError) as raised:
+        validate_contract("course_graph", graph)
+
+    assert raised.value.code == "validation_failed"
+
+
+def test_contract_rejects_invalid_content_hash() -> None:
+    anchor = valid_anchor()
+    anchor["source_state"]["content_hash"] = "sha256:not-a-digest"
+
+    with pytest.raises(ContractValidationError) as raised:
+        validate_contract("anchor", anchor)
+
+    assert raised.value.code == "validation_failed"
+
+
+@pytest.mark.parametrize(
+    "selector",
+    [
+        {"type": "text_quote", "exact": "x" * 512, "prefix": "定义", "suffix": "结论"},
+        {"type": "heading_path", "path": ["第三章", "连续函数"]},
+    ],
+)
+def test_anchor_accepts_remaining_selector_boundaries(selector: JsonObject) -> None:
+    anchor = valid_anchor()
+    anchor["selectors"] = [selector]
+
+    validate_contract("anchor", anchor)

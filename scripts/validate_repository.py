@@ -26,6 +26,7 @@ from scripts.repository_validation import (
     RepositoryValidationError,
     find_suspected_secrets,
     load_and_validate_llm_config,
+    load_graph_contract_schema,
     missing_required_paths,
     repository_text_files,
     validate_llm_semantics,
@@ -41,6 +42,7 @@ def main() -> int:
 
         providers, policies = load_and_validate_llm_config(root)
         validate_llm_semantics(providers, policies)
+        load_graph_contract_schema(root)
 
         dataset = load_and_validate_dataset(root)
         validate_dataset_semantics(root, dataset)
@@ -70,7 +72,7 @@ def main() -> int:
     profiles = len(policies["task_profiles"])
     provider_count = len(providers["providers"])
     print(
-        "PASS: repository skeleton, secret scan, LLM contracts, calculus review packet, "
+        "PASS: repository skeleton, secret scan, graph/LLM contracts, calculus review packet, "
         "and v2 mock/replay harness "
         f"({provider_count} providers, {profiles} task profiles, 30/40/50 review items, "
         f"{machine_review['machine_state']})"

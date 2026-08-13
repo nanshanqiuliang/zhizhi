@@ -26,14 +26,14 @@ jobs:
           enable-cache: true
       - name: Install locked dependencies
         run: uv sync --locked --group dev
-      - name: Validate repository, LLM config, and pending calculus review packet
+      - name: Validate repository, graph/LLM contracts, and calculus review packet
         run: uv run python -m scripts.validate_repository
       - name: Format check
-        run: uv run ruff format --check scripts tests
+        run: uv run ruff format --check packages scripts tests
       - name: Lint
         run: uv run ruff check .
       - name: Type check
-        run: uv run mypy scripts
+        run: uv run mypy scripts && uv run mypy --strict packages/contracts-py/src packages/domain/src
       - name: Test
         run: uv run pytest
 
