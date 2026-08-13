@@ -175,7 +175,7 @@
 - 验证与证据：失败 attempt 保存在 `evidence/TR-20260814-002/ai-graph-qa-attempt-001.md`；修复后专项 50/50、仓库集成 4/4、全仓 Python 136/136、Web 1/1，repository validator、Ruff、两层 mypy、生成漂移/tsc、locked installs/peers 和 build 全通过。
 - 性能/安全/运维影响：GraphPatch/contract 冷启动不再文件 I/O；仍无网络、数据库、Provider、用户数据或常驻进程。
 - 回滚：不得回退到运行时读取仓库 schema 的实现；若生成链异常，应让 drift gate 失败并停止交付，不得手改派生 schema。
-- 遗留风险与下一步：职责隔离 QA 复审通过后生成 TR-20260814-002，并把 WORK-005 移入 verification；operation log/inverse/undo 仍属于下一独立工作项。
+- 遗留风险与下一步：职责隔离 QA attempt 002 已对 `b946855` PASS，0 P0/P1/P2、无新发现；`TR-20260814-002` 已生成并把 WORK-005 移入 verification。正式 ADR/owner 接受仍待阶段出口；operation log/inverse/undo 属于下一独立工作项。
 
 ## 2026-08-12 — 建立总体架构技术基线
 

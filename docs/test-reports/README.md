@@ -10,6 +10,7 @@
 | [TR-20260813-004](TR-20260813-004_calculus-independent-review-gate.md) | `232d0cd` | 微积分金标逐条复核包、内容绑定、分歧裁决与双签完成硬门 | CONDITIONAL GO | WORK-2026-004 |
 | [TR-20260813-005](TR-20260813-005_calculus-ai-review-v2.md) | `ae834d9` | 离线 AI 学科/QA/裁决、证据/trace/provenance、安全变异与完整门 | GO（仅 prototype；correlated） | WORK-2026-004 |
 | [TR-20260814-001](TR-20260814-001_mvp-scope-decisions.md) | `10f249b` | 个人 MVP 10/10 开发默认值、QA 修正和 WORK-2026-005 Ready 门 | GO（仅离线 contract；correlated） | WORK-2026-002/005 |
+| [TR-20260814-002](TR-20260814-002_anchor-graphpatch-v1.md) | `b946855` | Anchor/GraphPatch v1、纯领域预演、无 runtime 文件 I/O、锁/DAG/evidence/revision | GO（仅 prototype；correlated） | WORK-2026-005 |
 
 正式执行时：
 

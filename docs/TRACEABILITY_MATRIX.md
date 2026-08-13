@@ -4,9 +4,9 @@
 
 | 源 ID | 目标/风险 | WORK/CHG | ADR/Contract | Commit/PR | Test Case/Run | Release | 运行 SLI/Runbook | 状态 |
 |---|---|---|---|---|---|---|---|---|
-| NFR-2026-001 | 锁定项在 AI 重建中误改为 0 | WORK-2026-005 | GraphPatch v1 implementation candidate；ADR-0004/0006/0012 proposed | `44b6233` 红灯；`a25470c` 实现；`1278e79` QA 红灯；`5ff02a4` 修复 | TC-GRAPH-004：四维锁、actor spoof、输入不可变通过；专项 50/50；QA 复审/产品 E2E 待建 | — | RB-DATA/GRAPH 待建 | implementation_verification |
+| NFR-2026-001 | 锁定项在 AI 重建中误改为 0 | WORK-2026-005 | GraphPatch v1 prototype；ADR-0004/0006/0012 proposed | `44b6233` 红灯；`a25470c` 实现；`1278e79` QA 红灯；`5ff02a4` 修复；`b946855` | TC-GRAPH-004 / TR-20260814-002：四维锁、actor spoof、输入不可变、专项 50/50、QA PASS；产品 E2E 待建 | — | RB-DATA/GRAPH 待建 | prototype_verified |
 | NFR-2026-002 | 数字 PDF 页级锚点 ≥98%，区域 ≥90% | WORK-2026-004/005 | calculus-gold.v1 + machine review v2；Anchor v1 implementation candidate | `e918fdf`、`232d0cd`、`ae834d9`、`a25470c`、`5ff02a4` | TC-ANCH-001 selector/bbox/quote/UUID/hash 通过；50 个页级金标已验证；QA 复审/产品 resolver 指标未完成 | — | RB-ANCH-001 待建 | partially_verified |
-| NFR-2026-003 | prerequisite 子图保持 DAG | WORK-2026-005 | GraphPatch v1 implementation candidate；ADR-0001/0004 proposed | `44b6233` 红灯；`a25470c` 实现；`5ff02a4` I/O 修复 | TC-GRAPH-003：Hypothesis 前向链/反向环、自环/重复边、cycle path、500 节点初值通过；QA 复审待执行 | — | graph cycle metric 待产品化 | implementation_verification |
+| NFR-2026-003 | prerequisite 子图保持 DAG | WORK-2026-005 | GraphPatch v1 prototype；ADR-0001/0004 proposed | `44b6233` 红灯；`a25470c` 实现；`5ff02a4` I/O 修复；`b946855` | TC-GRAPH-003 / TR-20260814-002：Hypothesis 前向链/反向环、自环/重复边、cycle path、500 节点初值、QA PASS；产品 E2E 待建 | — | graph cycle metric 待产品化 | prototype_verified |
 | NFR-2026-004 | 任务崩溃恢复不重复提交 | 待建 | Job lease contract 待建 | — | TC-JOB 待建 | — | RB-JOB-001 待建 | planned |
 | NFR-2026-005 | 发布可还原、构建可验证 | WORK-2026-006 | ADR-0014 proposed；release manifest 待建 | `bd66e8b` | TR-20260813-002（本地骨架） | — | RB-REL-001 待建 | partially_verified |
 | RISK-2026-004 | 遥测不得泄露敏感内容 | 待建 | telemetry catalog | — | security log test 待建 | — | RB-DIAG-001 待建 | planned |

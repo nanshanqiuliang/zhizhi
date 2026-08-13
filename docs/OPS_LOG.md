@@ -140,11 +140,11 @@
 - 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；红灯 `1278e79`；修复 `5ff02a4`。
 - 操作者：Codex（实现）；职责隔离 `graph_qa_fresh` attempt 001（机器证明，非人类签字/owner 接受）。
 - 变更或症状：QA 证明 `a25470c` 冷启动会从仓库 `docs/contracts` 读 schema，安装布局不可靠；现在运行时使用 canonical schema 的确定性 Python 派生产物，generator drift gate 同时约束 TS/Python。
-- 时间线：`a25470c` → QA-001 FAIL → `1278e79` 单测预期失败 → `5ff02a4` 修复 → 完整门绿 → 待 QA-002。
+- 时间线：`a25470c` → QA-001 FAIL → `1278e79` 单测预期失败 → `5ff02a4` 修复 → 完整门绿 → `b946855` → QA-002 PASS。
 - 影响：无部署、端口、数据库、API、UI、网络、Provider、用户数据、秘密或费用；网页能力未变化。
-- 证据：专项 50/50、仓库集成 4/4、全仓 Python 136/136、Web 1/1；完整本地门全部通过。
+- 证据：`TR-20260814-002`；专项 50/50、仓库集成 4/4、全仓 Python 136/136、Web 1/1；完整本地门全部通过；QA-002 为 0 P0/P1/P2、无新发现、`correlated_review`。
 - 缓解/回滚：生成漂移立即失败关闭；不得手改生成物或恢复运行时仓库路径依赖。
-- 遗留风险/Owner/期限：QA 复审、正式 ADR/owner 接受和下一工作项的回放/撤销仍待完成。
+- 遗留风险/Owner/期限：正式 ADR/owner 接受和下一工作项的回放/撤销仍待完成；机器 QA 不替代 owner 接受。
 
 ---
 

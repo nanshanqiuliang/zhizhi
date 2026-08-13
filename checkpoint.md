@@ -80,15 +80,10 @@ Historical WORK-2026-004 implementation chain:
 
 ## Exact next action
 
-Role-separated QA attempt 001 reviewed frozen commit
-`a25470c1a25bedaf57ff4beba9204bd255d75a2a` and returned FAIL. Preserve that
-attempt, add a failing regression proving contract/domain validation does not
-read the repository schema at runtime, then generate a Python schema artifact
-from the canonical JSON Schema and make runtime validation use the generated
-artifact. Correct the test accounting to 49 target tests plus 4 repository
-integration tests. Re-run the proportional gates, freeze the fix, and request a
-superseding QA review. Keep real Provider/Web, user data, database writes,
-API/UI work, and owner acceptance disabled.
+Seal `TR-20260814-002`, move WORK-2026-005 to prototype verification, then create
+a Ready Step 2B work item for deterministic operation replay and inverse patch
+generation. Start that item from failing pure-domain tests. Keep persistence,
+database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 
 ## Recovery checkpoint — 2026-08-14 01:21 +08:00
 
@@ -127,3 +122,19 @@ API/UI work, and owner acceptance disabled.
   Web 1/1, and production build.
 - Next exact action: commit corrected status accounting and send the resulting
   frozen SHA to role-separated QA for a superseding review.
+
+## QA closure checkpoint — 2026-08-14 01:30 +08:00
+
+- Superseding QA attempt 002 reviewed
+  `b946855c3f8d70a850f45ce2630303819c54e1dc` and returned PASS with no P0, P1,
+  P2, or new finding. The correlated machine review is not owner acceptance.
+- QA independently reran the cold-start I/O regression (1/1), graph target suite
+  (50/50), repository graph integration (4/4), TypeScript/Python generation
+  drift/tsc, and strict package mypy (five files).
+- Evidence is sealed under `evidence/TR-20260814-002/`; the report is
+  `docs/test-reports/TR-20260814-002_anchor-graphpatch-v1.md`.
+- Current natural-language position: Step 2 is approximately 80%; personal MVP
+  approximately 22%. Step 2A is prototype-verified; Step 2B replay/inverse/undo
+  is the next active work.
+- Next exact action: define a Ready work item for pure deterministic replay and
+  inverse patch generation, then commit its failing tests before implementation.

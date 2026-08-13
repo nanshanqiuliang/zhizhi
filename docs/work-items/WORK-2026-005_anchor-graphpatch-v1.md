@@ -1,7 +1,7 @@
 # WORK-2026-005：冻结 Anchor / GraphPatch v1 并实现纯领域验证
 
 ```yaml
-status: in_progress
+status: verification
 type: spike
 owner: Codex (domain/contracts implementation role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -9,7 +9,7 @@ related_ids: [REQ-2026-007, REQ-2026-008, REQ-2026-009, REQ-2026-010, NFR-2026-0
 target_stage: "阶段 0 / 自然语言第 2 步"
 risk: high
 created_at: 2026-08-14T00:00:00+08:00
-updated_at: 2026-08-14T01:26:00+08:00
+updated_at: 2026-08-14T01:30:00+08:00
 ```
 
 ## 问题与结果
@@ -86,7 +86,7 @@ updated_at: 2026-08-14T01:26:00+08:00
 
 - Commit/PR：分支 `feature/WORK-2026-005-anchor-graphpatch-v1`；先提交可重放红灯测试，再提交最小实现。
 - Contract/ADR/migration/prompt：Anchor/GraphPatch/graph snapshot v1 schema；补齐 ADR-0001/0004/0006/0012；无 migration/prompt。
-- Test Run：原始红灯提交 `44b6233`（exit 1，3 个预期 ImportError）；`a25470c` 的 QA attempt 001 返回 FAIL，发现冷启动间接文件 I/O 和测试计数错误；`1278e79` 以 1 个失败测试复现 I/O，`5ff02a4` 以 schema 生成的 Python runtime artifact 修复。当前专项 50/50、仓库 schema 集成 4/4、全仓 Python 136/136、Web 1/1 通过，repository schema 门、TypeScript/Python generation drift、tsc、Ruff、两层 mypy、locked install/peers 和 production build 均通过；职责隔离 QA 复审待执行。
+- Test Run：原始红灯提交 `44b6233`（exit 1，3 个预期 ImportError）；`a25470c` 的 QA attempt 001 返回 FAIL，发现冷启动间接文件 I/O 和测试计数错误；`1278e79` 以 1 个失败测试复现 I/O，`5ff02a4` 以 schema 生成的 Python runtime artifact 修复。专项 50/50、仓库 schema 集成 4/4、全仓 Python 136/136、Web 1/1 通过，repository schema 门、TypeScript/Python generation drift、tsc、Ruff、两层 mypy、locked install/peers 和 production build 均通过；QA attempt 002 对 `b946855` PASS，0 P0/P1/P2、无新发现，证据为 `TR-20260814-002`。
 - Release：无；仅阶段 0 prototype contract。
-- 观察结果：三份 schema 视图、六类 operation preview、确认门、四维锁、revision、DAG/cycle path、evidence/origin 防伪已可离线重放；冷启动验证不读取仓库文件，无 DB/API/UI 副作用。失败 QA 证据已保留，复审待执行。
+- 观察结果：三份 schema 视图、六类 operation preview、确认门、四维锁、revision、DAG/cycle path、evidence/origin 防伪已可离线重放；冷启动验证不读取仓库文件，无 DB/API/UI 副作用。失败 QA attempt 001 与通过 attempt 002 均已保留。
 - 未完成项的新 ID：持久化/revision/undo、API、UI、resolver、parser 分别进入后续工作项，不在本 spike 偷跑。
