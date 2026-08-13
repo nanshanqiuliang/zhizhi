@@ -144,6 +144,17 @@
 - 回滚：回退 Ready/证据收口提交即可停止尖峰；不得删除失败 attempt 或回退到伪 owner 批准表述。
 - 遗留风险与下一步：切换 `feature/WORK-2026-005-anchor-graphpatch-v1`，从失败 Anchor/GraphPatch schema 契约测试开始；Gate A 和精确 owner 验收仍开放。
 
+## 2026-08-14 — 建立 Anchor/GraphPatch v1 红灯契约基线
+
+- 关联 ID：WORK-2026-005、TC-GRAPH-001..005、TC-ANCH-001。
+- 实际变化：新增 Anchor、CourseGraph、GraphPatch 正/负契约测试，以及 preview/确认、revision、DAG、跨课程端点、四维锁和 AI evidence 安全测试；测试路径加入 contracts/domain 源目录。
+- 影响模块/接口/schema/migration/prompt：只新增测试和测试导入路径；尚未创建 schema、领域实现、migration 或 prompt。
+- 兼容性：既有 84 个 Python 测试未被改写；本红灯目标套件在收集阶段因两个预期公共 API 缺失而失败。
+- 验证与证据：`uv run pytest tests/contract/test_graph_contracts.py tests/unit/test_graph_patch.py tests/security/test_graph_patch_security.py -q`，exit 1，3 个收集错误；`ContractValidationError`、`GraphPatchError` 尚不存在。
+- 性能/安全/运维影响：无运行时、网络、数据库、Provider、用户数据或费用。
+- 回滚：回退本红灯提交即可移除未实现测试；不得以删除测试替代实现关键不变量。
+- 遗留风险与下一步：实现 JSON Schema 单一事实源、schema-backed Python contract API 和纯领域 preview；再补全六类 operation 与属性/容量测试。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

@@ -1,7 +1,7 @@
 # WORK-2026-005：冻结 Anchor / GraphPatch v1 并实现纯领域验证
 
 ```yaml
-status: ready
+status: in_progress
 type: spike
 owner: Codex (domain/contracts implementation role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -84,9 +84,9 @@ updated_at: 2026-08-14T00:00:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：待实现；分支 `feature/WORK-2026-005-anchor-graphpatch-v1`。
+- Commit/PR：分支 `feature/WORK-2026-005-anchor-graphpatch-v1`；先提交可重放红灯测试，再提交最小实现。
 - Contract/ADR/migration/prompt：Anchor/GraphPatch/graph snapshot v1 schema；补齐 ADR-0001/0004/0006/0012；无 migration/prompt。
-- Test Run：待建立。
+- Test Run：红灯基线已建立：目标测试在收集阶段出现 3 个预期 ImportError（`ContractValidationError` / `GraphPatchError` 尚不存在），退出码 1；无实现被提前引入。
 - Release：无；仅阶段 0 prototype contract。
 - 观察结果：待实现与职责隔离 QA。
 - 未完成项的新 ID：持久化/revision/undo、API、UI、resolver、parser 分别进入后续工作项，不在本 spike 偷跑。

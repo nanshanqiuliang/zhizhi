@@ -15,10 +15,10 @@ The current user request is “继续开发”. Work has resumed at natural-lang
 - WORK-2026-004 is closed by commits `90e13d0` and `ae834d9`; its final evidence is `TR-20260813-005`.
 - The user-facing roadmap was committed at `5b0bc1c`.
 - Current branch is being handed off from `feature/WORK-2026-002-mvp-decisions` to `feature/WORK-2026-005-anchor-graphpatch-v1`.
-- Current natural-language step: Step 2, contract foundation, approximately 5%; overall personal MVP approximately 16%.
+- Current natural-language step: Step 2, red contract baseline, approximately 10%; overall personal MVP approximately 16%.
 - Commit `8ff376d0aa339143332a47500646b455148b1169` records the WORK-2026-002 / PRD v0.3 / ADR-0016 safe-default baseline. The ten architecture section 21 questions are mapped 10/10 and all repository gates passed at that commit.
 - Role-separated QA attempt 001 returned FAIL with 1 P1 and 2 P2 evidence/governance findings; commit `10f249b3021da1577aa17eb114d3b44c20a2b0a2` corrected all three. Attempt 002 passed with no P0/P1/P2 or new findings. Both attempts are preserved by `TR-20260814-001`.
-- WORK-2026-005 is Ready for offline implementation. No schema/domain implementation existed at the Ready gate; the exact next action is the mandatory failing contract-test baseline.
+- WORK-2026-005 is in progress. No schema/domain implementation existed at the Ready gate; the mandatory red baseline now fails with three collection ImportErrors because the contract/domain public APIs do not yet exist.
 - Real DeepSeek/Web, user data, database writes, owner authentication, and Embedding remain disabled or unresolved.
 
 Historical WORK-2026-004 implementation chain:
@@ -56,9 +56,9 @@ Historical WORK-2026-004 implementation chain:
 
 ## Remaining work
 
-- Commit the `TR-20260814-001` evidence and Ready-state handoff, then switch to `feature/WORK-2026-005-anchor-graphpatch-v1`.
-- Create contract tests that fail because Anchor v1, CourseGraph snapshot v1, and GraphPatch v1 schemas do not yet exist.
-- Implement the smallest schema source and pure domain validator needed to turn those tests green, without database/API/UI/provider work.
+- Preserve the red baseline commit, then implement the smallest schema source and pure domain validator needed to turn it green.
+- Extend the green tests across the six v1 operations, locks, revision, endpoint/course, evidence, duplicate edge, and arbitrary-length DAG invariants.
+- Keep database/API/UI/provider and real user data out of this work item.
 
 ## Current risks or blockers
 
@@ -80,4 +80,4 @@ Historical WORK-2026-004 implementation chain:
 
 ## Exact next action
 
-Commit the QA/Ready handoff, switch to `feature/WORK-2026-005-anchor-graphpatch-v1`, and create the first deliberately failing schema contract tests. Keep real Provider/Web, user data, database writes, API/UI work, and owner acceptance disabled.
+Commit the deliberately failing schema/domain contract tests, then add the schema-backed contracts API and pure graph-patch preview implementation. Keep real Provider/Web, user data, database writes, API/UI work, and owner acceptance disabled.
