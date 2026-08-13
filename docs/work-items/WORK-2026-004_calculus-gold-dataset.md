@@ -60,7 +60,7 @@ updated_at: 2026-08-13T22:15:00+08:00
 | TC-DATA-004 | security/legal | 署名、许可、非商业与 ShareAlike 元数据 | 缺失时失败 | TR-20260813-003 |
 | TC-DATA-005 | visual | 代表页面 Poppler render | 清晰、页码/章节可辨 | TR-20260813-003 |
 | TC-DATA-006 | contract/review | 独立复核包绑定、覆盖、分歧与双签门 | 待签模板合法；缺项/重复/hash 漂移/伪签字失败 | TR-20260813-004 |
-| TC-AIREV-001..010 | contract/security/replay | v2 provenance、隔离、证据、搜索、失败与风险接受 | mock/replay 可重跑；所有硬不变量失败关闭 | 首轮 28/28 后经隔离学科 dispute 修复为 32/32；全套当前 75/75；正式 TR 待复核 |
+| TC-AIREV-001..010 | contract/security/replay | v2 provenance、隔离、证据、搜索、失败与风险接受 | mock/replay 可重跑；所有硬不变量失败关闭 | 首轮 28/28；两轮隔离学科 dispute 后 v2 32/32、全套 77/77；正式 TR 待复核 |
 
 ## 交付物与关闭
 
@@ -69,4 +69,4 @@ updated_at: 2026-08-13T22:15:00+08:00
 - Test Run：`TR-20260813-003`（数据集作者验证）与 `TR-20260813-004`（独立复核门验证）均为 CONDITIONAL GO；真实独立复核待完成。
 - Release：无；仅非商业研发 fixture。
 - 观察结果：复核门实现提交上 43/43 Python、1/1 Web 及完整本地门通过；待签包普通门通过，完成门按预期以 `calculus_review_invalid`/退出 1 阻断；此前 7 张代表页清晰可辨。
-- 未完成项：v2 contract、mock harness 和安全 fixture 已实现；首轮实现提交 `73a74da` 被隔离 AI 学科子 Agent以证据自证/错绑、范围和裁决 ledger 问题判定 `dispute`，当前修复待提交并复核。v1 不接受 AI 伪签，真实联网另受 WORK-2026-007/008 门控制。
+- 未完成项：v2 contract、mock harness 和安全 fixture 已实现；`73a74da` 后两轮隔离 AI 学科复核分别发现证据自证/错绑/范围/裁决 ledger 及 controlled-live assurance/裁决 position 问题，均已回归修复，最终修复待提交并复核。v1 不接受 AI 伪签，真实联网另受 WORK-2026-007/008 门控制。

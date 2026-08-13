@@ -774,6 +774,23 @@ def validate_machine_review(
             "machine_verified requires independent provider/model review"
         )
     assurance = cast(JsonObject, review["assurance"])
+    if assurance["product_eligible"] and not assurance["subject_evidence_established"]:
+        raise MachineReviewValidationError(
+            "product eligibility requires established subject evidence"
+        )
+    if review["machine_state"] in {"machine_reviewed", "machine_verified"} and not (
+        assurance["subject_evidence_established"] and assurance["product_eligible"]
+    ):
+        raise MachineReviewValidationError(
+            "machine review states require established subject evidence and product eligibility"
+        )
+    if (
+        review["machine_state"] == "accepted_with_owner_risk"
+        and not assurance["subject_evidence_established"]
+    ):
+        raise MachineReviewValidationError(
+            "owner risk acceptance cannot replace missing subject evidence"
+        )
     if assurance["execution_mode"] == "deterministic_mock_replay":
         if assurance != {
             "execution_mode": "deterministic_mock_replay",
@@ -833,6 +850,16 @@ def validate_machine_review(
                 if adjudication_evidence[evidence_id]["claim_id"] != resolution["claim_id"]:
                     raise MachineReviewValidationError(
                         f"adjudication evidence claim binding mismatch: {resolution['claim_id']}"
+                    )
+            for evidence_id in evidence_ids:
+                if adjudication_evidence[evidence_id]["position"] != "support":
+                    raise MachineReviewValidationError(
+                        f"adjudication support evidence has incorrect position: {evidence_id}"
+                    )
+            for evidence_id in counterevidence_ids:
+                if adjudication_evidence[evidence_id]["position"] != "counterevidence":
+                    raise MachineReviewValidationError(
+                        f"adjudication counterevidence has incorrect position: {evidence_id}"
                     )
         resolved = {
             resolution["claim_id"]

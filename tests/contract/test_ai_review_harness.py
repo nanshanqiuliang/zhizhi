@@ -154,6 +154,26 @@ def test_cross_provider_mock_is_independent_but_never_machine_verified() -> None
     assert review["assurance"]["product_eligible"] is False
 
 
+def test_controlled_live_cannot_be_product_eligible_without_subject_evidence() -> None:
+    review, dataset, provider = _review(same_model=False)
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    changed["assurance"] = {
+        "execution_mode": "controlled_live",
+        "evidence_basis": "controlled_sources",
+        "subject_evidence_established": False,
+        "product_eligible": True,
+    }
+    changed["machine_state"] = "machine_verified"
+    changed["failure"] = None
+    qa = changed["qa_artifact"]
+    qa["decision"] = "pass"
+    qa["artifact_sha256"] = _artifact_hash(qa)
+
+    with pytest.raises(MachineReviewValidationError, match="subject evidence|product eligibility"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
 def test_accept_requires_evidence_and_minimum_confidence() -> None:
     review, dataset, provider = _review()
     policy = load_review_policy(ROOT)
@@ -276,6 +296,22 @@ def test_dispute_requires_frozen_independent_adjudication_before_qa() -> None:
     assert adjudication["tool_trace"]
     assert adjudication["resolutions"][0]["evidence_ids"]
     assert adjudication["resolutions"][0]["confidence"] >= 0.8
+
+
+def test_adjudication_counterevidence_requires_counterevidence_position() -> None:
+    review, dataset, provider = _review(scenario="dispute")
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    adjudication = changed["adjudication_artifact"]
+    evidence_id = adjudication["resolutions"][0]["evidence_ids"][0]
+    adjudication["resolutions"][0]["counterevidence_ids"] = [evidence_id]
+    adjudication["artifact_sha256"] = _artifact_hash(adjudication)
+    qa = changed["qa_artifact"]
+    qa["adjudication_artifact_sha256"] = adjudication["artifact_sha256"]
+    qa["artifact_sha256"] = _artifact_hash(qa)
+
+    with pytest.raises(MachineReviewValidationError, match="counterevidence.*position"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
 
 
 def test_unresolved_dispute_cannot_produce_machine_verified() -> None:
