@@ -216,3 +216,18 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: seal WORK-2026-011 evidence, then create a separate Ready
   Web work item with visible acceptance criteria and start from failing component
   tests. Keep persistence and real AI out of that demo scope.
+
+## Step 3A Ready checkpoint — 2026-08-14 02:00 +08:00
+
+- Active branch: `feature/WORK-2026-012-knowledge-tree-web-demo`.
+- Ready work item: `docs/work-items/WORK-2026-012_knowledge-tree-web-demo.md`.
+- User-visible scope: an in-memory three-pane calculus workspace with selectable
+  tree nodes, title/note editing, add-child, leaf deletion, pointer movement,
+  auto-layout, position lock, and session undo/redo.
+- Explicit non-capabilities: no refresh persistence, API, database, file import,
+  source jump, AI generation, Provider, network, Tauri, or real user data.
+- Acceptance includes component interaction tests, TypeScript/ESLint/build, and
+  1440x900 plus 390x844 browser visual/overflow checks.
+- Exact next action: commit the Ready boundary, replace the old status-page test
+  with failing product-workspace tests, and preserve the red baseline before UI
+  implementation.
