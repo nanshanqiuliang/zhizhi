@@ -7,11 +7,12 @@ import re
 from collections.abc import Mapping
 from copy import deepcopy
 from functools import lru_cache
-from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+from ._generated_graph_v1_schema import GRAPH_V1_SCHEMA_JSON
 
 JsonObject = dict[str, Any]
 
@@ -32,18 +33,12 @@ class ContractValidationError(ValueError):
         super().__init__(f"{self.code}: {contract} at {path} violates {rule}")
 
 
-def _schema_path() -> Path:
-    root = Path(__file__).resolve().parents[4]
-    return root / "docs/contracts/knowledge-tree-graph.v1.schema.json"
-
-
 @lru_cache(maxsize=1)
 def _load_graph_contract_document() -> JsonObject:
-    path = _schema_path()
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise RuntimeError(f"cannot load canonical graph schema: {path}") from error
+        value = json.loads(GRAPH_V1_SCHEMA_JSON)
+    except json.JSONDecodeError as error:
+        raise RuntimeError("generated graph schema artifact is invalid") from error
     if not isinstance(value, dict):
         raise RuntimeError("canonical graph schema must be an object")
     Draft202012Validator.check_schema(value)

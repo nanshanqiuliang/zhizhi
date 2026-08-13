@@ -110,3 +110,18 @@ API/UI work, and owner acceptance disabled.
 - Next exact action: commit a red zero-runtime-file-I/O regression, then make a
   generated Python schema artifact the runtime source while retaining the JSON
   Schema as the only hand-edited contract source.
+
+## Fix checkpoint — 2026-08-14 01:24 +08:00
+
+- Red regression commit: `1278e79`; the isolated test failed because
+  `Path.read_text()` was called during cold-start contract validation.
+- Fix: the existing contract generator now derives a Python runtime schema
+  artifact from the canonical JSON Schema, and its `--check` mode detects drift
+  in both TypeScript and Python outputs. Runtime validation imports the generated
+  artifact and performs no repository file read.
+- Proportional verification: 50/50 graph contract/domain/security tests, 4/4
+  repository integration tests, strict package mypy, Ruff, TypeScript generation
+  drift/tsc, and diff hygiene all pass.
+- Next exact action: freeze this minimal fix, run the mandatory full repository
+  gates, correct 53-test accounting in status documents, and send the superseding
+  frozen SHA to role-separated QA.

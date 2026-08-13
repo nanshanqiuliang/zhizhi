@@ -6,6 +6,10 @@ const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryRoot = resolve(packageRoot, "../..");
 const schemaPath = resolve(repositoryRoot, "docs/contracts/knowledge-tree-graph.v1.schema.json");
 const outputPath = resolve(packageRoot, "src/generated/graph-v1.ts");
+const pythonOutputPath = resolve(
+  repositoryRoot,
+  "packages/contracts-py/src/knowledge_tree_contracts/_generated_graph_v1_schema.py",
+);
 
 const schema = JSON.parse(await readFile(schemaPath, "utf8"));
 const definitions = schema.$defs;
@@ -36,9 +40,18 @@ export type GraphPatchOperation = ${definitions.Operation.oneOf
 export const graphContractSchemaVersion = 1 as const;
 `;
 
+const pythonSource = `\"\"\"Generated from docs/contracts/knowledge-tree-graph.v1.schema.json.
+
+Do not hand-edit. Re-run: pnpm --filter @knowledge-tree/contracts-ts generate
+\"\"\"
+
+GRAPH_V1_SCHEMA_JSON = r\"\"\"${JSON.stringify(schema, null, 2)}\"\"\"
+`;
+
 if (process.argv.includes("--check")) {
   const current = await readFile(outputPath, "utf8").catch(() => "");
-  if (current !== source) {
+  const currentPython = await readFile(pythonOutputPath, "utf8").catch(() => "");
+  if (current !== source || currentPython !== pythonSource) {
     process.stderr.write(
       "generated_contract_drift: run pnpm --filter @knowledge-tree/contracts-ts generate\n",
     );
@@ -46,4 +59,5 @@ if (process.argv.includes("--check")) {
   }
 } else {
   await writeFile(outputPath, source, "utf8");
+  await writeFile(pythonOutputPath, pythonSource, "utf8");
 }
