@@ -6,7 +6,7 @@
 
 ## 冻结输入
 
-- 数据：`gold.json`，版本 `1.0.0-draft.1`；
+- 数据：`gold.json`，版本 `1.0.0-draft.2`；
 - 复核内容 SHA-256：`6e31f3fc332510b379a864c780488cf2acd32e9d4f9fad2b96076ae4603467a3`（规范化数据排除可变的 `status`/`review` 审批元数据）；
 - 来源：`source/mit-ocw-res-18-001-chapter-02-derivatives.pdf`；
 - 复核记录：`independent-review.json`；

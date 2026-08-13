@@ -2,7 +2,7 @@
 
 ```yaml
 dataset_id: calculus-continuity-differentiability-v1
-version: 1.0.0-draft.1
+version: 1.0.0-draft.2
 status: author_reviewed_independent_review_pending
 language: zh-CN labels and summaries; en source
 license: CC-BY-NC-SA-4.0

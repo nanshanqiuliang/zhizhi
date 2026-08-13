@@ -7,11 +7,13 @@ import json
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, cast
 from uuid import UUID
 
 from jsonschema import Draft202012Validator, FormatChecker
+from pypdf import PdfReader
 
 from scripts.calculus_dataset_validation import JsonObject
 
@@ -176,24 +178,65 @@ def _evidence_id(role_id: str, item_kind: str, item_id: str) -> str:
     return f"evidence-{role_token}-{item_kind}-{item_id}"
 
 
-def _evidence_payload(dataset: JsonObject, item_kind: str, item: JsonObject) -> JsonObject:
-    source = cast(JsonObject, dataset["source"])
+def _item_pages(dataset: JsonObject, item_kind: str, item: JsonObject) -> list[int]:
+    anchors = {
+        cast(str, anchor["id"]): anchor for anchor in cast(list[JsonObject], dataset["anchors"])
+    }
     if item_kind == "anchor":
-        selector = cast(JsonObject, item["selector"])
-        locator = f"page:{selector['page']}"
+        selected = [item]
     elif item_kind == "concept":
-        locator = f"concept:{item['id']}"
+        selected = [anchors[anchor_id] for anchor_id in cast(list[str], item["anchor_ids"])]
     else:
-        locator = f"relation:{item['id']}"
+        selected = [
+            anchors[anchor_id] for anchor_id in cast(list[str], item["evidence_anchor_ids"])
+        ]
+    return sorted({cast(int, cast(JsonObject, anchor["selector"])["page"]) for anchor in selected})
+
+
+def _evidence_payload(
+    dataset: JsonObject,
+    item_kind: str,
+    item: JsonObject,
+    page_hashes: dict[int, str],
+) -> JsonObject:
+    source = cast(JsonObject, dataset["source"])
+    pages = _item_pages(dataset, item_kind, item)
+    locator = "pages:" + ",".join(str(page) for page in pages)
     return {
         "source_id": source["resource_id"],
         "source_kind": "first_party_artifact",
         "locator": locator,
-        "content_sha256": _sha256({"kind": item_kind, "item": item, "source": source["sha256"]}),
+        "content_sha256": _sha256([page_hashes[page] for page in pages]),
+        "position": "support",
+        "claim_support_summary": (
+            "Frozen PDF page text was replayed for this claim; mock mode does not establish "
+            "semantic correctness."
+        ),
         "retrieved_at": FIXTURE_TIME,
         "untrusted_instructions_detected": False,
         "instructions_ignored": True,
     }
+
+
+@lru_cache(maxsize=4)
+def _pdf_page_hashes(pdf_path_text: str, expected_sha256: str) -> dict[int, str]:
+    pdf_path = Path(pdf_path_text)
+    try:
+        pdf_bytes = pdf_path.read_bytes()
+        if _sha256(pdf_bytes) != expected_sha256:
+            raise MachineReviewValidationError(
+                "first-party replay PDF hash mismatch", code="review_evidence_invalid"
+            )
+        reader = PdfReader(pdf_path, strict=True)
+        return {
+            page_number: _sha256(page.extract_text() or "")
+            for page_number, page in enumerate(reader.pages, start=1)
+        }
+    except (OSError, ValueError) as error:
+        raise MachineReviewValidationError(
+            f"cannot build first-party page replay index: {error}",
+            code="review_evidence_invalid",
+        ) from error
 
 
 @dataclass
@@ -205,11 +248,14 @@ class ReplaySearchProvider:
     _seen_calls: set[str] = field(default_factory=set)
 
     @classmethod
-    def from_dataset(cls, dataset: JsonObject) -> ReplaySearchProvider:
+    def from_dataset(cls, root: Path, dataset: JsonObject) -> ReplaySearchProvider:
+        source = cast(JsonObject, dataset["source"])
+        pdf_path = root / DATASET_DIR / cast(str, source["local_path"])
+        page_hashes = _pdf_page_hashes(str(pdf_path.resolve()), cast(str, source["sha256"]))
         records: dict[str, JsonObject] = {}
         for item_kind, item in _dataset_items(dataset):
             records[_claim_id(item_kind, cast(str, item["id"]))] = _evidence_payload(
-                dataset, item_kind, item
+                dataset, item_kind, item, page_hashes
             )
         return cls(records=records)
 
@@ -337,6 +383,15 @@ def build_mock_machine_review(
             for finding in cast(list[JsonObject], subject["findings"])
             if finding["decision"] == "dispute"
         )
+        adjudication_evidence, adjudication_trace = provider.search(
+            "ai_dispute_adjudicator", cast(str, disputed["claim_id"])
+        )
+        adjudication_evidence.update(
+            {
+                "evidence_id": f"evidence-adjudication-{disputed['claim_id']}",
+                "claim_id": disputed["claim_id"],
+            }
+        )
         adjudication = {
             "schema_version": "ai-dispute-resolution.v2",
             "provenance": _provenance(
@@ -352,8 +407,16 @@ def build_mock_machine_review(
                     "claim_id": disputed["claim_id"],
                     "decision": "reject_proposed",
                     "rationale": "Independent deterministic replay rejects the seeded dispute.",
+                    "evidence_ids": [adjudication_evidence["evidence_id"]],
+                    "counterevidence_ids": [],
+                    "confidence": 0.99,
+                    "uncertainty": (
+                        "Mock replay cannot establish product-eligible subject evidence."
+                    ),
                 }
             ],
+            "evidence_ledger": [adjudication_evidence],
+            "tool_trace": [adjudication_trace],
         }
         adjudication["artifact_sha256"] = _artifact_sha256(adjudication)
 
@@ -362,7 +425,7 @@ def build_mock_machine_review(
     qa_evidence, qa_trace = _build_evidence("ai_qa_auditor", dataset, provider)
     failure: JsonObject | None = None
     qa_decision = "pass"
-    machine_state = "machine_reviewed" if same_model else "machine_verified"
+    machine_state = "inconclusive"
     if scenario == "timeout":
         failure = {
             "code": "provider_timeout",
@@ -387,6 +450,16 @@ def build_mock_machine_review(
         }
         qa_decision = "inconclusive"
         machine_state = "inconclusive"
+    elif scenario in {"accept", "dispute"}:
+        failure = {
+            "code": "review_inconclusive",
+            "retryable": False,
+            "detail": (
+                "Deterministic mock replay validates contracts but does not establish subject "
+                "evidence for a product-eligible machine review."
+            ),
+        }
+        qa_decision = "inconclusive"
 
     qa: JsonObject = {
         "schema_version": "ai-qa-report.v2",
@@ -421,6 +494,12 @@ def build_mock_machine_review(
         "schema_version": "calculus-machine-review.v2",
         "review_id": "calculus-v1-machine-review-mock",
         "machine_state": machine_state,
+        "assurance": {
+            "execution_mode": "deterministic_mock_replay",
+            "evidence_basis": "first_party_page_replay",
+            "subject_evidence_established": False,
+            "product_eligible": False,
+        },
         "input_manifest": manifest,
         "correlation": {
             "classification": (
@@ -541,8 +620,9 @@ def _validate_findings(
     actual = {(cast(str, item["item_kind"]), cast(str, item["item_id"])) for item in findings}
     if actual != expected or len(findings) != len(expected):
         raise MachineReviewValidationError("subject finding coverage mismatch")
-    evidence_ids = {
-        item["evidence_id"] for item in cast(list[JsonObject], subject["evidence_ledger"])
+    evidence_by_id = {
+        cast(str, item["evidence_id"]): item
+        for item in cast(list[JsonObject], subject["evidence_ledger"])
     }
     threshold = cast(float, policy["minimum_accept_confidence"])
     for finding in findings:
@@ -560,11 +640,35 @@ def _validate_findings(
         referenced = set(cast(list[str], finding["evidence_ids"])) | set(
             cast(list[str], finding["counterevidence_ids"])
         )
-        if not referenced.issubset(evidence_ids):
+        if not referenced.issubset(evidence_by_id):
             raise MachineReviewValidationError(
                 f"finding references unknown evidence: {finding['claim_id']}",
                 code="review_evidence_invalid",
             )
+        for evidence_id in cast(list[str], finding["evidence_ids"]):
+            evidence = evidence_by_id[evidence_id]
+            if evidence["claim_id"] != finding["claim_id"]:
+                raise MachineReviewValidationError(
+                    f"evidence claim binding mismatch: {finding['claim_id']}/{evidence_id}",
+                    code="review_evidence_invalid",
+                )
+            if evidence["position"] != "support":
+                raise MachineReviewValidationError(
+                    f"support evidence has incorrect position: {finding['claim_id']}/{evidence_id}",
+                    code="review_evidence_invalid",
+                )
+        for evidence_id in cast(list[str], finding["counterevidence_ids"]):
+            evidence = evidence_by_id[evidence_id]
+            if evidence["claim_id"] != finding["claim_id"]:
+                raise MachineReviewValidationError(
+                    f"counterevidence claim binding mismatch: {finding['claim_id']}/{evidence_id}",
+                    code="review_evidence_invalid",
+                )
+            if evidence["position"] != "counterevidence":
+                raise MachineReviewValidationError(
+                    f"counterevidence has incorrect position: {finding['claim_id']}/{evidence_id}",
+                    code="review_evidence_invalid",
+                )
 
 
 def _validate_artifact_hash(label: str, artifact: JsonObject) -> None:
@@ -669,6 +773,19 @@ def validate_machine_review(
         raise MachineReviewValidationError(
             "machine_verified requires independent provider/model review"
         )
+    assurance = cast(JsonObject, review["assurance"])
+    if assurance["execution_mode"] == "deterministic_mock_replay":
+        if assurance != {
+            "execution_mode": "deterministic_mock_replay",
+            "evidence_basis": "first_party_page_replay",
+            "subject_evidence_established": False,
+            "product_eligible": False,
+        }:
+            raise MachineReviewValidationError("mock-only assurance metadata is invalid")
+        if review["machine_state"] != "inconclusive":
+            raise MachineReviewValidationError(
+                "mock-only subject evidence cannot produce a product-eligible machine state"
+            )
 
     _validate_tool_trace("ai_subject_reviewer", subject, policy)
     _validate_tool_trace("ai_qa_auditor", qa, policy)
@@ -699,6 +816,24 @@ def validate_machine_review(
             raise MachineReviewValidationError("adjudication requires a distinct agent run")
         if adjudication["subject_artifact_sha256"] != subject["artifact_sha256"]:
             raise MachineReviewValidationError("adjudication subject artifact binding mismatch")
+        _validate_tool_trace("ai_dispute_adjudicator", adjudication, policy)
+        _validate_evidence("ai_dispute_adjudicator", adjudication, provider)
+        adjudication_evidence = {
+            evidence["evidence_id"]: evidence
+            for evidence in cast(list[JsonObject], adjudication["evidence_ledger"])
+        }
+        for resolution in cast(list[JsonObject], adjudication["resolutions"]):
+            evidence_ids = set(cast(list[str], resolution["evidence_ids"]))
+            counterevidence_ids = set(cast(list[str], resolution["counterevidence_ids"]))
+            if not (evidence_ids | counterevidence_ids).issubset(adjudication_evidence):
+                raise MachineReviewValidationError(
+                    f"adjudication references unknown evidence: {resolution['claim_id']}"
+                )
+            for evidence_id in evidence_ids | counterevidence_ids:
+                if adjudication_evidence[evidence_id]["claim_id"] != resolution["claim_id"]:
+                    raise MachineReviewValidationError(
+                        f"adjudication evidence claim binding mismatch: {resolution['claim_id']}"
+                    )
         resolved = {
             resolution["claim_id"]
             for resolution in cast(list[JsonObject], adjudication["resolutions"])

@@ -36,4 +36,4 @@ uv run python -m scripts.validate_ai_review_harness
 
 ## v2 需求迁移说明
 
-用户已在 CHG-2026-001 中明确采用 AI 子 Agent自动复核。当前 `independent-review.json` 和 `--require-complete` 属于 v1 真人签字 contract，作为历史证据保留，不得把 AI 名称填入其中伪造真人签字。现有 v2 原型仅使用确定性 mock/replay SearchProvider：同源模型只得到 `machine_reviewed` 并披露 `correlated_review`，跨 Provider/模型 fixture 才可得到 `machine_verified`。它不联网、不调用真实 LLM、不修改 `gold.json`，也不把数据集状态提升为真人 `approved`。
+用户已在 CHG-2026-001 中明确采用 AI 子 Agent自动复核。当前 `independent-review.json` 和 `--require-complete` 属于 v1 真人签字 contract，作为历史证据保留，不得把 AI 名称填入其中伪造真人签字。现有 v2 原型仅使用确定性 mock/replay SearchProvider，并按 anchor 绑定的冻结 PDF 页文本建立 replay hash；无论配置为同源还是跨 Provider/模型 fixture，都强制输出 `inconclusive`、`subject_evidence_established=false`、`product_eligible=false`。它不联网、不调用真实 LLM，也不把数据集状态提升为真人 `approved`。

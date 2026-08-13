@@ -72,11 +72,22 @@
 - 关联 ID：WORK-2026-004、ADR-0015、REQ-2026-002..005、NFR-2026-009、RISK-2026-010..012。
 - 实际变化：以失败测试起步新增 `calculus-machine-review.v2` JSON Schema、版本化角色 prompt/context/tool policy、content-addressed subject/QA/裁决 artifact、证据 ledger、只读 ReplaySearchProvider 和稳定 CLI；默认仓库门开始复放同源 mock 双角色审查。
 - 影响模块/接口/schema/migration/prompt：仅扩展 `evals/calculus-v1` prototype contract 和 `scripts` 离线工具；三角色 prompt/context 版本为 `*.v2.mock.1`；无产品 API、数据库 migration、GraphPatch/Anchor 或真实 LLM SDK。
-- 兼容性：v1 真人签字 contract/历史证据原样保留；同 Provider/模型只能得到 `machine_reviewed` + `correlated_review`，跨 Provider/模型 fixture 才能得到 `machine_verified`；owner 风险接受只能覆盖显式同源风险。
-- 验证与证据：TC-AIREV 原型测试 28/28；完整本地门 71/71 Python、1/1 Web，schema/秘密/type/lint/peer/build 全通过；正式提交、TR 和隔离 AI QA 结论待形成。
+- 兼容性：v1 真人签字 contract/历史证据原样保留；mock/replay 无论模型相关性均固定为 `inconclusive`/非产品可用，不能进入 `machine_reviewed`/`machine_verified` 或由 owner 风险接受提升；真实状态转换留给后续受控实现。
+- 验证与证据：初版 TC-AIREV 原型测试 28/28、完整本地门 71/71 Python/1 Web；学科子 Agent随后提出证据自证、claim 绑定、范围和裁决 ledger 缺陷，修复后当前 75/75 Python 通过，完整增量门与正式 TR 待完成。
 - 性能/安全/运维影响：无网络、模型费用、秘密、数据库或用户内容；提示注入、工具越权、输入漂移、伪引用、低置信 accept、共享 run/session/prompt/context、未裁决分歧、超时和预算失败均失败关闭或转 inconclusive。
 - 回滚：回退本轮实现提交可禁用 v2 prototype；保留 v1 数据、历史 TR 和所有失败证据，不得据此启用真人 `approved` 或真实 Provider。
 - 遗留风险与下一步：冻结实现提交和不可变 TR，执行隔离 AI 学科/QA 复核；随后再决定 WORK-2026-004 是否可关闭。真实联网与产品化状态机仍归 WORK-2026-007/008/010。
+
+## 2026-08-13 — 修复 AI 学科子 Agent首轮复核争议
+
+- 关联 ID：WORK-2026-004、RISK-2026-010..012、TC-AIREV-001..010。
+- 实际变化：根据冻结提交 `73a74da` 的隔离 AI 学科 machine attestation，将 replay evidence 改为绑定冻结 PDF 页文本 hash；新增不可误读的 mock-only assurance 并强制 `inconclusive`；校验 finding/evidence 同 claim 与支持/反证立场；允许每个 claim 多证据；为裁决增加 evidence ledger/tool trace/confidence/uncertainty；修正数据集 2.1..2.7 范围与 a036 措辞。
+- 影响模块/接口/schema/migration/prompt：`calculus-machine-review.v2` 原型 schema 向前演进；数据集升为 `1.0.0-draft.2` 并刷新 v1 pending review content hash；无产品 migration 或 live prompt。
+- 兼容性：`1.0.0-draft.1` 的 TR-003/004 保持不可变历史证据；新的待签 review packet 绑定 draft.2，不改写旧报告。
+- 验证与证据：新增失败测试先复现全部争议；修复后当前 75/75 Python 通过，完整本地门、修复提交和复核重跑待执行。
+- 性能/安全/运维影响：首次进程内建 PDF 页文本索引，随后按 PDF/hash 缓存；不联网，不保存全文到 artifact，只保存页 locator 与 hash。
+- 回滚：回退本轮修复提交恢复初版原型，但会重新暴露误读/错绑风险，因此不得用于放行。
+- 遗留风险与下一步：冻结修复提交，要求同一学科角色复核争议是否解决；再将冻结学科 attestation hash 交给隔离 QA。
 
 ## 2026-08-12 — 建立总体架构技术基线
 

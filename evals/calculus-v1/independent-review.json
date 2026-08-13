@@ -2,8 +2,8 @@
   "schema_version": "calculus-independent-review.v1",
   "review_id": "calculus-v1-independent-review",
   "dataset_id": "calculus-continuity-differentiability-v1",
-  "dataset_version": "1.0.0-draft.1",
-  "review_subject_sha256": "6e31f3fc332510b379a864c780488cf2acd32e9d4f9fad2b96076ae4603467a3",
+  "dataset_version": "1.0.0-draft.2",
+  "review_subject_sha256": "54021dcac42e5e5030aaa2109d09a8ca0393e51ca7d87f2ac3e76075178a4574",
   "license_notice_seen": false,
   "concept_reviews": [
     {"id": "independent_variable", "decision": "pending", "comment": null, "proposed_change": null, "resolution": "not_applicable", "resolution_comment": null, "resolution_by": null, "resolved_at": null},

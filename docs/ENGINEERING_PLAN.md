@@ -30,7 +30,7 @@
 | WORK-2026-001 | 审阅并批准架构与开发运维基线 | 待验收 | 项目负责人 | 无 | 批准记录/修订意见 | 文档状态变更 |
 | WORK-2026-002 | 回答编码前待决问题 | 未开始 | 产品+技术 | WORK-2026-001 | 决策清单 | ADR/计划更新 |
 | WORK-2026-003 | 确定仓库、许可证与分支保护 | 未开始 | 项目负责人 | WORK-2026-001 | 仓库治理记录 | 本地/远端检查 |
-| WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 进行中 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 本地门 71 Python/1 Web 通过，提交/TR/隔离 AI 复核待完成 |
+| WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 进行中 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 初版 `73a74da` 被学科 dispute，修复后 75 Python 通过，修复提交/TR/复核待完成 |
 | WORK-2026-005 | 冻结 Anchor/GraphPatch v1 | 未开始 | 总工程师 | WORK-2026-002 | JSON Schema、ADR | 契约测试设计 |
 | WORK-2026-006 | 建仓和最小 CI/证据骨架 | 待验收 | 开发+QA+运维 | WORK-2026-003（远端治理仍待定） | 本地 Git、CI workflow、锁文件、状态页 | `TR-20260813-002` CONDITIONAL GO；独立 QA/远端 CI 待验收 |
 | WORK-2026-007 | 冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约 | 规划完成/待实现 | AI+后端+QA+运维 | WORK-2026-001 | 多 LLM 基线、配置 v1、错误与 Runbook | TC-LLM-001..009 待执行 |
@@ -44,8 +44,8 @@
 |---|---|---|
 | 技术尖峰实施 | 个人 AI Agent/自动复核方向已批准，review v2 原型已实现但正式证据/独立机器复核、核心 contract、预算、真实 API Key 和其余 MVP 细项仍未完成 | 完成 WORK-2026-004 v2 实现提交、TR 和隔离 AI 学科/QA 复核，再完成阶段 -1 其余出口门 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
-| WORK-2026-004 关闭 | v1 作者/合同门和 v2 mock/replay 本地门已通过；仍缺实现提交、不可变 TR 和隔离 AI 学科/QA 复核结论 | 冻结提交和证据；由不同 run 的 AI 学科/QA 子 Agent执行，必要时裁决；机器审查与 owner 风险接受分离 |
+| WORK-2026-004 关闭 | v1 作者/合同门已通过；v2 初版收到隔离学科 `dispute`，争议修复尚未冻结/复核；仍缺不可变 TR 和 AI QA 结论 | 提交争议修复并由学科 Agent复核；固定其 artifact hash 后交给独立 QA；机器审查与 owner 风险接受分离 |
 
 ## 下一门
 
-`Gate A：阶段 -1 出口验收`。产品方向和机器复核角色已明确；WORK-2026-004 的 v1 数据/门禁和 `TR-20260813-003/004` 保持历史证据，不改写为 AI 签字。v2 contract、确定性 mock/replay harness、证据 ledger、同源披露和安全 fixture 已由失败测试驱动实现；下一动作是冻结实现提交与测试证据，再由隔离的 AI 学科/QA 子 Agent复核该不可变 artifact。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭。
+`Gate A：阶段 -1 出口验收`。产品方向和机器复核角色已明确；WORK-2026-004 的 v1 数据/门禁和 `TR-20260813-003/004` 保持历史证据，不改写为 AI 签字。v2 初版 `73a74da` 经隔离学科复核发现证据自证/错绑、范围和裁决 ledger 问题；失败测试已复现并完成修复。下一动作是冻结修复提交并由同一学科角色复核，再把冻结 attestation 交给隔离 QA。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭。

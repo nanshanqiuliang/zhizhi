@@ -8,6 +8,7 @@
     "schema_version",
     "review_id",
     "machine_state",
+    "assurance",
     "input_manifest",
     "correlation",
     "subject_artifact",
@@ -22,6 +23,7 @@
     "machine_state": {
       "enum": ["machine_reviewed", "machine_verified", "inconclusive", "accepted_with_owner_risk"]
     },
+    "assurance": {"$ref": "#/$defs/assurance"},
     "input_manifest": {"$ref": "#/$defs/inputManifest"},
     "correlation": {"$ref": "#/$defs/correlation"},
     "subject_artifact": {"$ref": "#/$defs/subjectArtifact"},
@@ -39,6 +41,22 @@
   "$defs": {
     "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "uuid": {"type": "string", "format": "uuid"},
+    "assurance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_mode",
+        "evidence_basis",
+        "subject_evidence_established",
+        "product_eligible"
+      ],
+      "properties": {
+        "execution_mode": {"enum": ["deterministic_mock_replay", "controlled_live"]},
+        "evidence_basis": {"enum": ["first_party_page_replay", "controlled_sources"]},
+        "subject_evidence_established": {"type": "boolean"},
+        "product_eligible": {"type": "boolean"}
+      }
+    },
     "versionedHash": {
       "type": "object",
       "additionalProperties": false,
@@ -125,6 +143,8 @@
         "source_kind",
         "locator",
         "content_sha256",
+        "position",
+        "claim_support_summary",
         "retrieved_at",
         "untrusted_instructions_detected",
         "instructions_ignored"
@@ -136,6 +156,8 @@
         "source_kind": {"enum": ["first_party_artifact", "replay_search"]},
         "locator": {"type": "string", "minLength": 1},
         "content_sha256": {"$ref": "#/$defs/sha256"},
+        "position": {"enum": ["support", "counterevidence"]},
+        "claim_support_summary": {"type": "string", "minLength": 1},
         "retrieved_at": {"type": "string", "format": "date-time"},
         "untrusted_instructions_detected": {"type": "boolean"},
         "instructions_ignored": {"type": "boolean"}
@@ -200,7 +222,6 @@
         "evidence_ledger": {
           "type": "array",
           "minItems": 120,
-          "maxItems": 120,
           "items": {"$ref": "#/$defs/evidence"}
         },
         "tool_trace": {
@@ -261,6 +282,8 @@
         "input_manifest",
         "subject_artifact_sha256",
         "resolutions",
+        "evidence_ledger",
+        "tool_trace",
         "artifact_sha256"
       ],
       "properties": {
@@ -274,13 +297,44 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["claim_id", "decision", "rationale"],
+            "required": [
+              "claim_id",
+              "decision",
+              "rationale",
+              "evidence_ids",
+              "counterevidence_ids",
+              "confidence",
+              "uncertainty"
+            ],
             "properties": {
               "claim_id": {"type": "string", "minLength": 1},
               "decision": {"enum": ["accept_proposed", "reject_proposed", "inconclusive"]},
-              "rationale": {"type": "string", "minLength": 1}
+              "rationale": {"type": "string", "minLength": 1},
+              "evidence_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+              },
+              "counterevidence_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+              },
+              "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+              "uncertainty": {"type": ["string", "null"], "minLength": 1}
             }
           }
+        },
+        "evidence_ledger": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "tool_trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/toolCall"}
         },
         "artifact_sha256": {"$ref": "#/$defs/sha256"}
       }

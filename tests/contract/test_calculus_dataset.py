@@ -26,6 +26,27 @@ def test_calculus_dataset_passes_contract_and_semantics() -> None:
     validate_dataset_semantics(ROOT, dataset)
 
 
+def test_dataset_scope_matches_all_included_chapter_sections() -> None:
+    dataset = load_and_validate_dataset(ROOT)
+
+    assert dataset["scope"]["included_sections"] == [
+        "2.1",
+        "2.2",
+        "2.3",
+        "2.4",
+        "2.5",
+        "2.6",
+        "2.7",
+    ]
+
+
+def test_anchor_a036_names_product_quotient_and_power_rule_exercises() -> None:
+    dataset = load_and_validate_dataset(ROOT)
+    anchor = next(item for item in dataset["anchors"] if item["id"] == "a036")
+
+    assert anchor["topic_zh"] == "乘积、商与幂函数求导法则综合练习"
+
+
 @pytest.mark.parametrize(
     ("mutator", "message"),
     [

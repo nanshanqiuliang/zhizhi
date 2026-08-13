@@ -21,7 +21,7 @@
     "schema_version": {"const": "calculus-independent-review.v1"},
     "review_id": {"const": "calculus-v1-independent-review"},
     "dataset_id": {"const": "calculus-continuity-differentiability-v1"},
-    "dataset_version": {"const": "1.0.0-draft.1"},
+    "dataset_version": {"const": "1.0.0-draft.2"},
     "review_subject_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "license_notice_seen": {"type": "boolean"},
     "concept_reviews": {

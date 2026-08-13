@@ -20,7 +20,7 @@ def main() -> int:
     try:
         dataset = load_and_validate_dataset(root)
         policy = load_review_policy(root)
-        provider = ReplaySearchProvider.from_dataset(dataset)
+        provider = ReplaySearchProvider.from_dataset(root, dataset)
         review = build_mock_machine_review(dataset, policy, provider)
         validate_machine_review(root, review, dataset, policy, provider)
     except MachineReviewValidationError as error:

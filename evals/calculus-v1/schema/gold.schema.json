@@ -21,7 +21,7 @@
   "properties": {
     "schema_version": {"const": "calculus-gold.v1"},
     "dataset_id": {"const": "calculus-continuity-differentiability-v1"},
-    "dataset_version": {"const": "1.0.0-draft.1"},
+    "dataset_version": {"const": "1.0.0-draft.2"},
     "status": {"enum": ["draft", "author_reviewed", "approved"]},
     "language": {"const": "zh-CN"},
     "license": {
@@ -44,7 +44,7 @@
       "required": ["title_zh", "included_sections", "excluded"],
       "properties": {
         "title_zh": {"type": "string", "minLength": 1},
-        "included_sections": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"type": "string"}},
+        "included_sections": {"type": "array", "minItems": 7, "uniqueItems": true, "items": {"type": "string"}},
         "excluded": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}
       }
     },

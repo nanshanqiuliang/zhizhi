@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from copy import deepcopy
 from pathlib import Path
 
@@ -18,10 +20,18 @@ from scripts.calculus_dataset_validation import load_and_validate_dataset
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _artifact_hash(artifact: dict[str, object]) -> str:
+    payload = {key: value for key, value in artifact.items() if key != "artifact_sha256"}
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _fixture() -> tuple[dict[str, object], dict[str, object], ReplaySearchProvider]:
     dataset = load_and_validate_dataset(ROOT)
     policy = load_review_policy(ROOT)
-    provider = ReplaySearchProvider.from_dataset(dataset)
+    provider = ReplaySearchProvider.from_dataset(ROOT, dataset)
     return dataset, policy, provider
 
 
@@ -39,13 +49,20 @@ def _review(
     return review, dataset, provider
 
 
-def test_accept_replay_is_machine_reviewed_with_explicit_correlation() -> None:
+def test_accept_replay_is_mock_only_inconclusive_with_explicit_correlation() -> None:
     review, dataset, provider = _review()
     policy = load_review_policy(ROOT)
 
     validate_machine_review(ROOT, review, dataset, policy, provider)
 
-    assert review["machine_state"] == "machine_reviewed"
+    assert review["machine_state"] == "inconclusive"
+    assert review["assurance"] == {
+        "execution_mode": "deterministic_mock_replay",
+        "evidence_basis": "first_party_page_replay",
+        "subject_evidence_established": False,
+        "product_eligible": False,
+    }
+    assert review["failure"]["code"] == "review_inconclusive"
     assert review["correlation"]["classification"] == "correlated_review"
     assert (
         review["subject_artifact"]["artifact_sha256"]
@@ -126,14 +143,15 @@ def test_same_model_cannot_be_mislabeled_as_independent() -> None:
         validate_machine_review(ROOT, review, dataset, policy, provider)
 
 
-def test_cross_provider_mock_is_classified_as_independent() -> None:
+def test_cross_provider_mock_is_independent_but_never_machine_verified() -> None:
     review, dataset, provider = _review(same_model=False)
     policy = load_review_policy(ROOT)
 
     validate_machine_review(ROOT, review, dataset, policy, provider)
 
     assert review["correlation"]["classification"] == "independent_review"
-    assert review["machine_state"] == "machine_verified"
+    assert review["machine_state"] == "inconclusive"
+    assert review["assurance"]["product_eligible"] is False
 
 
 def test_accept_requires_evidence_and_minimum_confidence() -> None:
@@ -145,6 +163,35 @@ def test_accept_requires_evidence_and_minimum_confidence() -> None:
 
     with pytest.raises(MachineReviewValidationError, match="accept requires evidence"):
         validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
+def test_finding_evidence_must_bind_the_same_claim_and_support_position() -> None:
+    review, dataset, provider = _review()
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    changed["subject_artifact"]["findings"][0]["evidence_ids"] = [
+        changed["subject_artifact"]["evidence_ledger"][1]["evidence_id"]
+    ]
+
+    with pytest.raises(MachineReviewValidationError, match="evidence claim binding mismatch"):
+        validate_machine_review(ROOT, changed, dataset, policy, provider)
+
+
+def test_contract_allows_multiple_independent_evidence_items_for_one_claim() -> None:
+    review, dataset, provider = _review()
+    policy = load_review_policy(ROOT)
+    changed = deepcopy(review)
+    subject = changed["subject_artifact"]
+    duplicate = deepcopy(subject["evidence_ledger"][0])
+    duplicate["evidence_id"] += "-second"
+    subject["evidence_ledger"].append(duplicate)
+    subject["findings"][0]["evidence_ids"].append(duplicate["evidence_id"])
+    subject["artifact_sha256"] = _artifact_hash(subject)
+    qa = changed["qa_artifact"]
+    qa["subject_artifact_sha256"] = subject["artifact_sha256"]
+    qa["artifact_sha256"] = _artifact_hash(qa)
+
+    validate_machine_review(ROOT, changed, dataset, policy, provider)
 
 
 def test_prompt_injection_that_changes_instructions_fails_closed() -> None:
@@ -225,6 +272,10 @@ def test_dispute_requires_frozen_independent_adjudication_before_qa() -> None:
         adjudication["provenance"]["agent_run_id"]
         != review["subject_artifact"]["provenance"]["agent_run_id"]
     )
+    assert adjudication["evidence_ledger"]
+    assert adjudication["tool_trace"]
+    assert adjudication["resolutions"][0]["evidence_ids"]
+    assert adjudication["resolutions"][0]["confidence"] >= 0.8
 
 
 def test_unresolved_dispute_cannot_produce_machine_verified() -> None:
@@ -247,7 +298,7 @@ def test_qa_must_bind_exact_frozen_subject_artifact() -> None:
         validate_machine_review(ROOT, review, dataset, policy, provider)
 
 
-def test_owner_risk_acceptance_can_cover_correlation_but_not_hard_invariants() -> None:
+def test_owner_risk_acceptance_cannot_make_mock_only_review_product_eligible() -> None:
     review, dataset, provider = _review()
     policy = load_review_policy(ROOT)
     review["owner_risk_acceptance"] = {
@@ -260,10 +311,7 @@ def test_owner_risk_acceptance_can_cover_correlation_but_not_hard_invariants() -
         "expires_at": "2026-08-20T14:00:00Z",
     }
     review["machine_state"] = "accepted_with_owner_risk"
-    validate_machine_review(ROOT, review, dataset, policy, provider)
-
-    review["owner_risk_acceptance"]["risk_codes"].append("review_tool_denied")
-    with pytest.raises(MachineReviewValidationError, match="cannot waive hard invariant"):
+    with pytest.raises(MachineReviewValidationError, match="mock-only|subject evidence"):
         validate_machine_review(ROOT, review, dataset, policy, provider)
 
 

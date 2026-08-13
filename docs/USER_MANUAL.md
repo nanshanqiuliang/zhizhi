@@ -12,7 +12,7 @@
 - 无诊断包导出；
 - 无更新和恢复功能。
 - 开发者在完成根 README 的锁定安装后，可运行 `pnpm --filter @knowledge-tree/web dev` 查看状态页；页面只显示工程门，不导入资料、不保存数据、不调用 LLM。
-- 开发者可运行 `uv run python -m scripts.validate_ai_review_harness` 复放 v2 mock 审查门；输出 `machine_reviewed`/`correlated_review` 只表示确定性 fixture 通过，不是真人签字、真实模型质量证明或数据集批准。
+- 开发者可运行 `uv run python -m scripts.validate_ai_review_harness` 复放 v2 mock 审查门；输出固定为 `inconclusive`，只表示确定性 contract/security fixture 通过，不是真人签字、真实模型质量证明或数据集批准。
 
 ## 未来每个用户可见功能必须说明
 

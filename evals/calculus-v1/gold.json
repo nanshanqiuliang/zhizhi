@@ -1,7 +1,7 @@
 {
   "schema_version": "calculus-gold.v1",
   "dataset_id": "calculus-continuity-differentiability-v1",
-  "dataset_version": "1.0.0-draft.1",
+  "dataset_version": "1.0.0-draft.2",
   "status": "author_reviewed",
   "language": "zh-CN",
   "license": {
@@ -28,7 +28,7 @@
   },
   "scope": {
     "title_zh": "连续性与可导性及其前置概念",
-    "included_sections": ["2.1", "2.3", "2.6", "2.7"],
+    "included_sections": ["2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7"],
     "excluded": ["完整课程覆盖", "习题答案", "区域级锚点", "自动模型标注", "商业使用"]
   },
   "concepts": [
@@ -321,7 +321,7 @@
     {"id": "a033", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 33}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "乘积法则和商法则公式复核", "concept_ids": ["product_rule", "quotient_rule"]},
     {"id": "a034", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 34}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "乘积法则推广幂函数求导", "concept_ids": ["product_rule", "power_rule"]},
     {"id": "a035", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 35}, "heading_path": ["Chapter 2", "2.5 Product, Quotient and Power Rules"], "topic_zh": "分数幂在零点的无穷或零斜率", "concept_ids": ["power_rule", "slope", "differentiability"]},
-    {"id": "a036", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 36}, "heading_path": ["Chapter 2", "2.5 Exercises"], "topic_zh": "复合求导法则综合练习", "concept_ids": ["product_rule", "quotient_rule", "power_rule"]},
+    {"id": "a036", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 36}, "heading_path": ["Chapter 2", "2.5 Exercises"], "topic_zh": "乘积、商与幂函数求导法则综合练习", "concept_ids": ["product_rule", "quotient_rule", "power_rule"]},
     {"id": "a037", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 37}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "数列趋近与极限概念的引入", "concept_ids": ["limit"]},
     {"id": "a038", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 38}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "ε 容差与最终保持在邻域内", "concept_ids": ["limit", "epsilon"]},
     {"id": "a039", "resource_id": "mit_ocw_res_18_001_ch02", "selector": {"type": "page", "page": 39}, "heading_path": ["Chapter 2", "2.6 Limits"], "topic_zh": "收敛到一般目标值与必要条件", "concept_ids": ["limit"]},

@@ -47,7 +47,7 @@ def main() -> int:
         review = load_and_validate_review(root)
         validate_review_semantics(root, review, dataset)
         review_policy = load_review_policy(root)
-        replay_provider = ReplaySearchProvider.from_dataset(dataset)
+        replay_provider = ReplaySearchProvider.from_dataset(root, dataset)
         machine_review = build_mock_machine_review(dataset, review_policy, replay_provider)
         validate_machine_review(root, machine_review, dataset, review_policy, replay_provider)
 
