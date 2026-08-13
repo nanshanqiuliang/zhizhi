@@ -156,3 +156,13 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Next exact action: commit this Ready boundary, then add imports/tests for the
   absent history API and preserve the expected failing baseline before any
   implementation.
+
+## Step 2B red-test checkpoint — 2026-08-14 01:36 +08:00
+
+- Added the intended public history API tests for immutable minimal records,
+  two-record replay, all six GraphPatch operations, LIFO undo/redo, monotonic
+  revisions, redo invalidation, empty/order/duplicate/tamper/drift failures,
+  non-user/unconfirmed/spoof rejection, input immutability, and no I/O.
+- No history implementation exists yet. The exact next action is to run the
+  isolated tests and preserve their expected collection failure, then commit the
+  red baseline before adding `graph_history.py` or exports.
