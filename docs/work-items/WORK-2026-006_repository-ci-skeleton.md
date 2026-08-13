@@ -1,7 +1,7 @@
 # WORK-2026-006：建仓和最小 CI/证据骨架
 
 ```yaml
-status: verification
+status: ready_for_release
 type: ops
 owner: Codex (implementation role)
 reviewers: [project_owner, qa, operations]
@@ -9,7 +9,7 @@ related_ids: [NFR-2026-005, NFR-2026-006, RISK-2026-004]
 target_stage: "阶段 -1"
 risk: medium
 created_at: 2026-08-13T17:57:12+08:00
-updated_at: 2026-08-13T18:13:00+08:00
+updated_at: 2026-08-13T18:25:00+08:00
 ```
 
 ## 问题与结果
@@ -60,5 +60,5 @@ updated_at: 2026-08-13T18:13:00+08:00
 - Contract/ADR/migration/prompt：ADR-0014（工具链骨架，proposed）；无 migration/prompt 变化。
 - Test Run：`TR-20260813-002` passed / CONDITIONAL GO（独立 QA pending）。
 - Release：无；本骨架不可发布。
-- 观察结果：本地开发预览桌面/390px DOM、console 和布局通过；尚无发布运行环境。
+- 观察结果：本地开发预览桌面/390px DOM、console 和布局通过；用户/项目负责人于 2026-08-13 明确批准本次框架。独立 QA、远端 CI 和正式发布仍待完成，因此状态不记为 released/done。
 - 未完成项的新 ID：Rust/Tauri 环境、远端治理、许可证仍归 WORK-2026-003/006 后续验收。
