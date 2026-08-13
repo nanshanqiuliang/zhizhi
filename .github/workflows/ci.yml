@@ -1,0 +1,74 @@
+name: quality-gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python contracts and tests
+    runs-on: ubuntu-latest
+    env:
+      RUN_LIVE_LLM_TESTS: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.3"
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --locked --group dev
+      - name: Validate repository and LLM config
+        run: uv run python -m scripts.validate_repository
+      - name: Format check
+        run: uv run ruff format --check scripts tests
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check
+        run: uv run mypy scripts
+      - name: Test
+        run: uv run pytest
+
+  web:
+    name: TypeScript checks and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.19.0"
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.1"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Peer dependency check
+        run: pnpm peers check
+      - name: Check and test
+        run: pnpm check
+      - name: Build
+        run: pnpm build
+
+  desktop-contract:
+    name: Desktop gate declaration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require Rust checks once a manifest exists
+        shell: bash
+        run: |
+          if [[ -f apps/desktop/Cargo.toml ]]; then
+            echo "apps/desktop/Cargo.toml exists; add the approved Rust/Tauri build job before merging."
+            exit 1
+          fi
+          echo "SKIP (declared): no Rust manifest exists in WORK-2026-006; desktop build is not claimed."

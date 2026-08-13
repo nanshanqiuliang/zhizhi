@@ -1,0 +1,15 @@
+{
+  "name": "knowledge-tree-agent",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "build": "pnpm --filter @knowledge-tree/web build",
+    "check": "pnpm --filter @knowledge-tree/web check",
+    "test": "pnpm --filter @knowledge-tree/web test"
+  },
+  "engines": {
+    "node": ">=22 <25",
+    "pnpm": ">=11 <12"
+  }
+}
