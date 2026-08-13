@@ -186,3 +186,33 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: freeze the implementation commit, run all repository gates,
   then update evidence/status and request role-separated QA against the immutable
   SHA.
+
+## Step 2B pre-QA checkpoint — 2026-08-14 01:52 +08:00
+
+- Frozen implementation: `4fc8e60a392d1442f7475aa3f8082e31a1469cde`;
+  red baseline: `24257186911bede6f68c16ed18b525211d011c32`;
+  Ready boundary: `9d9f569d694a969cf6c262430b99fafa0ea8e96a`.
+- Full gates passed: repository validator, Ruff, scripts and strict package mypy,
+  154/154 Python tests, locked pnpm install/peers, TypeScript/Python generation
+  drift/tsc, Web 1/1, and production build.
+- Role-separated QA has received the immutable implementation SHA and is asked
+  to mutate record binding/order/revision, LIFO/branch behavior, authorization,
+  caller isolation, no-I/O, and minimal-record boundaries.
+- Exact next action: do not change frozen implementation while QA runs. Preserve
+  its PASS/FAIL evidence; if FAIL, add a red regression before the smallest fix.
+
+## Step 2B QA closure — 2026-08-14 01:55 +08:00
+
+- Role-separated QA reviewed `4fc8e60` and returned PASS with 0 P0/P1/P2 and no
+  new finding. It confirmed the direct Ready/red/green chain and independently
+  mutated record delta/digest/hash/revision/order/duplicate ID, two-level LIFO,
+  redo invalidation, six operations, caller isolation, and no-I/O behavior.
+- Evidence: `evidence/TR-20260814-003/`; report:
+  `docs/test-reports/TR-20260814-003_graph-replay-inverse.md`.
+- Natural-language Step 2 is complete as a pure-domain prototype. This does not
+  claim SQLite persistence, crash recovery, API, UI, or product undo is ready.
+- Current natural-language position: Step 3, 0%; overall personal MVP roughly
+  25%. Next user-visible milestone is a sample-data knowledge-tree Web UI.
+- Exact next action: seal WORK-2026-011 evidence, then create a separate Ready
+  Web work item with visible acceptance criteria and start from failing component
+  tests. Keep persistence and real AI out of that demo scope.

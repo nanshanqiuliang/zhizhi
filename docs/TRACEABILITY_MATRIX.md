@@ -18,6 +18,7 @@
 | REQ-2026-002..005 | Harness 自动搜索查证、AI 学科/QA/裁决子 Agent、机器证明与 owner 风险接受 | WORK-2026-004/010 | CHG-2026-001；ADR-0015；ROLE_CARDS v0.1；calculus machine review/policy v2 prototype | `73a74da`、`3f9b637`、`db0831b`、`ae834d9` | TC-AIREV-001..010 / TR-005：39/39 targeted、84/84 全套、学科 accept、QA PASS；live/owner 产品路径待 WORK-010 | — | AI review runbook 待建 | partially_verified |
 | NFR-2026-009 | AI 审查 provenance、最小权限、隔离与同源披露 | WORK-2026-004/010 | machine review v2 / evidence ledger / role tool policy prototype | `ae834d9` | TR-005：run/prompt/context/artifact/session 隔离、同源披露、越权/注入/漂移/trace 变异通过 | — | review SLI/runbook 待建 | partially_verified |
 | RISK-2026-010..012 | 同源偏差、搜索污染、harness 共同缺陷 | WORK-2026-004/010 | ADR-0015 / v2 replay source + tool policy prototype | `ae834d9` | TR-005：correlation/injection/false-citation/binding/replay 与 3 P1/3 P2 校准通过；真实搜索/跨实现仍待 | — | RB-AIREV-001 待建 | partially_verified |
+| REQ-2026-008 / ADR-0005 | 修改可追溯并最终可撤销 | WORK-2026-005/011 | GraphPatch v1 prototype；ADR-0005 proposed | `4fc8e60` | TR-20260814-002/003：安全 preview、minimal delta、replay、LIFO undo/redo、篡改/权限、全仓 154/154、QA PASS；持久化/UI 待建 | — | DB/history Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

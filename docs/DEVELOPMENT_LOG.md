@@ -177,6 +177,17 @@
 - 回滚：不得回退到运行时读取仓库 schema 的实现；若生成链异常，应让 drift gate 失败并停止交付，不得手改派生 schema。
 - 遗留风险与下一步：职责隔离 QA attempt 002 已对 `b946855` PASS，0 P0/P1/P2、无新发现；`TR-20260814-002` 已生成并把 WORK-005 移入 verification。正式 ADR/owner 接受仍待阶段出口；operation log/inverse/undo 属于下一独立工作项。
 
+## 2026-08-14 — 完成纯领域修改回放与 LIFO 撤销/重做 prototype
+
+- 关联 ID：WORK-2026-011、ADR-0005、REQ-2026-008、TR-20260814-003。
+- 实际变化：在 `2425718` 两组预期 ImportError 红灯后，`4fc8e60` 新增不可变 GraphHistory/GraphChangeRecord/EntityDelta、语义 hash、两条记录顺序 replay 和 LIFO undo/redo；undo 后新 apply 清空 redo。history 只接受 confirmed user GraphPatch，内部 inverse 不扩展 AI/导入器公共删除权限。
+- 影响模块/接口/schema/migration/prompt：新增纯领域 `graph_history.py` 和 `validate_course_graph()` 复用入口；不改 GraphPatch canonical schema、数据库或 prompt。record 只保存变化实体 before/after canonical JSON、index、revision、hash 和 digest，不保存整图、patch reason 或 actor credential。
+- 兼容性：既有 GraphPatch preview 公共语义不变；history snapshot 对调用方返回副本；revision 在 apply/undo/redo 中单调递增，语义 hash 排除 revision。
+- 验证与证据：history/security/property 18/18、既有 graph 50/50、全仓 Python 154/154、Web 1/1 和完整门通过；`TR-20260814-003` 的职责隔离 QA attempt 001 PASS，0 P0/P1/P2、无新发现，并主动变异 delta/digest/hash/revision/order/duplicate/LIFO/no-I/O。
+- 性能/安全/运维影响：O(V+E) 内存 prototype；无文件/网络/数据库/Provider/用户数据；错误 details 不含 label/annotation 正文。
+- 回滚：回退独立 history 模块/export 即可禁用，不能回退 GraphPatch 锁/DAG/确认门；失败红灯和 QA 证据保留。
+- 遗留风险与下一步：ADR-0005 owner 接受、持久 operation log/周期快照、崩溃恢复和 UI history 面板未完成。自然语言第 2 步底层 prototype 收口，下一主项进入第 3 步示例数据知识树网页。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

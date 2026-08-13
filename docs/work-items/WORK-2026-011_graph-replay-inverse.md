@@ -1,7 +1,7 @@
 # WORK-2026-011：实现纯领域修改回放与 LIFO 撤销/重做
 
 ```yaml
-status: ready
+status: verification
 type: spike
 owner: Codex (graph_revision domain role)
 reviewers: [graph_qa_fresh, workspace_owner]
@@ -9,7 +9,7 @@ related_ids: [REQ-2026-008, NFR-2026-001, NFR-2026-003, ADR-0004, ADR-0005, ADR-
 target_stage: "阶段 0 / 自然语言第 2B 步"
 risk: high
 created_at: 2026-08-14T01:32:00+08:00
-updated_at: 2026-08-14T01:32:00+08:00
+updated_at: 2026-08-14T01:55:00+08:00
 ```
 
 ## 问题与结果
@@ -44,14 +44,14 @@ updated_at: 2026-08-14T01:32:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：合法 confirmed user GraphPatch 可生成 delta record 并追加 undo stack；AI/import/system 或未确认 patch 不可进入 history。
-- [ ] AC-2：从初始 graph 顺序 replay records 得到与原 apply 序列相同的业务语义；输入/record 不变且无文件/网络/数据库 I/O。
-- [ ] AC-3：undo/redo 对 create/update/edge/lock/annotation/layout 六类 operation 恢复前/后语义，revision 严格递增。
-- [ ] AC-4：乱序 record、篡改 delta/hash、history snapshot 漂移、重复 change ID、空栈均稳定失败，不返回部分状态。
-- [ ] AC-5：undo 后应用新 patch 清空 redo；record 不包含整图快照、patch reason 或可信 actor 凭据。
-- [ ] AC-6：属性测试证明 `apply → undo` 语义等于原图、`undo → redo` 语义等于 apply 后图（revision 除外）。
-- [ ] 错误和恢复路径：调用方基于 code/details 刷新 history 或禁用撤销；不自动猜测/合并冲突。
-- [ ] 回滚/禁用方法：回退独立 history 模块/导出即可，不改变已验证 GraphPatch preview；红灯与 FAIL evidence 保留。
+- [x] AC-1：合法 confirmed user GraphPatch 可生成 delta record 并追加 undo stack；AI/import/system 或未确认 patch 不可进入 history。
+- [x] AC-2：从初始 graph 顺序 replay records 得到与原 apply 序列相同的业务语义；输入/record 不变且无文件/网络/数据库 I/O。
+- [x] AC-3：undo/redo 对 create/update/edge/lock/annotation/layout 六类 operation 恢复前/后语义，revision 严格递增。
+- [x] AC-4：乱序 record、篡改 delta/hash、history snapshot 漂移、重复 change ID、空栈均稳定失败，不返回部分状态。
+- [x] AC-5：undo 后应用新 patch 清空 redo；record 不包含整图快照、patch reason 或可信 actor 凭据。
+- [x] AC-6：属性测试证明 `apply → undo` 语义等于原图、`undo → redo` 语义等于 apply 后图（revision 除外）。
+- [x] 错误和恢复路径：调用方基于 code/details 刷新 history 或禁用撤销；不自动猜测/合并冲突。
+- [x] 回滚/禁用方法：回退独立 history 模块/导出即可，不改变已验证 GraphPatch preview；红灯与 FAIL evidence 保留。
 
 ## 验证计划
 
@@ -68,7 +68,7 @@ updated_at: 2026-08-14T01:32:00+08:00
 
 - Commit/PR：分支 `feature/WORK-2026-011-graph-replay-inverse`；Ready 文档后先提交失败测试，再实现最小 pure-domain 模块。
 - Contract/ADR/migration/prompt：ADR-0005 proposal；不改 GraphPatch v1 schema；无 migration/prompt。
-- Test Run：待红灯、完整本地门和职责隔离 QA。
+- Test Run：`2425718` 红灯为 2 个预期 ImportError；`4fc8e60` 实现后 history/security/property 18/18、既有 graph 50/50、全仓 Python 154/154、Web 1/1 和完整门通过；职责隔离 QA attempt 001 PASS，0 P0/P1/P2、无新发现；证据为 `TR-20260814-003`。
 - Release：无；仅阶段 0 prototype。
-- 观察结果：待实现，不提前声明可撤销产品能力。
+- 观察结果：内存 prototype 已可 apply/replay/LIFO undo/redo；尚无持久化/UI，不能声明产品撤销可用。
 - 未完成项的新 ID：持久 SQLite operation log/periodic snapshot、API、UI history 面板、跨进程恢复和 merge 分别后续建项。

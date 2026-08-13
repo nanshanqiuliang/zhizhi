@@ -146,6 +146,18 @@
 - 缓解/回滚：生成漂移立即失败关闭；不得手改生成物或恢复运行时仓库路径依赖。
 - 遗留风险/Owner/期限：正式 ADR/owner 接受和下一工作项的回放/撤销仍待完成；机器 QA 不替代 owner 接受。
 
+## 2026-08-14 01:55 — 内存回放/撤销 prototype 通过 QA
+
+- 关联 ID：WORK-2026-011、TR-20260814-003。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；Ready `9d9f569`；红灯 `2425718`；实现 `4fc8e60`。
+- 操作者：Codex（实现）；职责隔离 `graph_qa_fresh`（只读机器 QA，非人类签字/owner 接受）。
+- 变更或症状：纯内存 history 支持最小 delta、顺序 replay、LIFO undo/redo、redo 分支清空和 tamper/hash/revision 冲突检测；无持久日志或运行服务变化。
+- 时间线：Ready → 2 个预期 ImportError → 18/18 目标绿灯 → 154/154 全门绿 → QA attempt 001 PASS。
+- 影响：无部署、端口、常驻进程、数据库、API、UI、网络、Provider、用户数据、秘密或费用；当前网页仍只是工程状态页。
+- 证据：`TR-20260814-003`；history 18/18、graph 50/50、全仓 154/154、Web 1/1、完整门 PASS；QA 0 P0/P1/P2。
+- 缓解/回滚：prototype 可整体禁用；不得把内存证明写成跨进程恢复/数据已持久化。记录未来落盘前需版本化 schema、迁移、隐私和损坏恢复门。
+- 遗留风险/Owner/期限：ADR-0005/owner、SQLite operation log、periodic snapshot、crash recovery 和 UI 未完成；由后续工作项承接。
+
 ---
 
 ## 新条目模板

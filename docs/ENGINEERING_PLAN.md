@@ -9,7 +9,7 @@
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1 步的可回滚开发默认值已通过 QA；当前第 2 步约 80%，个人可用 MVP 粗略完成度约 22%：Anchor/GraphPatch 纯领域 prototype 的首轮 QA 缺陷已按红灯修复，`TR-20260814-002` 的 attempt 002 对 `b946855` PASS；50 个专项测试、4 个仓库集成测试、全仓 Python 136/136 和 Web 1/1 通过。下一主项是回放/逆向补丁；百分比只反映已提交、可验证的产品能力，不以计划或测试数量代替功能完成度。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1 步的可回滚开发默认值已通过 QA；第 2 步的合同/安全预演和纯领域回放/撤销 prototype 均已通过职责隔离 QA，当前进入第 3 步，个人可用 MVP 粗略完成度约 25%。`TR-20260814-002/003` 分别冻结 GraphPatch 与 history 证据；全仓 Python 154/154、Web 1/1 和完整门通过。百分比只反映已提交、可验证的产品能力，不把内存 prototype 冒充持久化产品能力。
 
 ## 当前阶段出口门
 
@@ -39,7 +39,7 @@
 | WORK-2026-008 | DeepSeek 真实兼容验证与金标评测 | 未开始 | AI+QA | WORK-2026-004/006/007 | live smoke、EVAL-LLM-001、成本/延迟报告 | 受控 Key + 报告 + QA 签字 |
 | WORK-2026-009 | 选择并验证 Embedding Provider | 未开始 | AI+检索+QA | WORK-2026-004/007 | embedding policy、索引版本策略 | Recall/成本/离线对照 |
 | WORK-2026-010 | 产品化 AI 自动审查 Harness | 未开始 | AI 平台 + AI 学科/QA 子 Agent | WORK-2026-004 v2 prototype、WORK-2026-007；live 另依赖 008 | 通用 harness、角色策略、evidence ledger、状态机、owner risk acceptance | TC-AIREV-001..010 待执行 |
-| WORK-2026-011 | 纯领域修改回放与 LIFO 撤销/重做 | Ready | graph_revision domain + QA | WORK-2026-005 / TR-20260814-002 | immutable entity delta、history/replay/undo/redo、ADR-0005 | 先提交失败测试；无 DB/API/UI/Provider |
+| WORK-2026-011 | 纯领域修改回放与 LIFO 撤销/重做 | 已验证 prototype（持久化/owner 待后续） | graph_revision domain + QA | WORK-2026-005 / TR-20260814-002 | immutable entity delta、history/replay/undo/redo、ADR-0005 | `2425718` 红灯；`4fc8e60` 实现；`TR-20260814-003` QA PASS；专项 18/18、既有 graph 50/50、全仓 154/154、Web 1/1 |
 
 ## 当前受阻项
 
