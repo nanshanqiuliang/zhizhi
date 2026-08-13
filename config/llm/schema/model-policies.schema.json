@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-tree-agent.local/schema/llm-model-policies.v1.json",
+  "title": "Knowledge Tree Agent LLM Model Policies v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy_version", "updated_at", "global_limits", "task_profiles"],
+  "properties": {
+    "schema_version": {"const": "llm-model-policies.v1"},
+    "policy_version": {"type": "integer", "minimum": 1},
+    "updated_at": {"type": "string", "format": "date"},
+    "global_limits": {"type": "object"},
+    "task_profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/taskProfile"}
+    }
+  },
+  "$defs": {
+    "deployment": {"type": "string", "pattern": "^[a-z0-9_-]+/[a-z0-9_-]+$"},
+    "taskProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_capabilities", "deployments", "production_preference"],
+      "properties": {
+        "status": {"enum": ["active", "unresolved", "disabled"]},
+        "required_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "output_validation": {"type": "string", "minLength": 1},
+        "deployments": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/deployment"}
+        },
+        "production_preference": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/deployment"}
+        },
+        "request": {"type": "object"},
+        "budget": {"$ref": "#/$defs/budget"},
+        "fallback": {"type": "object"}
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_attempts", "max_fallbacks", "max_input_tokens", "max_output_tokens", "max_latency_ms", "max_cost_usd"],
+      "properties": {
+        "max_attempts": {"type": "integer", "minimum": 1},
+        "max_fallbacks": {"type": "integer", "minimum": 0},
+        "max_tool_rounds": {"type": "integer", "minimum": 1},
+        "max_input_tokens": {"type": "integer", "minimum": 1},
+        "max_output_tokens": {"type": "integer", "minimum": 1},
+        "max_latency_ms": {"type": "integer", "minimum": 1},
+        "max_cost_usd": {"type": ["number", "null"], "minimum": 0}
+      }
+    }
+  }
+}

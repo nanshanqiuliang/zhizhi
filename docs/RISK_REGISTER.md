@@ -1,0 +1,19 @@
+# 风险登记册
+
+> 风险是尚未发生的不确定事件；已发生的用户影响进入 Bug/Incident。
+
+| ID | 风险 | 概率 | 影响 | 等级 | 触发信号 | 预防 | 应急 | Owner | 目标阶段 | 状态 |
+|---|---|---:|---:|---:|---|---|---|---|---|---|
+| RISK-2026-001 | 锚点无法稳定恢复，产品核心价值不成立 | 中 | 极高 | 高 | 页/区域指标未达标 | 阶段 0 金标与 parser/viewer 对照 | 降级格式/暂停产品开发 | 待定 | 阶段 0 | open |
+| RISK-2026-002 | AI 覆盖用户锁定内容 | 中 | 极高 | 高 | lock regression 非 0 | GraphPatch 确定性校验、属性测试 | 禁用 AI 写入、恢复 revision | 待定 | 阶段 0/2 | open |
+| RISK-2026-003 | 本地安装依赖过重影响验证 | 中 | 高 | 高 | 需 Docker/外部 DB | SQLite + sidecar 本地基线 | 缩减功能或提供云模式 | 待定 | 阶段 1 | open |
+| RISK-2026-004 | 日志/诊断包泄露课件、路径或密钥 | 中 | 极高 | 高 | 敏感字段进入 evidence | allowlist、redaction、隐私测试 | 停止上传、轮换密钥、事故响应 | 待定 | 阶段 1/3 | open |
+| RISK-2026-005 | 模型/Prompt 更新造成静默质量退化 | 高 | 高 | 高 | eval、schema failure、cost 漂移 | 版本冻结、金标 gate、灰度 | 回退 model policy/prompt | 待定 | 阶段 2 | open |
+| RISK-2026-006 | migration 或更新导致本地数据不可恢复 | 中 | 极高 | 高 | integrity/restore 失败 | expand-migrate-contract、备份恢复 | 停更、恢复备份/前向修复 | 待定 | 阶段 1/3 | open |
+| RISK-2026-007 | 把 OpenAI 兼容误认为语义完全相同，导致 DeepSeek tool/thinking/JSON 失败 | 高 | 高 | 高 | 400、空 JSON、断流、schema failure 上升 | protocol/profile 分层、capability preflight、TC-LLM-001..009 | 隔离 deployment、回退批准配置、恢复 mock | 待定 | 阶段 0/2 | open |
+| RISK-2026-008 | Provider 回退重复工具副作用或产生不可追溯的混合草案 | 中 | 极高 | 高 | 同一 tool_call 重放、partial output 被复用 | fresh model run、禁止副作用自动回退、幂等键 | 禁用回退/AI 草案、审计并撤销 revision | 待定 | 阶段 2 | open |
+| RISK-2026-009 | 模型下线、别名漂移或能力变化造成静默退化 | 高 | 高 | 高 | `/models` 差异、capability mismatch、eval 漂移 | 显式模型 ID、能力快照、启动探测不自动升级 | 关闭 deployment、回退批准 snapshot | 待定 | 阶段 2/运营 | open |
+
+## 评分
+
+概率和影响使用 `低/中/高/极高`。高风险必须有 Owner、触发信号、预防与应急；无缓解的高风险阻断对应阶段。

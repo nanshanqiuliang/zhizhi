@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-tree-agent.local/schema/llm-providers.v1.json",
+  "title": "Knowledge Tree Agent LLM Providers v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "config_revision", "updated_at", "defaults", "providers"],
+  "properties": {
+    "schema_version": {"const": "llm-providers.v1"},
+    "config_revision": {"type": "integer", "minimum": 1},
+    "updated_at": {"type": "string", "format": "date"},
+    "defaults": {"type": "object"},
+    "providers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/provider"}
+    }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "protocol", "secret_ref", "models"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "enablement_gate": {"type": "string", "minLength": 1},
+        "priority": {"type": "integer", "minimum": 0},
+        "protocol": {
+          "enum": ["mock", "openai_chat_completions", "openai_responses", "anthropic_messages"]
+        },
+        "vendor_profile": {"type": "string", "minLength": 1},
+        "endpoint": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["base_url", "allowed_hosts"],
+              "properties": {
+                "base_url": {"type": "string", "pattern": "^https://"},
+                "allowed_hosts": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1}
+                },
+                "allow_beta": {"type": "boolean"}
+              },
+              "additionalProperties": {"type": ["string", "boolean", "array"]}
+            }
+          ]
+        },
+        "secret_ref": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^(keychain|stronghold|env)://"}
+          ]
+        },
+        "development_secret_ref": {"type": "string", "pattern": "^env://"},
+        "request": {"type": "object"},
+        "errors": {"type": "object"},
+        "models": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/model"}
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_id"],
+      "properties": {
+        "model_id": {"type": "string", "minLength": 1},
+        "model_revision": {"type": ["string", "null"]},
+        "lifecycle": {"enum": ["current", "preview", "deprecated", "retired"]},
+        "capabilities": {"$ref": "#/$defs/capabilities"},
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_context_tokens", "max_output_tokens"],
+          "properties": {
+            "max_context_tokens": {"type": "integer", "minimum": 1},
+            "max_output_tokens": {"type": "integer", "minimum": 1}
+          }
+        },
+        "defaults": {"type": "object"}
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text_input", "text_output", "image_input", "streaming", "tool_calls",
+        "parallel_tool_calls", "json_object", "json_schema", "strict_tool_schema",
+        "thinking", "reasoning_effort", "reasoning_replay", "system_message",
+        "developer_message", "usage_tokens", "prompt_cache_usage",
+        "provider_request_id", "web_search", "file_search", "embeddings"
+      ],
+      "properties": {
+        "text_input": {"type": "boolean"},
+        "text_output": {"type": "boolean"},
+        "image_input": {"type": "boolean"},
+        "streaming": {"type": "boolean"},
+        "tool_calls": {"type": "boolean"},
+        "parallel_tool_calls": {"type": "boolean"},
+        "json_object": {"type": "boolean"},
+        "json_schema": {"type": "boolean"},
+        "strict_tool_schema": {"type": "boolean"},
+        "thinking": {"type": "boolean"},
+        "reasoning_effort": {"type": "boolean"},
+        "reasoning_replay": {"type": "boolean"},
+        "system_message": {"type": "boolean"},
+        "developer_message": {"type": "boolean"},
+        "usage_tokens": {"type": "boolean"},
+        "prompt_cache_usage": {"type": "boolean"},
+        "provider_request_id": {"type": "boolean"},
+        "web_search": {"type": "boolean"},
+        "file_search": {"type": "boolean"},
+        "embeddings": {"type": "boolean"}
+      }
+    }
+  }
+}
+

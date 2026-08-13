@@ -1,0 +1,158 @@
+schema_version: llm-model-policies.v1
+policy_version: 1
+updated_at: "2026-08-13"
+
+global_limits:
+  max_fallbacks_per_model_run: 1
+  max_total_network_attempts: 4
+  persist_prompt_or_response: false
+  persist_reasoning_content: false
+  live_tests_require_env: RUN_LIVE_LLM_TESTS
+
+task_profiles:
+  concept_extract:
+    required_capabilities: [text_input, text_output, json_object]
+    output_validation: local_json_schema_strict
+    deployments:
+      - deepseek/fast
+      - mock/deterministic
+    production_preference:
+      - deepseek/fast
+    request:
+      thinking: disabled
+      max_tokens: 4096
+    budget:
+      max_attempts: 2
+      max_fallbacks: 1
+      max_input_tokens: 50000
+      max_output_tokens: 4096
+      max_latency_ms: 180000
+      max_cost_usd: null
+    fallback:
+      allowed_errors:
+        - provider_rate_limited
+        - provider_unavailable
+        - provider_connection_failed
+        - provider_timeout
+      require_fresh_model_run: true
+      reuse_partial_output: false
+
+  relation_validate:
+    required_capabilities: [text_input, text_output, json_object, thinking]
+    output_validation: local_json_schema_strict
+    deployments:
+      - deepseek/quality
+      - mock/deterministic
+    production_preference:
+      - deepseek/quality
+    request:
+      thinking: enabled
+      reasoning_effort: high
+      max_tokens: 8192
+    budget:
+      max_attempts: 2
+      max_fallbacks: 0
+      max_input_tokens: 100000
+      max_output_tokens: 8192
+      max_latency_ms: 600000
+      max_cost_usd: null
+    fallback:
+      allowed_errors: []
+      require_fresh_model_run: true
+      reuse_partial_output: false
+
+  command_interpret:
+    required_capabilities: [text_input, text_output, json_object]
+    output_validation: local_json_schema_strict
+    deployments:
+      - deepseek/fast
+      - mock/deterministic
+    production_preference:
+      - deepseek/fast
+    request:
+      thinking: disabled
+      max_tokens: 2048
+    budget:
+      max_attempts: 2
+      max_fallbacks: 1
+      max_input_tokens: 16000
+      max_output_tokens: 2048
+      max_latency_ms: 120000
+      max_cost_usd: null
+    fallback:
+      allowed_errors:
+        - provider_rate_limited
+        - provider_unavailable
+        - provider_connection_failed
+        - provider_timeout
+      require_fresh_model_run: true
+      reuse_partial_output: false
+
+  answer_with_sources:
+    required_capabilities: [text_input, text_output, streaming]
+    output_validation: citations_and_groundedness
+    deployments:
+      - deepseek/quality
+      - mock/deterministic
+    production_preference:
+      - deepseek/quality
+    request:
+      thinking: enabled
+      reasoning_effort: high
+      max_tokens: 8192
+    budget:
+      max_attempts: 2
+      max_fallbacks: 1
+      max_input_tokens: 100000
+      max_output_tokens: 8192
+      max_latency_ms: 600000
+      max_cost_usd: null
+    fallback:
+      allowed_errors:
+        - provider_rate_limited
+        - provider_unavailable
+        - provider_connection_failed
+        - provider_timeout
+      require_fresh_model_run: true
+      reuse_partial_output: false
+
+  tool_orchestration:
+    required_capabilities: [text_input, text_output, tool_calls, thinking, reasoning_replay]
+    output_validation: tool_and_domain_contracts
+    deployments:
+      - deepseek/quality
+      - mock/deterministic
+    production_preference:
+      - deepseek/quality
+    request:
+      thinking: enabled
+      reasoning_effort: high
+      max_tokens: 8192
+    budget:
+      max_attempts: 1
+      max_fallbacks: 0
+      max_tool_rounds: 8
+      max_input_tokens: 120000
+      max_output_tokens: 8192
+      max_latency_ms: 600000
+      max_cost_usd: null
+    fallback:
+      allowed_errors: []
+      require_fresh_model_run: true
+      reuse_partial_output: false
+      repeat_side_effecting_tools: false
+
+  image_understanding:
+    status: unresolved
+    required_capabilities: [text_input, text_output, image_input]
+    deployments: []
+    production_preference: []
+
+  multilingual_embedding:
+    status: unresolved
+    required_capabilities: [embeddings]
+    deployments: []
+    production_preference: []
+    fallback:
+      automatic_cross_model: false
+      reason: changing_embedding_model_requires_new_index_version

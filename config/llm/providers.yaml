@@ -1,0 +1,174 @@
+schema_version: llm-providers.v1
+config_revision: 1
+updated_at: "2026-08-13"
+
+defaults:
+  deny_unknown_fields: true
+  require_https: true
+  allow_custom_base_url_in:
+    - local-dev
+    - test
+  allow_beta_endpoints_in:
+    - test
+  redact:
+    request_headers:
+      - authorization
+      - x-api-key
+    body_fields:
+      - reasoning_content
+    log_body_content: false
+
+providers:
+  mock:
+    enabled: true
+    protocol: mock
+    secret_ref: null
+    endpoint: null
+    models:
+      deterministic:
+        model_id: mock-deterministic-v1
+        model_revision: "1"
+        capabilities:
+          text_input: true
+          text_output: true
+          image_input: false
+          streaming: true
+          tool_calls: true
+          parallel_tool_calls: false
+          json_object: true
+          json_schema: true
+          strict_tool_schema: true
+          thinking: true
+          reasoning_effort: true
+          reasoning_replay: true
+          system_message: true
+          developer_message: false
+          usage_tokens: true
+          prompt_cache_usage: false
+          provider_request_id: true
+          web_search: false
+          file_search: false
+          embeddings: false
+        limits:
+          max_context_tokens: 100000
+          max_output_tokens: 8192
+
+  deepseek:
+    enabled: false
+    enablement_gate: live_smoke_and_eval_required
+    priority: 10
+    protocol: openai_chat_completions
+    vendor_profile: deepseek
+    endpoint:
+      base_url: https://api.deepseek.com
+      chat_path: /chat/completions
+      models_path: /models
+      allow_beta: false
+      allowed_hosts:
+        - api.deepseek.com
+    secret_ref: keychain://knowledge-tree-agent/deepseek-api-key
+    development_secret_ref: env://DEEPSEEK_API_KEY
+    request:
+      user_agent: knowledge-tree-agent/${APP_VERSION}
+      connect_timeout_ms: 10000
+      first_byte_timeout_ms: 120000
+      stream_idle_timeout_ms: 60000
+      total_timeout_ms: 600000
+      explicit_thinking_mode: true
+      preserve_reasoning_for_tool_rounds: true
+      send_sampling_params_when_thinking: false
+      max_network_attempts: 3
+      retry_backoff_ms: [500, 1000, 2000]
+      retry_jitter: full
+    errors:
+      retry_http_status: [429, 500, 503]
+      do_not_retry_http_status: [400, 401, 402, 403, 422]
+    models:
+      fast:
+        model_id: deepseek-v4-flash
+        model_revision: null
+        lifecycle: current
+        capabilities: &deepseek_capabilities
+          text_input: true
+          text_output: true
+          image_input: false
+          streaming: true
+          tool_calls: true
+          parallel_tool_calls: false
+          json_object: true
+          json_schema: false
+          strict_tool_schema: false
+          thinking: true
+          reasoning_effort: true
+          reasoning_replay: true
+          system_message: true
+          developer_message: false
+          usage_tokens: true
+          prompt_cache_usage: true
+          provider_request_id: true
+          web_search: false
+          file_search: false
+          embeddings: false
+        limits:
+          max_context_tokens: 1000000
+          max_output_tokens: 384000
+        defaults:
+          thinking: disabled
+          max_tokens: 4096
+      quality:
+        model_id: deepseek-v4-pro
+        model_revision: null
+        lifecycle: current
+        capabilities: *deepseek_capabilities
+        limits:
+          max_context_tokens: 1000000
+          max_output_tokens: 384000
+        defaults:
+          thinking: enabled
+          reasoning_effort: high
+          max_tokens: 8192
+
+  openai:
+    enabled: false
+    enablement_gate: adapter_contract_live_smoke_and_eval_required
+    priority: 20
+    protocol: openai_responses
+    vendor_profile: openai
+    endpoint:
+      base_url: https://api.openai.com/v1
+      responses_path: /responses
+      allowed_hosts:
+        - api.openai.com
+    secret_ref: keychain://knowledge-tree-agent/openai-api-key
+    development_secret_ref: env://OPENAI_API_KEY
+    models: {}
+
+  kimi:
+    enabled: false
+    enablement_gate: adapter_contract_live_smoke_and_eval_required
+    priority: 30
+    protocol: openai_chat_completions
+    vendor_profile: kimi
+    endpoint:
+      base_url: https://api.moonshot.cn/v1
+      chat_path: /chat/completions
+      allowed_hosts:
+        - api.moonshot.cn
+    secret_ref: keychain://knowledge-tree-agent/kimi-api-key
+    development_secret_ref: env://MOONSHOT_API_KEY
+    models: {}
+
+  anthropic:
+    enabled: false
+    enablement_gate: adapter_contract_live_smoke_and_eval_required
+    priority: 40
+    protocol: anthropic_messages
+    vendor_profile: anthropic
+    endpoint:
+      base_url: https://api.anthropic.com
+      messages_path: /v1/messages
+      allowed_hosts:
+        - api.anthropic.com
+    secret_ref: keychain://knowledge-tree-agent/anthropic-api-key
+    development_secret_ref: env://ANTHROPIC_API_KEY
+    models: {}
