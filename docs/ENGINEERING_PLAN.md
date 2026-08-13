@@ -41,12 +41,13 @@
 | WORK-2026-010 | 产品化 AI 自动审查 Harness | 未开始 | AI 平台 + AI 学科/QA 子 Agent | WORK-2026-004 v2 prototype、WORK-2026-007；live 另依赖 008 | 通用 harness、角色策略、evidence ledger、状态机、owner risk acceptance | TC-AIREV-001..010 待执行 |
 | WORK-2026-011 | 纯领域修改回放与 LIFO 撤销/重做 | 已验证 prototype（持久化/owner 待后续） | graph_revision domain + QA | WORK-2026-005 / TR-20260814-002 | immutable entity delta、history/replay/undo/redo、ADR-0005 | `2425718` 红灯；`4fc8e60` 实现；`TR-20260814-003` QA PASS；专项 18/18、既有 graph 50/50、全仓 154/154、Web 1/1 |
 | WORK-2026-012 | 示例数据知识树 Web Demo | 已验证 developer demo | Web frontend + QA | WORK-2026-005/011 prototype verified | 三栏工作台、树画布、人工编辑/拖动/layout/会话 undo | `4caa76a` 原红灯；`5aab0e3` 实现；`c8c6bf9` QA P1 红灯；`fff1ce6` 修复；`TR-20260814-004` QA PASS；Web 6/6、Python 154/154 |
+| WORK-2026-013 | 本地 SQLite 持久化工作区 prototype | Ready | local persistence + QA | WORK-2026-005/011 prototype verified；WORK-2026-012 已收口 | 数据目录、SQLite schema/migration、save/load 重启存活、备份/导出/删除、回滚、故障注入证据 | TC-PERS-001..006 待红灯→绿灯 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 4 步持久工作区 | Web Demo 已通过 QA；本地目录、SQLite schema/migration、备份/删除语义未建项 | 建立独立 Ready 工作项，从失败 persistence/restart 测试开始；不得复用内存 Demo 冒充保存 |
+| 第 4 步持久工作区 | Web Demo 已通过 QA；本地目录、SQLite schema/migration、备份/删除语义已建项 | WORK-2026-013 Ready；从失败 persistence/restart 测试开始实现，不得复用内存 Demo 冒充保存 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门

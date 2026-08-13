@@ -394,3 +394,25 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   and failure evidence; start from failing persistence/restart tests.
 - Current blocker: none for offline Step 4 preparation. Real Provider/Web and
   owner acceptance remain separately gated and disabled.
+
+## Step 4A Ready checkpoint — 2026-08-14 07:24 +08:00
+
+- Active branch: `feature/WORK-2026-013-local-sqlite-workspace`.
+- Ready work item: `docs/work-items/WORK-2026-013_local-sqlite-workspace.md`.
+- Scope: pure Python + stdlib `sqlite3` local workspace persistence prototype —
+  data directory layout/validation, versioned SQLite schema v1 + migration
+  framework, CourseGraph save/load (reusing canonical graph contract and
+  `validate_course_graph`), restart survival, backup (checksummed), export
+  (validated JSON), delete via purge-manifest semantics, migration rollback,
+  and fault-injection evidence (truncated/garbage db, interrupted write,
+  duplicate replay).
+- Explicit non-capabilities: no Web API/UI hookup, no auto-save UI, no FTS5
+  search, no file import/PDF viewer, no AI/Provider, no multi-process, no
+  cloud, no encryption. The in-memory Demo must not be presented as saved.
+- Acceptance: TC-PERS-001..006 — directory lifecycle; save→close→reopen
+  semantic equivalence with revision preserved; migration v1 ordered/duplicate/
+  rollback; backup/export/delete consistency; fault injection fails closed;
+  history record JSON round-trip consistent with WORK-2026-011.
+- Exact next action: commit this Ready boundary, then add failing
+  persistence/restart tests (expected ImportError/collection failure) before
+  any SQLite implementation.
