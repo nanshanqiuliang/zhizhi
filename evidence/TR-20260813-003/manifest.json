@@ -1,0 +1,27 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260813-003",
+  "created_at": "2026-08-13T19:48:00+08:00",
+  "commit": "e918fdf915d635760a86842ba1ccee933f962ed1",
+  "dataset": {
+    "id": "calculus-continuity-differentiability-v1",
+    "version": "1.0.0-draft.1",
+    "status": "author_reviewed",
+    "sha256": "53268e3b7b54a9596ac73fc0e6096c5e8aa1941a534be0635591d42510d0e299"
+  },
+  "files": [
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt",
+    "screenshots/page-01.png",
+    "screenshots/page-16.png",
+    "screenshots/page-37.png",
+    "screenshots/page-41.png",
+    "screenshots/page-45.png",
+    "screenshots/page-48.png",
+    "screenshots/page-51.png"
+  ],
+  "sensitive_data": false,
+  "independent_review": "pending"
+}

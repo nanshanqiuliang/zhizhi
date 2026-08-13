@@ -1,7 +1,7 @@
 # WORK-2026-004：建立微积分金标集与许可清单
 
 ```yaml
-status: in_progress
+status: verification
 type: spike
 owner: Codex (dataset author / implementation role)
 reviewers: [project_owner, independent_subject_reviewer, qa]
@@ -9,7 +9,7 @@ related_ids: [NFR-2026-002, NFR-2026-008, RISK-2026-001, RISK-2026-005]
 target_stage: "阶段 -1 / 阶段 0 入口准备"
 risk: high
 created_at: 2026-08-13T18:25:00+08:00
-updated_at: 2026-08-13T18:25:00+08:00
+updated_at: 2026-08-13T19:48:00+08:00
 ```
 
 ## 问题与结果
@@ -36,14 +36,14 @@ updated_at: 2026-08-13T18:25:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：第 2 章 PDF 来自 MIT OCW 官方资源页，记录 52 页、字节数、SHA-256、获取时间和 URL。
-- [ ] AC-2：dataset card/NOTICE 正确署名 Gilbert Strang、MIT OCW，链接 CC BY-NC-SA 4.0，说明修改和非商业/ShareAlike 边界。
-- [ ] AC-3：30 个规范概念均有稳定 ID、名称、定义摘要和至少一个来源锚点。
-- [ ] AC-4：40 条 prerequisite 关系端点存在、无重复、无自环、形成 DAG，并带依据锚点与标注理由。
-- [ ] AC-5：50 个页级锚点在 1..52 范围内，绑定 PDF SHA-256，并覆盖目标主题；不使用伪造 bbox。
-- [ ] AC-6：schema/语义/许可/计数自动校验及失败变异测试通过；至少抽检章节开头、极限和连续函数页面渲染。
-- [ ] 错误和恢复路径：校验失败不得进入 parser/AI eval；远端资源变化时保留旧 hash，创建新 dataset 版本。
-- [ ] 回滚/禁用方法：移除/回退 `evals/calculus-v1` 和本工作项提交；不得删除上游许可/来源记录来“消除”限制。
+- [x] AC-1：第 2 章 PDF 来自 MIT OCW 官方资源页，记录 52 页、736149 bytes、SHA-256、获取时间和 URL；复核时远端重下摘要一致。
+- [x] AC-2：dataset card/NOTICE 正确署名 Gilbert Strang、MIT OCW，链接 CC BY-NC-SA 4.0，说明修改和非商业/ShareAlike 边界。
+- [x] AC-3：30 个规范概念均有稳定 ID、名称、定义摘要和至少一个来源锚点。
+- [x] AC-4：40 条 prerequisite 关系端点存在、无重复、无自环、形成 DAG，并带依据锚点与标注理由；独立学科判断仍待复核。
+- [x] AC-5：50 个页级锚点在 1..52 范围内，绑定 PDF SHA-256，并覆盖目标主题；不使用伪造 bbox。
+- [x] AC-6：schema/语义/许可/计数自动校验及失败变异测试通过；页 1/16/37/41/45/48/51 渲染抽检通过。
+- [x] 错误和恢复路径：CLI 返回稳定 `calculus_dataset_invalid` 和非零；校验失败不得进入 parser/AI eval；远端资源变化时保留旧 hash，创建新 dataset 版本。
+- [x] 回滚/禁用方法：回退实现提交 `e918fdf`；不得删除上游许可/来源记录来“消除”限制。
 
 ## 验证计划
 
@@ -57,9 +57,9 @@ updated_at: 2026-08-13T18:25:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：待实现。
+- Commit/PR：`e918fdf915d635760a86842ba1ccee933f962ed1`；无远端 PR。
 - Contract/ADR/migration/prompt：eval fixture schema v1；无产品 migration/prompt。
-- Test Run：待生成 TR-20260813-003。
+- Test Run：`TR-20260813-003`，CONDITIONAL GO；自动校验和作者复核通过，独立复核待完成。
 - Release：无；仅非商业研发 fixture。
-- 观察结果：待验证。
-- 未完成项的新 ID：独立学科复核是本工作项最终完成门，不由作者自签替代。
+- 观察结果：14/14 金标合同/失败变异、24/24 Python、1/1 Web 通过；7 张代表页清晰可辨。
+- 未完成项：独立学科复核和独立 QA 是本工作项最终完成门，不由作者自签替代；复核任务仍归属本 WORK，不另行伪造已完成 ID。

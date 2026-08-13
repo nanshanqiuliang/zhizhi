@@ -27,6 +27,7 @@ target/
 logs/
 backups/
 diagnostic-bundles/
+tmp/
 
 # Editors and OS
 .idea/

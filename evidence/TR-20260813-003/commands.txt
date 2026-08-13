@@ -1,0 +1,19 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run python -m scripts.validate_calculus_dataset
+uv run ruff format --check scripts tests
+uv run ruff check .
+uv run mypy scripts
+uv run pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+git diff --check
+
+Visual sample rendering (Poppler pdftoppm 144 DPI, PNG):
+pages 1, 16, 37, 41, 45, 48, 51 from evals/calculus-v1/source/mit-ocw-res-18-001-chapter-02-derivatives.pdf
+
+Official source identity check:
+download https://ocw.mit.edu/courses/res-18-001-calculus-fall-2023/mitres_18_001_f17_ch02.pdf
+compare byte size and SHA-256 with the repository fixture

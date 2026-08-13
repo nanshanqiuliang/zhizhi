@@ -1,11 +1,12 @@
 # 测试报告索引
 
-当前只有工程骨架和本地验证，没有产品业务或真实 Provider 测试：
+当前已有工程骨架、本地验证和微积分 eval fixture 作者验证；仍没有产品业务、独立 QA 或真实 Provider 测试：
 
 | Report | Build | 范围 | 结论 | 关联 |
 |---|---|---|---|---|
 | [TR-20260813-001](TR-20260813-001_llm-config-static-validation.md) | documentation-only | LLM YAML/JSON/引用/能力/秘密/链接静态检查 | CONDITIONAL GO | WORK-2026-007 |
 | [TR-20260813-002](TR-20260813-002_repository-skeleton-validation.md) | `bd66e8b` | 本地仓库、配置、安全、Python/Web 与浏览器骨架 | CONDITIONAL GO | WORK-2026-006 |
+| [TR-20260813-003](TR-20260813-003_calculus-gold-dataset-validation.md) | `e918fdf` | 微积分金标 schema/语义/来源/许可、失败变异与代表页渲染 | CONDITIONAL GO | WORK-2026-004 |
 
 正式执行时：
 

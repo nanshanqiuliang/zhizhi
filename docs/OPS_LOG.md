@@ -47,6 +47,18 @@
 - 缓解/回滚：`apps/desktop/Cargo.toml` 不存在时 CI 只允许显式 skip；manifest 出现却没有 Rust job 时失败。回退 `bd66e8b`。
 - 遗留风险/Owner/期限：项目负责人确定远端/许可证；技术负责人批准 ADR-0014；运维补 Rust 与托管 CI；QA 独立复核。
 
+## 2026-08-13 — 微积分 eval fixture 来源与恢复边界登记
+
+- 关联：WORK-2026-004、TR-20260813-003。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；pypdf 6.15.0；commit `e918fdf`；dataset `1.0.0-draft.1` / `author_reviewed`。
+- 操作者：Codex（数据集作者与分时验证；非独立 QA）。
+- 变更或症状：新增 736149-byte、52-page MIT OCW 第 2 章 PDF 与固定 SHA-256；远端官方直链重下字节/hash 一致；无部署或运行服务变化。
+- 影响：fixture 只允许非商业研发，不能进入商业分发；校验失败应阻断 parser/AI eval，禁止自动替换远端变化后的文件。
+- 证据：`evidence/TR-20260813-003/` 含环境、命令、摘要、校验和与 7 张代表页截图；完整本地门通过。
+- 缓解/回滚：远端摘要变化时保留 v1 文件和 hash，创建新 dataset version 再复核；回退 `e918fdf` 可禁用 fixture；不删除署名/许可来规避限制。
+- 验证：来源/hash/页数/元数据/活动内容、schema、引用、DAG、许可、审批状态和视觉抽检通过。
+- 遗留风险/Owner/期限：项目负责人待指派 independent_subject_reviewer 与 QA；签字前 dataset 不得标 `approved`，DeepSeek 保持禁用。
+
 ---
 
 ## 新条目模板
