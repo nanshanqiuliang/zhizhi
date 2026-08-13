@@ -8,6 +8,8 @@
 > **LLM 兼容基线：`!!!_【多LLM兼容基线】知识树Agent_DeepSeek优先适配与配置_v0.1.md`**  
 > **适用范围：需求、设计、开发、测试、发布、运营、更新、缺陷修复、事故响应和退役**
 
+> **2026-08-13 个人项目治理增补**：AI 学科复核与 AI QA 可由确定性 harness 编排的职责隔离子 Agent承担。它们提供 machine attestation，不冒充真人签字；同一模型/Provider 属于相关性复核，必须披露。个人 workspace owner 负责最终范围与残余风险接受，安全不变量不可豁免。详细政策见 `docs/PRODUCT_REQUIREMENTS.md` 和 ADR-0015。
+
 ---
 
 ## 0. 目标与使用规则
@@ -151,12 +153,23 @@ release_version -> build_id -> git_commit -> config_fingerprint
 | 运维/SRE | 环境、配置、监控、备份、部署、回滚、事件响应 | 运行准备度和部署结果 |
 | 安全/隐私 | 威胁、秘密、日志、依赖、数据处理 | 高风险安全与隐私变更 |
 | 发布负责人 | 汇总签字、冻结范围、执行版本门 | 最终发布/中止决定 |
+| AI 学科复核 Agent | 查证学科事实、关系与锚点，记录证据/反证/不确定性 | 只生成 subject machine attestation |
+| AI QA Agent | 独立重算机械门、主动证伪、检查证据/安全/可重放性 | 只生成 QA machine attestation |
+| Harness policy engine | 校验权限、provenance、隔离和状态机 | 确定性计算机器审查状态，无业务风险接受权 |
 
 单人阶段可以一人承担多个角色，但必须：
 
 - 分时执行“实现”和“验收”，使用书面清单重新审视；
 - 高风险发布至少找一名独立复核者；
 - 不能删掉 QA/运维签字字段，只能标记 `same_person_due_to_team_size` 并记录风险。
+
+个人 AI-only 项目使用子 Agent 时：
+
+- 每个角色必须使用不同 run、role prompt、context manifest 和冻结 artifact；
+- QA 不得读取学科 Agent 的隐藏推理或共享可变会话；
+- 相同模型或 Provider 必须记录 `correlated_review`，不能宣称真人或强组织独立；
+- Agent 不得自授工具、写库、改锁、执行 GraphPatch、改审批或接受风险；
+- workspace owner 的显式风险接受只适用于可披露的残余风险，不能绕过输入漂移、越权、伪证据、未解决分歧、秘密泄漏或审计缺失。
 
 ---
 

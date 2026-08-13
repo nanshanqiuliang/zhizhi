@@ -71,6 +71,18 @@
 - 验证：30/40/50 精确覆盖、内容摘要、分歧裁决、双人身份及时序、许可确认和审批同步均有正/负向合同测试。
 - 遗留风险/Owner/期限：项目负责人待指派两名不同人员；真实完成后由独立 QA 形成后续签字报告。DeepSeek 继续禁用。
 
+## 2026-08-13 21:05 — AI 自动机器复核方向登记
+
+- 关联 ID：CHG-2026-001、ADR-0015、WORK-2026-004、WORK-2026-010。
+- 环境/版本/build/config：需求/治理变更；无新运行环境、deployment、secret 或 live flag。
+- 操作者：workspace owner 提出需求；Codex 编排 AI 学科设计子 Agent与 AI QA 设计子 Agent完成只读方案审查。
+- 变更或症状：真人双签不再作为个人产品的目标运行模式；后续采用 AI 学科/QA 子 Agent + 确定性 harness + 机器证明。v1 完成门仍保持红色且不被 AI 伪签。
+- 影响：当前无网络、模型调用、部署、数据库或常驻进程变化；真实 DeepSeek 和 Web Search 继续关闭。
+- 证据：`docs/PRODUCT_REQUIREMENTS.md`、CHG-2026-001、ADR-0015、`docs/ai-review/ROLE_CARDS.md`、WORK-2026-010。
+- 缓解/回滚：v2 未实现前保持数据集 `author_reviewed`；如后续隔离/安全/eval 不达标，禁用 v2 policy 并返回 inconclusive。
+- 验证：本轮只验证文档一致性和仓库门；不声称 harness 或自动审查已实现。
+- 遗留风险/Owner/期限：同源模型偏差、搜索提示注入/漂移和 harness 共同缺陷已登记 RISK-2026-010..012；由后续 TC-AIREV 安全/变异/eval 门处理。
+
 ---
 
 ## 新条目模板

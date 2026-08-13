@@ -26,3 +26,7 @@ required_decisions: [concept_accept, relation_accept_or_dispute, anchor_page_acc
 独立复核者应逐条标记 30 个概念和 40 条关系；分歧必须记录建议方向、理由和裁决，不允许只给“总体看过”。在该签字前，WORK-2026-004 最多进入 `verification`，不能 `complete`，也不能作为 DeepSeek 路由批准证据。
 
 待签执行载体为 `independent-review.json`，操作步骤见 `INDEPENDENT_REVIEW_GUIDE.md`。它同时包含 50 个页级锚点复核和独立 QA 签字；普通校验确认包结构可用，`--require-complete` 是最终双签硬门。
+
+## v2 automatic machine review migration
+
+CHG-2026-001 已改变后续执行方式：个人项目使用 harness 编排 `ai_subject_reviewer` 和 `ai_qa_auditor`，必要时创建 `ai_dispute_adjudicator`。v1 状态继续保持 pending，不用 AI 冒充真人；v2 将使用独立 schema、machine attestation、run/provenance、搜索证据与同源性披露。角色要求见 `docs/ai-review/ROLE_CARDS.md`，实现前不得据此把数据集标成 approved。

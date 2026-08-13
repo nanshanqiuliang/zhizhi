@@ -13,6 +13,7 @@
 
 | 文件 | 用途 |
 |---|---|
+| `PRODUCT_REQUIREMENTS.md` | 个人 AI Agent App 的版本化产品需求与自动审查边界 |
 | `ENGINEERING_PLAN.md` | 当前阶段与工作项 |
 | `DEVELOPMENT_LOG.md` | 技术变化时间线 |
 | `OPS_LOG.md` | 环境、发布和运行问题 |
@@ -26,6 +27,8 @@
 | `../config/llm/providers.yaml` | 非敏感 Provider/协议/能力/端点配置 |
 | `../config/llm/model-policies.yaml` | 任务模型路由、预算、重试和回退配置 |
 | `../AGENTS.md` | 仓库级强制工作流与本地验证命令 |
+| `adr/ADR-0015-ai-review-harness.md` | AI 学科/QA 子 Agent 与确定性 harness 的架构决策 |
+| `ai-review/ROLE_CARDS.md` | AI 学科复核、AI QA 与分歧裁决角色卡 |
 
 ## 目录
 

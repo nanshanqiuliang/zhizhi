@@ -30,3 +30,7 @@ uv run python -m scripts.validate_calculus_review
 ```
 
 任何 hash、许可、计数、引用、DAG 或复核覆盖校验失败都会阻断后续 parser/AI eval。`--require-complete` 在独立学科和 QA 双签前应稳定失败，因此本数据集当前不能成为批准的质量基线。
+
+## v2 需求迁移说明
+
+用户已在 CHG-2026-001 中明确采用 AI 子 Agent自动复核。当前 `independent-review.json` 和 `--require-complete` 属于 v1 真人签字 contract，作为历史证据保留，不得把 AI 名称填入其中伪造真人签字。下一实现将在同一工作项新增 v2 machine attestation、确定性 harness、搜索证据 ledger 和 AI 学科/QA 隔离门；v2 通过前，本数据集继续保持 `author_reviewed`。

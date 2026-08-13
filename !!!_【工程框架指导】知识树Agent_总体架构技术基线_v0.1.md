@@ -9,6 +9,8 @@
 > **LLM 兼容基线：`!!!_【多LLM兼容基线】知识树Agent_DeepSeek优先适配与配置_v0.1.md`**  
 > **阅读顺序：先读 Proposal 理解产品，再读本文件决定如何实现，最后按开发运维总纲执行与留证**
 
+> **2026-08-13 需求增补**：首版定位已明确为个人 AI Agent App；学科复核与 QA 由确定性 harness 编排职责隔离的 AI 子 Agent执行。机器证明、同源性披露和个人用户风险接受必须分离，详细需求与决策见 `docs/PRODUCT_REQUIREMENTS.md`、`docs/adr/ADR-0015-ai-review-harness.md`。
+
 ---
 
 ## 0. 本文件解决什么问题
@@ -58,6 +60,7 @@ Proposal 已回答“为什么做、做什么、价值与风险是什么”。�
 - PDF 查看：PDF.js；解析：Docling 为主、PyMuPDF 为补充；
 - 图约束与离线图算法：NetworkX；
 - LLM、Embedding、OCR、Web Search 都通过 Provider Port 接入。
+- Agent 审查：确定性 review harness + content-addressed artifacts；学科、QA 和裁决角色只产结构化机器证明，不直接获得领域写权限。
 
 ### 1.3 对 Proposal 的一项重要修正：本地 MVP 不强制 PostgreSQL
 
@@ -85,6 +88,7 @@ Proposal 推荐 PostgreSQL + pgvector 作为主数据库，方向适合云端/�
 - 30–50 个概念、40–80 条边、50 个金标锚点；
 - 首家真实 LLM Provider 为 DeepSeek API，另保留确定性 mock Provider；DeepSeek 必须在契约测试、真实 smoke 和金标评测通过后才能启用；
 - 手工图编辑、AI 草案审核、锁定、撤销/重做、重建不覆盖人工成果；
+- harness 自动编排 AI 学科审查、QA 主动证伪和必要的分歧裁决；搜索/检索只读、可追溯、失败关闭；
 - 本地混合检索和带来源回答；
 - 不做多人协作、移动端、完整 GraphRAG 社区摘要、Neo4j、插件市场。
 
@@ -101,6 +105,7 @@ Proposal 推荐 PostgreSQL + pgvector 作为主数据库，方向适合云端/�
 | P0 | 数据完整性 | `prerequisite_of` 无自环、无有向环、边端点存在、证据可追溯 |
 | P0 | 可恢复性 | 应用或 Worker 中断后，任务可从最近完成阶段恢复；写操作可撤销 |
 | P1 | 可解释性 | AI 节点/边包含证据、理由、置信度、模型和 prompt/schema 版本 |
+| P1 | 机器审查可追溯性 | 学科与 QA 使用独立 run/prompt/context；每个结论绑定证据，模型同源时自动降级披露 |
 | P1 | 可替换性 | 更换 LLM/Embedding/Parser 不修改领域层和数据库业务语义 |
 | P1 | 本地可用性 | 不安装 Docker/数据库服务也能运行本地 MVP |
 | P1 | 性能 | 500 个可见节点的拖拽/缩放保持交互流畅；API 常规读 P95 <200ms（工程初值） |

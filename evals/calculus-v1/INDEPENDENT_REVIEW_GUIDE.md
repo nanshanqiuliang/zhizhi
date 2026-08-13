@@ -2,6 +2,8 @@
 
 本文件供项目负责人指派的独立学科复核者和 QA 使用。作者不得代填签字。
 
+> 历史 v1 指南：CHG-2026-001 已将后续路径改为 AI harness 自动机器复核。不得把 AI 子 Agent名称填入本文所述真人 `signoff` 字段；v1 保持 pending，直至新的 v2 machine-attestation contract 和 harness 通过验证。AI 角色卡见 `docs/ai-review/ROLE_CARDS.md`。
+
 ## 冻结输入
 
 - 数据：`gold.json`，版本 `1.0.0-draft.1`；

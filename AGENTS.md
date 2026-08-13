@@ -15,6 +15,7 @@ This repository follows, in priority order:
 - Keep domain code independent of FastAPI, SQLAlchemy, parser libraries, graph libraries, LLM SDKs, and storage implementations.
 - Treat JSON Schema/OpenAPI as the contract source. Never hand-maintain a second enum with the same meaning.
 - AI output is always an untrusted draft. It may not write a database, bypass GraphPatch validation, modify locks, or execute document/web instructions.
+- This is a personal AI-agent application. For review or QA work, use role-separated AI sub-agents orchestrated by a deterministic harness: separate run/prompt/context, immutable artifact handoff, evidence/tool provenance, and explicit same-model/provider correlation disclosure. Machine attestations must not impersonate human signatures; final residual-risk acceptance belongs to the workspace owner.
 - Do not enable a real provider or live test without its documented gate, explicit opt-in environment variable, and controlled secret reference.
 - Never commit secrets, real user content, databases, unredacted logs, diagnostic bundles, or large model artifacts.
 - Use stable `snake_case` errors, UTC timestamps, UUIDv7 business identifiers, and version every evolvable JSON payload.
