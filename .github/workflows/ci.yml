@@ -33,7 +33,7 @@ jobs:
       - name: Lint
         run: uv run ruff check .
       - name: Type check
-        run: uv run mypy scripts && uv run mypy --strict packages/contracts-py/src packages/domain/src
+        run: uv run mypy scripts && uv run mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src
       - name: Test
         run: uv run pytest
 

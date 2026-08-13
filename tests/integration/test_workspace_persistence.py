@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from knowledge_tree_domain import GraphHistory, GraphHistoryError
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
@@ -47,9 +46,7 @@ def history_with_one_record() -> tuple[JsonObject, JsonObject]:
     """Return (initial_graph, record_payload) from a confirmed patch replay."""
 
     graph = valid_graph()
-    history = GraphHistory.start(graph).apply_patch(
-        confirmed_patch(), trusted_actor=TRUSTED_USER
-    )
+    history = GraphHistory.start(graph).apply_patch(confirmed_patch(), trusted_actor=TRUSTED_USER)
     record = history.undo_records[-1]
     return graph, record
 
@@ -201,7 +198,8 @@ def test_load_truncated_db_fails_closed(tmp_path: Path) -> None:
     save_course_graph(layout, valid_graph())
 
     raw = layout.db_path.read_bytes()
-    layout.db_path.write_bytes(raw[: len(raw) // 2])
+    # Truncate inside the SQLite header so the file cannot be opened at all.
+    layout.db_path.write_bytes(raw[:60])
 
     with pytest.raises(WorkspaceError) as excinfo:
         load_course_graph(layout)

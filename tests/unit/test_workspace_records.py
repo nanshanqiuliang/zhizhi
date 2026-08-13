@@ -10,7 +10,6 @@ import json
 from typing import Any
 
 import pytest
-
 from knowledge_tree_domain import GraphHistory
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
