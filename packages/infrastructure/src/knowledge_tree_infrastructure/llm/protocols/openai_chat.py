@@ -119,9 +119,7 @@ def build_chat_request(
     if reasoning_continuation is not None:
         # Attach to the assistant message that issued the tool calls, falling
         # back to the first assistant message for plain reasoning replay.
-        target = next(
-            (m for m in messages if m["role"] == "assistant" and "tool_calls" in m), None
-        )
+        target = next((m for m in messages if m["role"] == "assistant" and "tool_calls" in m), None)
         if target is None:
             target = next((m for m in messages if m["role"] == "assistant"), None)
         if target is not None:

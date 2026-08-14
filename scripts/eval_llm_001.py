@@ -122,9 +122,7 @@ def task_concept_extract(adapter: DeepSeekLlmAdapter, gold: Any) -> dict[str, An
 
 def task_relation_candidate(adapter: DeepSeekLlmAdapter, gold: Any) -> dict[str, Any]:
     label = {c["id"]: c["preferred_label_zh"] for c in gold["concepts"]}
-    gold_pairs = {
-        (r["source_concept_id"], r["target_concept_id"]) for r in gold["relations"]
-    }
+    gold_pairs = {(r["source_concept_id"], r["target_concept_id"]) for r in gold["relations"]}
     sample = list(gold["relations"])[:10]
     positives = [
         f"{label[r['source_concept_id']]} -> {label[r['target_concept_id']]}" for r in sample
@@ -189,7 +187,7 @@ def task_command_interpret(adapter: DeepSeekLlmAdapter, gold: Any) -> dict[str, 
         "把下面的中文操作命令解释成结构化 JSON。只输出 JSON 对象，格式："
         '{"action": "mark_important"或"create_edge"或"lock", "target": "概念名", '
         '"related": ["相关概念"]}。'
-        '命令：「把极限和连续标为重点，并注明连续以极限为前提」。'
+        "命令：「把极限和连续标为重点，并注明连续以极限为前提」。"
     )
     data, in_tok, out_tok, ms = _run(
         adapter,
@@ -251,8 +249,7 @@ def main() -> int:
     total_in = sum(r["input_tokens"] for r in results)
     total_out = sum(r["output_tokens"] for r in results)
     cost = (
-        total_in / 1e6 * PRICING.input_usd_per_mtok
-        + total_out / 1e6 * PRICING.output_usd_per_mtok
+        total_in / 1e6 * PRICING.input_usd_per_mtok + total_out / 1e6 * PRICING.output_usd_per_mtok
     )
 
     report = {

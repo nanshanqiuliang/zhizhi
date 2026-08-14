@@ -484,9 +484,7 @@ def test_runner_raises_when_all_adapters_fail() -> None:
 
     with pytest.raises(LLMProviderError) as raised:
         runner.generate(
-            make_request(
-                budget=Budget(max_attempts=2, max_output_tokens=4096, max_fallbacks=1)
-            ),
+            make_request(budget=Budget(max_attempts=2, max_output_tokens=4096, max_fallbacks=1)),
             thinking="disabled",
         )
     assert raised.value.code == "provider_unavailable"
@@ -499,9 +497,7 @@ def test_runner_raises_when_all_adapters_fail() -> None:
 
 def test_monetary_budget_requires_pricing() -> None:
     adapter = _adapter([_ok_response()])  # config has no pricing
-    request = make_request(
-        budget=Budget(max_attempts=2, max_output_tokens=4096, max_cost_usd=0.01)
-    )
+    request = make_request(budget=Budget(max_attempts=2, max_output_tokens=4096, max_cost_usd=0.01))
 
     with pytest.raises(LLMProviderError) as raised:
         adapter.generate(request, thinking="disabled")
@@ -509,9 +505,7 @@ def test_monetary_budget_requires_pricing() -> None:
 
 
 def test_adapter_respects_request_max_attempts() -> None:
-    fake = _FakeHttp(
-        [HttpTransportError(status=429, body="{}"), _ok_response()]
-    )
+    fake = _FakeHttp([HttpTransportError(status=429, body="{}"), _ok_response()])
     adapter = DeepSeekLlmAdapter(
         api_key="test-key",
         http=fake,
