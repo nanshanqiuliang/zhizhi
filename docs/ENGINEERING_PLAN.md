@@ -9,7 +9,7 @@
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感进行中（约 60%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做，WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入，均已实现并全仓门 + 真实浏览器端到端通过，待职责隔离 QA；冲突预览/崩溃恢复 UI 与普通编辑 patch 化保存待建；个人可用 MVP 粗略完成度约 72%。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感进行中（约 60%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做，WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入，已由 `TR-20260814-011` 验证（QA attempt 001 FAIL 2 P0+3 P1+3 P2，`a6a471a` 修复 P0-2/P1/P2 后收敛，P0-1 普通编辑跨会话撤销与 P2-2 并发记为边界）；冲突预览/崩溃恢复 UI 与普通编辑 patch 化保存待建；个人可用 MVP 粗略完成度约 72%。
 
 ## 当前阶段出口门
 
@@ -47,14 +47,14 @@
 | WORK-2026-016 | 安全文件导入与资源注册（Markdown/TXT/PDF） | 已验证 prototype（PDF 解析/查看器/跳转待后续） | import + storage + QA | WORK-2026-013/014/015 已验证 | schema v2（resource/resource_version）、受控导入、去重、API/Web 导入入口 | `50b3245` 红灯；`10e104f` 实现；`eee15d0` P2 修复；`TR-20260814-008` QA PASS；import 15/15、全仓 208/208、Web 15/15 |
 | WORK-2026-017 | PDF 文本解析与 Anchor 来源跳转 | 已验证 prototype（PDF.js 渲染/bbox 高亮待后续） | parser + viewer + anchor + QA | WORK-2026-016 已验证（导入）；WORK-2026-005 Anchor 契约冻结 | schema v3（resource_segment/anchor）、pypdf 页文本、页文本/锚点端点、Web 查看器与跳转 | `53eb2cd` 红灯；`8c3c620` 实现；`267fb7e` P2 修复；`TR-20260814-009` QA PASS；viewer 10/10、全仓 218/218、Web 18/18 |
 | WORK-2026-018 | PDF.js 可视化渲染与 bbox 区域高亮 | 已验证 prototype（第 5 步完成） | viewer-render + QA | WORK-2026-017 已验证（页文本/锚点）；pdfjs-dist 6.2.108 | PDF.js canvas 渲染、bbox 高亮层、file/anchors 端点、渲染视图与锚点联动 | `275d7c6` 红灯；`2601215` 实现；`d56e7ef` P1/P2 修复；`TR-20260814-010` QA FAIL→修复→浏览器验证；224/224、Web 20/20 |
-| WORK-2026-019 | 持久化 GraphPatch 提交门与跨会话撤销/重做 | 已实现（待职责隔离 QA） | persistence + api + QA | WORK-2026-005/011/013/014 已验证 | `apply_graph_patch`/`undo_graph`/`redo_graph`（重建→apply/undo/redo→原子提交）、持久化 initial graph + applied 栈指针、幂等拒绝、`POST graph/patches|undo|redo` + `GET history` 端点 | `4f5fbd3` Ready；`db3cb26` 红灯；`e0a5ed9` 实现；`49e78eb` 格式修复；全仓 237/237、Web 20/20；QA 待执行 |
-| WORK-2026-020 | 锁定维度存储保护与 WebUI 锁定/撤销接入 | 已实现（待职责隔离 QA） | persistence + api + web + QA | WORK-2026-005/019 已实现 | `save_course_graph` 锁定维度保护（锁降级/内容变化/删除拒绝）；前端四维锁保真往返 + `toggleLock` patch 门 + 撤销/重做回退后端 + 锁标记 | `618420c` 实现；`b5e2680` 格式；`c70d339` 首跑同步修复；lock-guard 4/4、Web 22/22、全仓 241/241；CDP 浏览器端到端 PASS；QA 待执行 |
+| WORK-2026-019 | 持久化 GraphPatch 提交门与跨会话撤销/重做 | 已验证 prototype | persistence + api + QA | WORK-2026-005/011/013/014 已验证 | `apply_graph_patch`/`undo_graph`/`redo_graph`（重建→apply/undo/redo→原子提交）、持久化 initial graph + applied 栈指针、幂等拒绝、`POST graph/patches|undo|redo` + `GET history` 端点 | `4f5fbd3` Ready；`db3cb26` 红灯；`e0a5ed9` 实现；`a6a471a` QA 修复；`TR-20260814-011` QA FAIL→修复；全仓 243/243、Web 23/23 |
+| WORK-2026-020 | 锁定维度存储保护与 WebUI 锁定/撤销接入 | 已验证 prototype | persistence + api + web + QA | WORK-2026-005/019 已实现 | `save_course_graph` 锁定维度保护（锁降级/内容变化/删除/revision 回退拒绝）；前端四维锁保真往返 + `toggleLock` patch 门 + 撤销/重做回退后端 + 编辑前查锁 | `618420c` 实现；`a6a471a` QA 修复；lock-guard 6/6、Web 23/23、全仓 243/243；`TR-20260814-011` QA FAIL→修复 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 6 步冲突预览/崩溃恢复 UI + 普通编辑 patch 化保存 | 后端提交门 + 跨会话撤销/重做 + 锁定存储保护 + 锁定/撤销 UI 已实现（WORK-2026-019/020，待 QA）；普通编辑（增删改/拖动）仍整图 PUT 保存（清空历史）、冲突预览与崩溃恢复 UI 未建 | 建立 WORK-2026-021：冲突预览 UI + 崩溃恢复 UI + 普通编辑 patch 化保存；不得把未接入能力宣称为用户已可见 |
+| 第 6 步冲突预览/崩溃恢复 UI + 普通编辑 patch 化保存 | 后端提交门 + 跨会话撤销/重做 + 锁定存储保护 + 锁定/撤销 UI 已实现并由 TR-20260814-011 验证；普通编辑（增删改/拖动）仍整图 PUT 保存（清空历史）、冲突预览与崩溃恢复 UI 未建 | 建立 WORK-2026-021：冲突预览 UI + 崩溃恢复 UI + 普通编辑 patch 化保存；不得把未接入能力宣称为用户已可见 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门

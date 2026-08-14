@@ -1,6 +1,6 @@
 # 测试报告索引
 
-当前已有工程骨架、本地验证、微积分 eval fixture 作者验证、v1 独立复核待签门、v2 离线 AI 机器复核证明，以及第 4–5 步本地持久化/API/搜索/导入/PDF 查看渲染 prototype 验证（第 6 步锁定/撤销/提交门已实现，职责隔离 QA 待执行）；仍没有产品业务、人类 QA 签字或真实 Provider 测试：
+当前已有工程骨架、本地验证、微积分 eval fixture 作者验证、v1 独立复核待签门、v2 离线 AI 机器复核证明，以及第 4–5 步本地持久化/API/搜索/导入/PDF 查看渲染 prototype 验证（第 6 步锁定/撤销/提交门已由 TR-20260814-011 验证）；仍没有产品业务、人类 QA 签字或真实 Provider 测试：
 
 | Report | Build | 范围 | 结论 | 关联 |
 |---|---|---|---|---|
@@ -19,6 +19,7 @@
 | [TR-20260814-008](TR-20260814-008_safe-import.md) | `eee15d0` | schema v2、MD/TXT/PDF 受控导入、类型/大小/路径守卫、去重 | GO（仅 prototype；correlated） | WORK-2026-016 |
 | [TR-20260814-009](TR-20260814-009_pdf-viewer-anchor.md) | `267fb7e` | schema v3、pypdf 页文本、页文本/锚点端点、漂移不误跳、金标 50 锚点 | GO（仅 prototype；correlated） | WORK-2026-017 |
 | [TR-20260814-010](TR-20260814-010_pdfjs-render.md) | `d56e7ef` | PDF.js canvas 渲染、bbox 高亮、窄视口对齐、file/anchors 端点、真实浏览器验证 | GO（仅 prototype；correlated） | WORK-2026-018 |
+| [TR-20260814-011](TR-20260814-011_patch-gate-undo-redo-lock-guard.md) | `a6a471a` | 持久化 GraphPatch 提交门、跨会话 undo/redo、锁定维度存储保护、Web 锁定/撤销、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-019/020 |
 
 正式执行时：
 

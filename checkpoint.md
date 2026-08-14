@@ -810,3 +810,33 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   add regression tests for any finding, then continue with conflict-preview /
   crash-recovery UI. Keep real Provider/Web, user data, and owner acceptance
   disabled.
+
+## Step 6 QA closure checkpoint — 2026-08-14 18:15 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- Role-separated QA (graph_qa_fresh) reviewed frozen `c70d339` (WORK-2026-019
+  commit gate + cross-session undo/redo, WORK-2026-020 lock guard + web UI) and
+  returned FAIL with 2 P0 + 3 P1 + 3 P2. The core patch gate and record digest
+  checks were confirmed correct; the findings were two conflicting persistence
+  paths (whole-graph PUT clearing history vs patch-gate history) plus lock
+  boundary bypasses.
+- Fix `a6a471a` closed P0-2 (undo/redo autosave), P1-1 (content lock protects
+  the whole concept), P1-2 (revision regression rejected, 409 revision_conflict),
+  P1-3 (front-end checks locks before edit/add/delete/drag), P2-1 (positionLocked
+  reads locks.position or legacy pinned), P2-3 (10 MiB JSON body bound), each
+  with a regression test. P0-1 (ordinary-edit cross-session undo) and P2-2
+  (single-user concurrency TOCTOU) are recorded as boundaries (WORK-2026-021 /
+  single-user loopback).
+- Full gates at `a6a471a`: repository validator, Ruff, mypy (scripts 9 + strict
+  11), pytest 243/243 (lock guard 6/6), locked pnpm install/peers, Web 23/23,
+  production build all pass.
+- Evidence/report: `evidence/TR-20260814-011/` and
+  `docs/test-reports/TR-20260814-011_patch-gate-undo-redo-lock-guard.md`
+  (GO, prototype only, correlated_review, not owner acceptance).
+- Natural-language Step 6 progress: approximately 60% — the core completion
+  markers (locked items never overwritten; no duplicate write on failure/restart)
+  are now verified. Ordinary-edit cross-session undo, conflict-preview UI and
+  crash-recovery UI remain (WORK-2026-021). Overall personal MVP approximately 72%.
+- Exact next action: enter WORK-2026-021 (conflict-preview UI + crash-recovery
+  UI, offline; ordinary-edit patch-based save deferred by owner decision). Keep
+  real Provider/Web, user data, and owner acceptance disabled.

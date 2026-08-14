@@ -323,6 +323,17 @@
 - 回滚：回退 `618420c`/`c70d339` 即回到无锁保护/无锁定 UI 状态；不改变已验证 GraphPatch 提交门与纯领域 history。
 - 遗留风险与下一步：普通编辑（增删改/拖动）仍走整图 PUT（清空历史），其跨会话撤销尚未覆盖；冲突预览 UI、崩溃恢复 UI、前端 patch 化保存待后续；职责隔离 QA 待执行。
 
+## 2026-08-14 — WORK-2026-019/020 职责隔离 QA 收口（TR-20260814-011）
+
+- 关联 ID：WORK-2026-019/020、TR-20260814-011、NFR-2026-001/003、ADR-0005。
+- 实际变化：职责隔离 QA（graph_qa_fresh）对冻结 `c70d339` 返回 FAIL（2 P0、3 P1、3 P2）；修复 `a6a471a` 关闭 P0-2（撤销/重做补自动保存）、P1-1（content 锁护整个 concept）、P1-2（`_guard_revision_monotonic` 拒绝 revision 回退，新增 `revision_conflict` 409）、P1-3（前端编辑前查锁）、P2-1（positionLocked 兼容旧 pinned）、P2-3（body 上限 10 MiB），各配回归测试；P0-1（普通编辑跨会话撤销）与 P2-2（单用户并发 TOCTOU）记为边界（归 WORK-2026-021 / 单用户本地）。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；新增稳定错误码 `revision_conflict`；无 schema/migration/prompt 变化。
+- 兼容性：旧库向后兼容；content 锁语义与 domain 门对齐（保护整个 concept）；positionLocked 兼容 `layout_items.pinned` 旧数据。
+- 验证与证据：`0ecdb1b` 封存 QA 报告 + evidence + TR 报告；全仓 pytest 243/243（lock guard 6/6）、Web 23/23、validator/Ruff/mypy/锁依赖/构建全绿；QA attempt 001 FAIL 记录 + 修复说明保留于 `evidence/TR-20260814-011/`。
+- 性能/安全/运维影响：锁保护纯内存 diff；body 上限防大 payload；错误仅含标识，不落正文/secret。
+- 回滚：回退 `a6a471a` 回到 QA 前实现；QA FAIL evidence 保留；不回退既已验证 GraphPatch/纯领域 history。
+- 遗留风险与下一步：第 6 步核心完成标志已兑现（锁定项不被覆盖、失败/重启不重复写入）；普通编辑跨会话撤销、冲突预览 UI、崩溃恢复 UI 归 WORK-2026-021；真实 Provider/Web 与 owner 接受保持禁用。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
