@@ -40,6 +40,9 @@ extend-exclude = [".venv", "node_modules", "dist"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+"packages/contracts-py/src/knowledge_tree_contracts/_generated_*.py" = ["E501"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

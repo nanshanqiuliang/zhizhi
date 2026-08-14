@@ -25,8 +25,8 @@ from knowledge_tree_contracts.llm_v1 import (
     FINISH_REASONS,
     LLM_ERROR_CODES,
     LLM_SCHEMA_VERSION,
-    PROVIDER_IDS,
     PROTOCOL_IDS,
+    PROVIDER_IDS,
 )
 
 JsonObject = dict[str, Any]
@@ -77,9 +77,7 @@ def valid_request(**overrides: Any) -> JsonObject:
         "schema_version": 1,
         "model_run_id": MODEL_RUN_ID,
         "task": "concept_extract",
-        "messages": [
-            {"role": "user", "parts": [{"kind": "text", "value": "解释极限的定义"}]}
-        ],
+        "messages": [{"role": "user", "parts": [{"kind": "text", "value": "解释极限的定义"}]}],
         "output_schema": None,
         "tools": [],
         "model_policy": "concept_extract",
@@ -158,9 +156,7 @@ def test_finish_reasons_cover_baseline_stream_contract() -> None:
 
 
 def test_generated_artifact_matches_repository_schema() -> None:
-    source = json.loads(
-        (ROOT / "docs/contracts/llm.v1.schema.json").read_text(encoding="utf-8")
-    )
+    source = json.loads((ROOT / "docs/contracts/llm.v1.schema.json").read_text(encoding="utf-8"))
 
     assert llm_contract_document() == source
 
@@ -186,9 +182,7 @@ def test_invalid_message_role_is_rejected() -> None:
 
 
 def test_invalid_content_part_kind_is_rejected() -> None:
-    request = valid_request(
-        messages=[{"role": "user", "parts": [{"kind": "audio", "value": "x"}]}]
-    )
+    request = valid_request(messages=[{"role": "user", "parts": [{"kind": "audio", "value": "x"}]}])
 
     with pytest.raises(ContractValidationError):
         validate_llm_contract("generation_request", request)

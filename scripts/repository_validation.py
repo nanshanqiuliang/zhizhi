@@ -48,6 +48,7 @@ REQUIRED_PATHS = (
     "packages/contracts-py/src/knowledge_tree_contracts",
     "packages/contracts-ts/src",
     "docs/contracts/knowledge-tree-graph.v1.schema.json",
+    "docs/contracts/llm.v1.schema.json",
     "packages/infrastructure/src/knowledge_tree_infrastructure",
     "packages/algorithms/src/knowledge_tree_algorithms",
     "migrations/sqlite",
@@ -156,6 +157,20 @@ def load_graph_contract_schema(root: Path) -> JsonObject:
         Draft202012Validator.check_schema(schema)
     except SchemaError as error:
         raise RepositoryValidationError(f"{path}: invalid JSON Schema: {error}") from error
+    return schema
+
+
+def load_llm_contract_schema(root: Path) -> JsonObject:
+    """Load and self-validate the canonical LLM contract source."""
+
+    path = root / "docs/contracts/llm.v1.schema.json"
+    schema = _load_json(path)
+    try:
+        Draft202012Validator.check_schema(schema)
+    except SchemaError as error:
+        raise RepositoryValidationError(f"{path}: invalid JSON Schema: {error}") from error
+    if "GenerationRequest" not in schema.get("$defs", {}):
+        raise RepositoryValidationError(f"{path}: missing $defs.GenerationRequest")
     return schema
 
 

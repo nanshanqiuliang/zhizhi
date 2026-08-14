@@ -9,18 +9,14 @@ ever touched.
 
 from __future__ import annotations
 
+import re
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import pytest
-
 from knowledge_tree_contracts import validate_llm_contract
 from knowledge_tree_contracts.llm_v1 import CAPABILITY_NAMES
-from knowledge_tree_infrastructure.llm.capabilities import (
-    capability_fingerprint,
-    check_required_capabilities,
-)
 from knowledge_tree_infrastructure.llm.canonical import (
     Budget,
     CanonicalMessage,
@@ -33,6 +29,10 @@ from knowledge_tree_infrastructure.llm.canonical import (
     result_from_dict,
     result_to_dict,
     validate_typed_output,
+)
+from knowledge_tree_infrastructure.llm.capabilities import (
+    capability_fingerprint,
+    check_required_capabilities,
 )
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError
 from knowledge_tree_infrastructure.llm.mock import (
@@ -107,7 +107,7 @@ def test_result_dict_round_trip() -> None:
 
 
 def test_invalid_role_rejected_at_dto_boundary() -> None:
-    with pytest.raises(Exception, match="validation"):
+    with pytest.raises(LLMProviderError) as raised:
         request_from_dict(
             {
                 "schema_version": 1,
@@ -122,6 +122,7 @@ def test_invalid_role_rejected_at_dto_boundary() -> None:
                 "trace_context": {"correlation_id": CORRELATION_ID},
             }
         )
+    assert raised.value.code == "provider_invalid_request"
 
 
 def test_mock_generate_returns_contract_valid_result() -> None:
@@ -173,9 +174,7 @@ def test_blank_json_output_fails_schema_as_provider_schema_failed() -> None:
 
 def test_stream_event_sequence() -> None:
     events = list(
-        make_adapter().stream(
-            make_request(), MockScript(stream_deltas=("极", "限", "是"))
-        )
+        make_adapter().stream(make_request(), MockScript(stream_deltas=("极", "限", "是")))
     )
 
     assert [event.type for event in events] == [
@@ -411,8 +410,8 @@ def test_error_details_never_contain_prompt_or_content() -> None:
 
 def test_mock_fixtures_do_not_contain_secret_patterns() -> None:
     source = Path(__file__).read_text(encoding="utf-8")
-    assert "sk-" not in source
-    assert "sk_" not in source
+    assert re.search(r"sk-[A-Za-z0-9]{16,}", source) is None
+    assert re.search(r"sk_[A-Za-z0-9]{16,}", source) is None
 
 
 # ---------------------------------------------------------------------------

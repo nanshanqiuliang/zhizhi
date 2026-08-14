@@ -27,6 +27,7 @@ from scripts.repository_validation import (
     find_suspected_secrets,
     load_and_validate_llm_config,
     load_graph_contract_schema,
+    load_llm_contract_schema,
     missing_required_paths,
     repository_text_files,
     validate_llm_semantics,
@@ -43,6 +44,7 @@ def main() -> int:
         providers, policies = load_and_validate_llm_config(root)
         validate_llm_semantics(providers, policies)
         load_graph_contract_schema(root)
+        load_llm_contract_schema(root)
 
         dataset = load_and_validate_dataset(root)
         validate_dataset_semantics(root, dataset)
