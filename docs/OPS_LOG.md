@@ -249,6 +249,16 @@
 - 验证：file 二进制/404/越界/文件缺失、anchors 注册/无效 422、bbox 百分比映射、窄视口对齐（aligned: true）、worker dev/build 一致性全部通过。
 - 遗留风险/Owner/期限：文本层联动、多页连续滚动、Markdown/TXT 可视化、OCR、中文分词保持关闭；其余 P2 记录在 QA 报告。第 5 步完成（100%）。
 
+## 2026-08-14 11:55 — 新增人工验证启动入口
+
+- 关联 ID：WORK-2026-014/018。
+- 环境/版本/build/config：commit `ff02c3e`。
+- 变更或症状：新增 `uv run python -m apps.api --data-root <dir> [--port N] [--origin URL]` 启动入口（loopback + Vite dev origins 默认允许）；`apps/__init__.py`/`apps/api/__init__.py` 修正 mypy 包识别（此前 main.py 被匹配为 "main" 与 "apps.api.main" 两处）。
+- 影响：无部署或常驻服务变化；纯开发者/人工验证便利。
+- 证据：health 200、allowed origin 200、evil origin 无 ACAO 头；224/224 pytest、mypy 11 源文件、ruff 全绿。
+- 缓解/回滚：回退 `ff02c3e` 即恢复无启动入口状态（临时脚本仍可用）。
+- 遗留风险/Owner/期限：无新增风险；数据目录默认在用户主目录 `knowledge-tree-data`，用户应自行选择位置。
+
 ---
 
 ## 新条目模板
