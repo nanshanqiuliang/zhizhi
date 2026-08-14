@@ -236,6 +236,19 @@
 - 验证：解析幂等、页文本/越界/未解析/404、锚点 UPSERT/排序/缺失 404、漂移 source_changed 全部通过。
 - 遗留风险/Owner/期限：PDF.js 渲染、bbox 高亮、Markdown/TXT 查看器、OCR、中文分词保持关闭；P2-2/P2-5 已知边界记录在 QA 报告。
 
+## 2026-08-14 11:40 — PDF.js 可视化渲染与 bbox 高亮验证
+
+- 关联 ID：WORK-2026-018、TR-20260814-010。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；pdfjs-dist 6.2.108；commit `d56e7ef`。
+- 操作者：Codex（实现与浏览器 e2e）；职责隔离 `graph_qa_fresh`（只读机器证明，非真人签字/owner 接受）。
+- 变更或症状：新增 PDF.js canvas 渲染与 bbox 高亮、file/anchors 端点；无部署或常驻服务变化。
+- 时间线：`54a108b` Ready → `275d7c6` 红灯 → `2601215` 实现 → QA-001 FAIL（1 P1 + 7 P2）→ `d56e7ef` P1/P2-1/P2-4 修复。
+- 影响：无部署、端口常驻、网络出站、Provider、真实用户数据、秘密或费用；API 仅测试期临时监听 127.0.0.1:8127，已关闭。
+- 证据：`evidence/TR-20260814-010/` 与 `docs/test-reports/TR-20260814-010_pdfjs-render.md`；viewer 12/12、file 4/4、全仓 224/224、Web 20/20、完整本地门 PASS、浏览器 e2e（CDP 完整渲染/高亮/窄视口对齐）PASS。
+- 缓解/回滚：回退 `d56e7ef` 回到页文本查看器；不影响既有持久化/导入/跳转证据。
+- 验证：file 二进制/404/越界/文件缺失、anchors 注册/无效 422、bbox 百分比映射、窄视口对齐（aligned: true）、worker dev/build 一致性全部通过。
+- 遗留风险/Owner/期限：文本层联动、多页连续滚动、Markdown/TXT 可视化、OCR、中文分词保持关闭；其余 P2 记录在 QA 报告。第 5 步完成（100%）。
+
 ---
 
 ## 新条目模板

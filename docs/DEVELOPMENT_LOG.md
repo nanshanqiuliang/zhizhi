@@ -254,6 +254,17 @@
 - 回滚：回退 `267fb7e` 可回到导入-only；红灯测试保留，不得以删除测试替代不变量。
 - 遗留风险与下一步：PDF.js 可视化渲染、bbox 高亮、Markdown/TXT 查看器、OCR、中文分词仍关闭，由第 5 步后续工作项承接。
 
+## 2026-08-14 — 实现 PDF.js 可视化渲染与 bbox 区域高亮
+
+- 关联 ID：WORK-2026-018、REQ-2026-010、NFR-2026-002、TR-20260814-010。
+- 实际变化：`apps/web` 新增 PdfRenderer（pdfjs canvas 渲染、public worker 规避 Windows `@fs` 空格、bbox 高亮覆盖层、canvas 撑开容器保证窄视口对齐）；API 新增 file 端点与 anchors POST；`get_resource_file_path`（storage_key 越界守卫 + 文件缺失 404）；build 产物含 worker。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；无 schema/migration；public/pdf.worker.min.mjs 为 Apache-2.0 运行时资源；无新 canonical contract/prompt。
+- 兼容性：pdfjs-dist 6.2.108；dev/build 用同一 public worker URL；窄视口（≤800px）bbox 对齐。
+- 验证与证据：Ready `54a108b`；红灯 `275d7c6`（API 2 失败 + Web 2 失败）；实现 `2601215` 后 223/223、Web 20/20；QA attempt 001 FAIL（1 P1：窄视口 bbox 错位 + 7 P2）；修复 `d56e7ef` 后 224/224、Web 20/20；真实浏览器（CDP）完整渲染/高亮/窄视口验证 aligned。
+- 性能/安全/运维影响：本地 canvas 渲染无网络；file 端点受控读取 + 越界守卫；错误不含正文；无 Provider、secret、真实用户数据或费用。
+- 回滚：回退 `d56e7ef` 可回到页文本查看器；不影响既有持久化/导入/跳转证据。
+- 遗留风险与下一步：文本层与页面文本高亮联动、多页连续滚动渲染、Markdown/TXT 可视化渲染、OCR、中文分词仍关闭；本工作项完成后第 5 步标记 100%，下一主项进入第 6 步人工编辑安全感。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

@@ -1,0 +1,20 @@
+{
+  "schema_version": "test-environment.v1",
+  "test_run_id": "TR-20260814-010",
+  "recorded_at": "2026-08-14T11:40:00+08:00",
+  "os": "Windows 11 x64 10.0.26200",
+  "timezone": "Asia/Shanghai",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "git": "2.53.0.windows.2",
+  "reviewed_commit": "d56e7ef07e463b114b55f749f621f11f93d80ebf",
+  "qa_attempt001_commit": "2601215a8db600eb6ff104b920799930484960a2",
+  "red_baseline_commit": "275d7c6429aa870eda86184a4023f0cf8cf7d1f2",
+  "ready_commit": "54a108be875b4fb76e3331c6babc89f30e6e3c90",
+  "network_used": false,
+  "provider": "none",
+  "user_data": false,
+  "database": "sqlite3 (stdlib, local test dirs only); pdfjs-dist 6.2.108"
+}

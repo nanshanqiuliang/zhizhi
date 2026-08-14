@@ -1,0 +1,35 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-010",
+  "created_at": "2026-08-14T11:40:00+08:00",
+  "reviewed_commit": "d56e7ef07e463b114b55f749f621f11f93d80ebf",
+  "qa_attempt001_commit": "2601215a8db600eb6ff104b920799930484960a2",
+  "red_baseline_commit": "275d7c6429aa870eda86184a4023f0cf8cf7d1f2",
+  "ready_commit": "54a108be875b4fb76e3331c6babc89f30e6e3c90",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": null,
+    "attempt001": {
+      "path": "ai-render-qa-attempt-001.md",
+      "reviewed_commit": "2601215a8db600eb6ff104b920799930484960a2",
+      "decision": "fail",
+      "findings": "1 P1 (narrow-viewport bbox misalignment) + 7 P2"
+    },
+    "post_review_fix": {
+      "commit": "d56e7ef07e463b114b55f749f621f11f93d80ebf",
+      "note": "P1 fixed (container sized by canvas, bbox aligned; verified in 800px headless viewport aligned:true); P2-1 (file_not_found 404) and P2-4 (drift clears activeAnchor) closed; other P2s recorded as boundaries"
+    }
+  },
+  "files": [
+    "ai-render-qa-attempt-001.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false
+}

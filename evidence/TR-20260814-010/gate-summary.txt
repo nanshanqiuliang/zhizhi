@@ -1,0 +1,20 @@
+TR-20260814-010 / WORK-2026-018
+reviewed commit: d56e7ef07e463b114b55f749f621f11f93d80ebf
+qa attempt-001 commit: 2601215a8db600eb6ff104b920799930484960a2
+red baseline: 275d7c6429aa870eda86184a4023f0cf8cf7d1f2
+ready commit: 54a108be875b4fb76e3331c6babc89f30e6e3c90
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 9 source files)
+pytest: PASS (224/224; pdf viewer 12/12, pdf file 4/4)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (20/20, incl bbox position assertions)
+web production build: PASS (dist includes pdf.worker.min.mjs)
+browser auto-check (CDP): viewer open, text view, render view, canvas 979x1267, flip, anchor jump, bbox highlight ALL PASS
+narrow 800px viewport: bbox top 20% / left 10% / height 15% / width 50%, aligned true
+QA attempt 001 (2601215): FAIL 1 P1 (narrow-viewport bbox misalignment) + 7 P2; P1 + P2-1 + P2-4 fixed by d56e7ef
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test dirs only; pdfjs-dist 6.2.108

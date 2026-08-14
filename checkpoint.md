@@ -669,3 +669,36 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: commit this Ready boundary, then add failing render/file
   tests before any implementation. Completing this work item marks natural-
   language Step 5 100%.
+
+## Step 5 closure checkpoint — 2026-08-14 11:40 +08:00
+
+- Active branch: `feature/WORK-2026-018-pdfjs-render`.
+- Frozen implementation: `d56e7ef07e463b114b55f749f621f11f93d80ebf`
+  (initial `2601215` + P1/P2-1/P2-4 fix); red baseline:
+  `275d7c6429aa870eda86184a4023f0cf8cf7d1f2`; Ready boundary:
+  `54a108be875b4fb76e3331c6babc89f30e6e3c90`.
+- Role-separated QA reviewed `2601215` and returned FAIL (1 P1: bbox
+  highlight vertically misaligned on narrow viewports because .pdf-page had a
+  fixed inline height while the canvas shrank with max-width). P1 fixed by
+  `d56e7ef` (container height driven by the canvas), verified in a real
+  800px headless viewport: pageH == canvasH and bbox top 20% / left 10% /
+  height 15% / width 50%, aligned true. P2-1 (missing file → 404
+  file_not_found) and P2-4 (drift clears activeAnchor) also closed; remaining
+  P2s recorded as boundaries.
+- Full gates pass at `d56e7ef`: repository validator, Ruff, scripts + strict
+  package mypy (incl. apps/api), pytest 224/224 (pdf viewer 12/12, file 4/4),
+  locked pnpm install/peers, Web 20/20 (incl. bbox position assertions),
+  TypeScript check, and production build (dist includes pdf.worker.min.mjs).
+- Real-browser auto-check (CDP headless Chrome): viewer open, text view,
+  render view, canvas 979×1267, page flip, anchor jump, bbox highlight all
+  pass; narrow 800px viewport bbox aligned.
+- Evidence/report: `evidence/TR-20260814-010/` and
+  `docs/test-reports/TR-20260814-010_pdfjs-render.md`.
+- **Natural-language Step 5 is COMPLETE (100%)**: safe import (TR-008),
+  PDF page-text viewer/anchor jump (TR-009), and PDF.js render/bbox highlight
+  (TR-010) are all verified. Overall personal MVP is approximately 70%.
+- Exact next action on the next "继续推进": enter natural-language Step 6
+  (editing safety: undo/lock/crash recovery) with a separate Ready work item
+  (WORK-2026-019), starting from failing undo/lock red tests.
+- Current blocker: none for offline Step 6 preparation. Real Provider/Web and
+  owner acceptance remain separately gated and disabled.
