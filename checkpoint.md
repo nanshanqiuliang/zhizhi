@@ -645,3 +645,27 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   from failing render red tests, or continue with Step 6 (undo/lock safety).
 - Current blocker: none for offline Step 5/6 preparation. Real Provider/Web
   and owner acceptance remain separately gated and disabled.
+
+## Step 5C Ready checkpoint — 2026-08-14 10:00 +08:00
+
+- Active branch: `feature/WORK-2026-018-pdfjs-render`.
+- Ready work item: `docs/work-items/WORK-2026-018_pdfjs-render.md`.
+- Scope: PDF.js visual rendering + bbox highlighting — `pdfjs-dist` (6.2.108,
+  already locked) renders PDF pages to canvas in the browser (local worker, no
+  network), a bbox highlight layer draws `PageBboxSelector.bbox_norm` boxes
+  scaled by page size, a new `GET .../resources/{rid}/file` endpoint serves the
+  registered resource binary (guarded by `_storage_key_within`, 404 on missing,
+  `source_changed` on drift), and the viewer switches between page-text and
+  rendered views with anchor-click highlighting. Gold 50 page anchors +
+  synthetic bbox anchors are the acceptance fixtures.
+- Reuses schema v3 (resource_version.storage_key, anchor table) from
+  WORK-2026-016/017. No new canonical contract, no migration, no prompt.
+- Explicit non-capabilities: text-layer/page-text highlight linkage,
+  multi-page continuous scrolling, Markdown/TXT visual rendering, OCR, cloud,
+  encryption.
+- Acceptance: TC-RENDER-001..004 — file endpoint positive/negative; PDF.js
+  page render + flip/jump; bbox highlight position and no-box case; drift/
+  missing/escape fail closed.
+- Exact next action: commit this Ready boundary, then add failing render/file
+  tests before any implementation. Completing this work item marks natural-
+  language Step 5 100%.

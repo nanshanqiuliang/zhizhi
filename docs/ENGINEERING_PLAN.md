@@ -46,12 +46,13 @@
 | WORK-2026-015 | FTS5 基础搜索（笔记/概念全文检索） | 已验证 prototype（第 4 步完成） | search + api + web + QA | WORK-2026-013/014 prototype verified | FTS5 索引、search 端点、Web 搜索框与结果定位 | `e451057` Ready；`eeba073` 实现；`d6c8e01` P2-2 修复；`TR-20260814-007` QA PASS；搜索 10/10、全仓 193/193、Web 12/12 |
 | WORK-2026-016 | 安全文件导入与资源注册（Markdown/TXT/PDF） | 已验证 prototype（PDF 解析/查看器/跳转待后续） | import + storage + QA | WORK-2026-013/014/015 已验证 | schema v2（resource/resource_version）、受控导入、去重、API/Web 导入入口 | `50b3245` 红灯；`10e104f` 实现；`eee15d0` P2 修复；`TR-20260814-008` QA PASS；import 15/15、全仓 208/208、Web 15/15 |
 | WORK-2026-017 | PDF 文本解析与 Anchor 来源跳转 | 已验证 prototype（PDF.js 渲染/bbox 高亮待后续） | parser + viewer + anchor + QA | WORK-2026-016 已验证（导入）；WORK-2026-005 Anchor 契约冻结 | schema v3（resource_segment/anchor）、pypdf 页文本、页文本/锚点端点、Web 查看器与跳转 | `53eb2cd` 红灯；`8c3c620` 实现；`267fb7e` P2 修复；`TR-20260814-009` QA PASS；viewer 10/10、全仓 218/218、Web 18/18 |
+| WORK-2026-018 | PDF.js 可视化渲染与 bbox 区域高亮 | Ready | viewer-render + QA | WORK-2026-017 已验证（页文本/锚点）；pdfjs-dist 6.2.108 已锁定 | PDF.js canvas 渲染、bbox 高亮层、file 端点、渲染视图与锚点联动 | TC-RENDER-001..004 待红灯→绿灯 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 5 步渲染/高亮 | 导入与页文本跳转已验证（TR-008/009）；PDF.js 可视化渲染与 bbox 区域高亮未建项 | 建立独立 Ready 工作项（WORK-2026-018），从失败 viewer-render 红灯开始；不得把未实现能力宣称为已上线 |
+| 第 5 步渲染/高亮 | 导入与页文本跳转已验证（TR-008/009）；PDF.js 可视化渲染与 bbox 区域高亮已建项 | WORK-2026-018 Ready；从失败 render 红灯开始；完成后第 5 步标记 100% |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门
