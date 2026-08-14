@@ -44,12 +44,13 @@
 | WORK-2026-013 | 本地 SQLite 持久化工作区 prototype | 已验证 prototype（UI/API 接入待后续） | local persistence + QA | WORK-2026-005/011 prototype verified；WORK-2026-012 已收口 | 数据目录、SQLite schema/migration、save/load 重启存活、备份/导出/删除、回滚、故障注入证据 | `1420b68` 红灯；`8e34a40` 实现；`TR-20260814-005` QA PASS；目标 21/21、全仓 175/175、Web 6/6 |
 | WORK-2026-014 | 本地持久化 API sidecar 与 Web 自动保存接入 | 已验证 prototype（Tauri/认证/FTS5 待后续） | api + web integration + QA | WORK-2026-013 prototype verified | `apps/api` FastAPI loopback、CourseGraph GET/PUT/备份、Web 自动保存与保存状态 | `4fe918b` 红灯；`6c0c33c` 实现；`e0a4c72` P2-1 修复；`TR-20260814-006` QA-001/002 PASS；API 8/8、全仓 183/183、Web 10/10 |
 | WORK-2026-015 | FTS5 基础搜索（笔记/概念全文检索） | 已验证 prototype（第 4 步完成） | search + api + web + QA | WORK-2026-013/014 prototype verified | FTS5 索引、search 端点、Web 搜索框与结果定位 | `e451057` Ready；`eeba073` 实现；`d6c8e01` P2-2 修复；`TR-20260814-007` QA PASS；搜索 10/10、全仓 193/193、Web 12/12 |
+| WORK-2026-016 | 安全文件导入与资源注册（Markdown/TXT/PDF） | Ready | import + storage + QA | WORK-2026-013/014/015 已验证 | schema v2（resource/resource_version）、受控导入、去重、API/Web 导入入口 | TC-IMPORT-001..005 待红灯→绿灯 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 5 步导入资料 | 第 4 步已完成（TR-005/006/007，持久化+自动保存+搜索）；文件导入与来源跳转尚未建项 | 建立独立 Ready 工作项（WORK-2026-016），从失败 import/source 红灯开始；不得把未实现能力宣称为已上线 |
+| 第 5 步导入资料 | 第 4 步已完成（TR-005/006/007）；安全文件导入已建项，PDF 解析/查看器/来源跳转未建项 | WORK-2026-016 Ready；从失败 import 红灯开始；不得把未实现能力宣称为已上线 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门

@@ -544,3 +544,25 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   work item (WORK-2026-016), starting from failing import/source red tests.
 - Current blocker: none for offline Step 5 preparation. Real Provider/Web and
   owner acceptance remain separately gated and disabled.
+
+## Step 5A Ready checkpoint — 2026-08-14 08:55 +08:00
+
+- Active branch: `feature/WORK-2026-016-safe-import`.
+- Ready work item: `docs/work-items/WORK-2026-016_safe-import.md`.
+- Scope: safe local import of Markdown/TXT/PDF into the workspace — SQLite
+  schema v2 migration (new `resource`/`resource_version` tables), controlled
+  storage directory (UUIDv7 filenames, no path traversal), SHA-256 content
+  hash + idempotent de-dup, content-based type/size guards (≤25 MiB, magic
+  bytes + extension), `POST`/`GET /api/workspaces/{id}/resources` endpoints,
+  and a Web import control + resource list.
+- Reuses the v1 workspace adapter; migration v1→v2 is forward-compatible.
+  No new canonical contract, no prompt changes.
+- Explicit non-capabilities: PDF text parsing/viewer, Markdown rendering,
+  Anchor generation and source jump (WORK-2026-005 Anchor contract stays
+  frozen; landing later), url/note resources, cloud, encryption.
+- Acceptance: TC-IMPORT-001..005 — migration v1→v2; MD/TXT/PDF import with
+  correct metadata and idempotent de-dup; rejection of out-of-whitelist/
+  forged/oversized/traversal payloads without writes; resources list metadata
+  only; Web import control and list.
+- Exact next action: commit this Ready boundary, then add failing import tests
+  (expected ImportError/collection failure) before any implementation.
