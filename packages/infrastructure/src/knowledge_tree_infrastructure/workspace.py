@@ -1233,14 +1233,10 @@ def _guard_locked_dimensions(current: JsonObject, incoming: Mapping[str, Any]) -
     """Reject a whole-graph replacement that downgrades or mutates a locked dimension."""
 
     current_concepts = {
-        str(item["id"]): item
-        for item in current.get("concepts", [])
-        if isinstance(item, dict)
+        str(item["id"]): item for item in current.get("concepts", []) if isinstance(item, dict)
     }
     incoming_concepts = {
-        str(item["id"]): item
-        for item in incoming.get("concepts", [])
-        if isinstance(item, dict)
+        str(item["id"]): item for item in incoming.get("concepts", []) if isinstance(item, dict)
     }
     for concept_id, before in current_concepts.items():
         locks = before.get("locks")
