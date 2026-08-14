@@ -1,0 +1,19 @@
+TR-20260814-008 / WORK-2026-016
+reviewed commit: eee15d0e5127bd91d7e21124282107a4e02c1f25
+qa attempt-001 commit: 10e104f2961e93813f2ce477c52e50b29aa0081e
+red baseline: 50b324528ec594876f2949b0de9d76fc7a6fce61
+ready commit: 293c0ef6eec2250ef8780f4089d2384fb9597762
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 9 source files)
+pytest: PASS (208/208; import target 15/15)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (15/15)
+web production build: PASS
+live e2e smoke (uvicorn 127.0.0.1:8125): MD/PDF import 200; duplicate same-hash idempotent; exe rejected 422; list metadata only
+QA attempt 001 (10e104f): PASS (0 P0/P1, 5 P2); P2-1 + P2-3 fixed by eee15d0
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test directories only

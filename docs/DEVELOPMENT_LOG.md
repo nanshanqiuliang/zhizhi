@@ -232,6 +232,17 @@
 - 回滚：回退 `d6c8e01` 可移除搜索；红灯测试保留，不得以删除测试替代不变量。
 - 遗留风险与下一步：中文分词、模糊/纠错、文件内容检索（第 5 步）仍关闭；本工作项完成后第 4 步标记 100%，下一主项进入第 5 步导入资料与来源跳转。
 
+## 2026-08-14 — 实现安全文件导入与资源注册
+
+- 关联 ID：WORK-2026-016、REQ-2026-006、REQ-2026-010、NFR-2026-002、TR-20260814-008。
+- 实际变化：schema v2 migration（resource/resource_version 表）；`import_resource`（类型/大小/路径守卫、SHA-256 去重、先落盘后提交、UUIDv7 磁盘文件名）、`list_resources`；API POST/GET resources 端点；Web 导入控件与资源列表；新增 python-multipart 依赖。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；PRAGMA user_version 1→2（向前兼容）；无新 canonical contract/prompt。
+- 兼容性：旧 v1 库自动迁移保留数据；文件只存受控数据目录；客户端文件名仅作 display_name。
+- 验证与证据：Ready `293c0ef`；红灯 `50b3245`（API 1 ImportError + Web 3 失败）；实现 `10e104f` 后 import 14/14、全仓 207/207、Web 15/15；QA attempt 001 PASS（0 P0/P1，5 P2）；P2-1/P2-3 修复 `eee15d0` 后 import 15/15、全仓 208/208；真实 uvicorn e2e 通过。
+- 性能/安全/运维影响：受控存储 + 路径逃逸拒绝 + 类型/大小守卫；错误不含正文；无网络出站、Provider、secret、真实用户数据或费用。
+- 回滚：回退 `eee15d0` 可回到 v1 库（迁移前数据保留）；红灯测试保留，不得以删除测试替代不变量。
+- 遗留风险与下一步：PDF 解析/查看器、Markdown 渲染、Anchor 生成与来源跳转、url/note 资源仍关闭，由第 5 步后续工作项承接。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

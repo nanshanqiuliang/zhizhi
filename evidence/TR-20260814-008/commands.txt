@@ -1,0 +1,13 @@
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run ruff format --check packages scripts tests apps
+uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m pytest
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check
+pnpm build
+uv run python -m pytest tests/integration/test_resource_import.py -q
+uv run python tmp/e2e_import.py (real uvicorn on 127.0.0.1:8125)

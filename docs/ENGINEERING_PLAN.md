@@ -9,7 +9,7 @@
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1 步的可回滚开发默认值已通过 QA；第 2 步的合同/安全预演和纯领域回放/撤销 prototype 均已通过职责隔离 QA。第 3 步的会话内知识树 Web Demo 已由 `TR-20260814-004` 验证。第 4 步已由 `TR-20260814-005/006/007` 验证：SQLite 持久化内核（`8e34a40`）、FastAPI sidecar 与 Web 自动保存（`6c0c33c`/`e0a4c72`）、FTS5 基础搜索（`eeba073`/`d6c8e01`）均通过职责隔离 QA；第 4 步标记 100% 完成（关闭重开内容仍在、可导出备份恢复、基础搜索可用）。下一主项为第 5 步导入资料与来源跳转；个人可用 MVP 粗略完成度约 55%。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步的 安全文件导入（WORK-2026-016）已由 `TR-20260814-008` 验证（schema v2、MD/TXT/PDF 受控导入、类型/大小/路径守卫、去重；红灯 `50b3245` → 实现 `10e104f` → P2 修复 `eee15d0` → QA PASS，import 15/15、全仓 208/208、Web 15/15）。第 5 步后续（PDF 解析/查看器、Anchor 来源跳转）为独立工作项；个人可用 MVP 粗略完成度约 60%。
 
 ## 当前阶段出口门
 
@@ -44,13 +44,13 @@
 | WORK-2026-013 | 本地 SQLite 持久化工作区 prototype | 已验证 prototype（UI/API 接入待后续） | local persistence + QA | WORK-2026-005/011 prototype verified；WORK-2026-012 已收口 | 数据目录、SQLite schema/migration、save/load 重启存活、备份/导出/删除、回滚、故障注入证据 | `1420b68` 红灯；`8e34a40` 实现；`TR-20260814-005` QA PASS；目标 21/21、全仓 175/175、Web 6/6 |
 | WORK-2026-014 | 本地持久化 API sidecar 与 Web 自动保存接入 | 已验证 prototype（Tauri/认证/FTS5 待后续） | api + web integration + QA | WORK-2026-013 prototype verified | `apps/api` FastAPI loopback、CourseGraph GET/PUT/备份、Web 自动保存与保存状态 | `4fe918b` 红灯；`6c0c33c` 实现；`e0a4c72` P2-1 修复；`TR-20260814-006` QA-001/002 PASS；API 8/8、全仓 183/183、Web 10/10 |
 | WORK-2026-015 | FTS5 基础搜索（笔记/概念全文检索） | 已验证 prototype（第 4 步完成） | search + api + web + QA | WORK-2026-013/014 prototype verified | FTS5 索引、search 端点、Web 搜索框与结果定位 | `e451057` Ready；`eeba073` 实现；`d6c8e01` P2-2 修复；`TR-20260814-007` QA PASS；搜索 10/10、全仓 193/193、Web 12/12 |
-| WORK-2026-016 | 安全文件导入与资源注册（Markdown/TXT/PDF） | Ready | import + storage + QA | WORK-2026-013/014/015 已验证 | schema v2（resource/resource_version）、受控导入、去重、API/Web 导入入口 | TC-IMPORT-001..005 待红灯→绿灯 |
+| WORK-2026-016 | 安全文件导入与资源注册（Markdown/TXT/PDF） | 已验证 prototype（PDF 解析/查看器/跳转待后续） | import + storage + QA | WORK-2026-013/014/015 已验证 | schema v2（resource/resource_version）、受控导入、去重、API/Web 导入入口 | `50b3245` 红灯；`10e104f` 实现；`eee15d0` P2 修复；`TR-20260814-008` QA PASS；import 15/15、全仓 208/208、Web 15/15 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 5 步导入资料 | 第 4 步已完成（TR-005/006/007）；安全文件导入已建项，PDF 解析/查看器/来源跳转未建项 | WORK-2026-016 Ready；从失败 import 红灯开始；不得把未实现能力宣称为已上线 |
+| 第 5 步查看/跳转 | 安全文件导入已验证（TR-008）；PDF 解析/查看器与 Anchor 来源跳转未建项 | 建立独立 Ready 工作项（WORK-2026-017），从失败 viewer/anchor 红灯开始；不得把未实现能力宣称为已上线 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门

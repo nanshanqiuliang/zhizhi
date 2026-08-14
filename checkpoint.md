@@ -566,3 +566,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   only; Web import control and list.
 - Exact next action: commit this Ready boundary, then add failing import tests
   (expected ImportError/collection failure) before any implementation.
+
+## Step 5A closure checkpoint — 2026-08-14 09:15 +08:00
+
+- Active branch: `feature/WORK-2026-016-safe-import`.
+- Frozen implementation: `eee15d0e5127bd91d7e21124282107a4e02c1f25`
+  (initial `10e104f` + P2-1/P2-3 fix); red baseline:
+  `50b324528ec594876f2949b0de9d76fc7a6fce61`; Ready boundary:
+  `293c0ef6eec2250ef8780f4089d2384fb9597762`.
+- Role-separated QA reviewed `10e104f` and returned PASS (0 P0/P1, 5 P2).
+  P2-1 (DB-commit vs disk-write non-atomicity, orphan records) and P2-3 (dead
+  `mime` param) were closed by `eee15d0` (write-then-commit + orphan cleanup
+  regression test); P2-2 (idempotency not concurrency-safe), P2-4 (POST
+  implicitly creates workspace, consistent with PUT /graph) and P2-5 (coarse
+  front-end error mapping) are recorded prototype boundaries.
+- Full gates pass at `eee15d0`: repository validator, Ruff, scripts + strict
+  package mypy (incl. apps/api), pytest 208/208 (import 15/15), locked pnpm
+  install/peers, Web 15/15, TypeScript check, and production build. Live e2e
+  smoke via real uvicorn confirmed MD/PDF import, same-hash idempotency, exe
+  rejection, and metadata-only listing.
+- Evidence/report: `evidence/TR-20260814-008/` and
+  `docs/test-reports/TR-20260814-008_safe-import.md`.
+- Natural-language Step 5 progress: first work item (safe file import) done
+  (approximately 25% of Step 5); overall personal MVP approximately 60%.
+- Exact next action on the next "继续推进": create a separate Ready work item
+  for PDF text parsing/viewer and Anchor-based source jump (WORK-2026-017),
+  starting from failing viewer/anchor red tests. The calculus gold PDF and
+  page-level samples are ready for acceptance.
+- Current blocker: none for offline Step 5 preparation. Real Provider/Web and
+  owner acceptance remain separately gated and disabled.
