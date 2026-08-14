@@ -86,7 +86,9 @@ LLM_V1_SCHEMA_JSON = r"""{
     "LlmErrorCode": {
       "enum": [
         "provider_invalid_request",
+        "provider_config_invalid",
         "provider_continuation_lost",
+        "provider_secret_missing",
         "provider_auth_failed",
         "provider_balance_exhausted",
         "provider_rate_limited",

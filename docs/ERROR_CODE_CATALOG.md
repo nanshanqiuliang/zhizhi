@@ -44,20 +44,23 @@ HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..013`。
 | `record_tampered` | API/History | 409 | no | 从备份恢复 | TC-GATE-004 | verified |
 | `record_invalid` | API/History | 409 | no | 从备份恢复 | TC-GATE-004 | verified |
 
-## 已验证实现（LLM port，WORK-2026-007，第 7 步离线契约层）
+## 已验证实现（LLM port，WORK-2026-007/008，第 7 步）
 
-以下 15 个稳定错误码由 canonical `LlmErrorCode` enum（`docs/contracts/llm.v1.schema.json`）定义，
+以下 17 个稳定错误码由 canonical `LlmErrorCode` enum（`docs/contracts/llm.v1.schema.json`）定义，
 `knowledge_tree_infrastructure/llm/errors.py` 强制 code 属于该 enum；details 不含正文/prompt/密钥。
-证据为 `b2e215b` 与 TC-LLM-006/007 的 mock 契约测试（注入失败映射 10 码 + 退避/预算/熔断）。
+证据为 `b2e215b`/`d81c574` 与 TC-LLM-006/007、TC-DS-004 的契约测试；`declared` 指已在 canonical
+enum 声明并被 RB-PROV-001 引用，但 raise 路径/专门测试仍待后续工作项。
 
 | Code | Layer/Owner | Retryable | 用户动作 | Test | 状态 |
 |---|---|---:|---|---|---|
-| `provider_invalid_request` | LLM port | no | 修正请求/配置 | TC-LLM-006/001 | verified |
+| `provider_invalid_request` | LLM port | no | 修正请求/配置 | TC-LLM-006/001、TC-DS-004 | verified |
+| `provider_config_invalid` | Config/Provider | no | 修复版本化配置 | 待建 | declared |
 | `provider_continuation_lost` | LLM port | no | 从安全 checkpoint 重启模型阶段 | TC-LLM-005 | verified |
-| `provider_auth_failed` | LLM port | no | 检查密钥/权限（立即熔断） | TC-LLM-006/007 | verified |
-| `provider_balance_exhausted` | LLM port | no | 充值或改 deployment（立即熔断） | TC-LLM-006/007 | verified |
-| `provider_rate_limited` | LLM port | yes | 稍后重试（尊重响应头） | TC-LLM-006/007 | verified |
-| `provider_unavailable` | LLM port | yes | 稍后重试 | TC-LLM-006/007 | verified |
+| `provider_secret_missing` | Secret/Provider | no | 配置或重新授权 API Key | 待建 | declared |
+| `provider_auth_failed` | LLM port | no | 检查密钥/权限（立即熔断） | TC-LLM-006/007、TC-DS-004 | verified |
+| `provider_balance_exhausted` | LLM port | no | 充值或改 deployment（立即熔断） | TC-LLM-006/007、TC-DS-004 | verified |
+| `provider_rate_limited` | LLM port | yes | 稍后重试（尊重响应头） | TC-LLM-006/007、TC-DS-004 | verified |
+| `provider_unavailable` | LLM port | yes | 稍后重试 | TC-LLM-006/007、TC-DS-004 | verified |
 | `provider_connection_failed` | LLM port | yes | 检查网络 | TC-LLM-006/007 | verified |
 | `provider_timeout` | LLM port | depends | 按阶段与幂等性处理 | TC-LLM-006/007 | verified |
 | `provider_schema_failed` | LLM port | no（最多一次修复） | 重试或回退模型 | TC-LLM-002/006 | verified |
@@ -82,23 +85,8 @@ HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..013`。
 | `resource_missing` | Resource | maybe | 重新授权/定位文件 | resource.missing | RB-APP/ANCH | 待建 | planned |
 | `unsupported_format` | Ingestion | no | 转换格式 | ingestion.rejected | — | 待建 | planned |
 | `parse_failed` | Parser | depends | 重试/诊断 | ingestion.stage.failed | RB-JOB-001 | 待建 | planned |
-| `provider_rate_limited` | Provider | yes | 稍后重试 | provider.rate_limited | RB-PROV-001 | 待建 | planned |
-| `provider_schema_failed` | Provider/AI | depends | 重试或回退模型 | provider.schema_failed | RB-PROV-001 | 待建 | planned |
-| `provider_capability_missing` | Router/Policy | no | 改用支持该能力的已批准模型 | provider.capability_missing | RB-PROV-001 | TC-LLM-009 | planned |
-| `provider_config_invalid` | Config/Provider | no | 修复版本化配置 | provider.config_invalid | RB-PROV-001 | TC-LLM-009 | planned |
-| `provider_secret_missing` | Secret/Provider | no | 配置或重新授权 API Key | provider.secret_missing | RB-PROV-001 | TC-LLM-008/009 | planned |
-| `provider_auth_failed` | Provider | no | 检查、轮换或重新授权密钥 | provider.auth_failed | RB-PROV-001/RB-SEC-001 | TC-LLM-006 | planned |
-| `provider_balance_exhausted` | Provider/Billing | no | 充值或人工批准替代 Provider | provider.balance_exhausted | RB-PROV-001 | TC-LLM-006 | planned |
-| `provider_invalid_request` | Adapter/Provider | no | 检查 protocol、参数和 fixture | provider.invalid_request | RB-PROV-001 | TC-LLM-001/006 | planned |
-| `provider_connection_failed` | Provider/Network | yes | 检查网络后重试 | provider.connection_failed | RB-PROV-001 | TC-LLM-006/007 | planned |
-| `provider_timeout` | Provider/Network | depends | 稍后重试或按策略回退 | provider.timeout | RB-PROV-001 | TC-LLM-003/006/007 | planned |
-| `provider_unavailable` | Provider | yes | 稍后重试或按策略回退 | provider.unavailable | RB-PROV-001 | TC-LLM-006/007 | planned |
-| `provider_protocol_mismatch` | Adapter/Provider | no | 隔离 deployment 并更新适配器 | provider.protocol_mismatch | RB-PROV-001 | TC-LLM-001/003/006 | planned |
-| `provider_stream_incomplete` | Adapter/Provider | depends | 从阶段 checkpoint 重跑 | provider.stream_incomplete | RB-PROV-001 | TC-LLM-003 | planned |
-| `provider_continuation_lost` | Adapter/Provider | no in-place | 从安全 checkpoint 重启模型阶段 | provider.continuation_lost | RB-PROV-001 | TC-LLM-005 | planned |
 | `job_lease_lost` | Job | yes by new owner | 等待安全恢复 | job.lease_lost | RB-JOB-001 | 待建 | planned |
 | `job_cancelled` | Job | no | 可重新发起 | job.cancelled | RB-JOB-001 | 待建 | planned |
-| `budget_exceeded` | Provider/Policy | no until approved | 调整预算/继续 | provider.budget_exceeded | RB-PROV-001 | 待建 | planned |
 | `unsafe_path` | Security/Desktop | no | 重新选择授权路径 | security.path_rejected | RB-SEC 待建 | 待建 | planned |
 | `permission_denied` | Security | no | 请求适当权限 | security.permission_denied | RB-SEC 待建 | TC-GRAPH-004 actor spoof | prototype |
 | `prompt_injection_suspected` | AI/Security | no auto retry | 审核来源 | security.prompt_injection | RB-SEC 待建 | 待建 | planned |

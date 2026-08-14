@@ -147,6 +147,12 @@ def test_error_codes_cover_baseline_section_4_6() -> None:
     )
 
 
+def test_error_codes_include_config_and_secret_reference() -> None:
+    # RB-PROV-001 and ERROR_CODE_CATALOG reference these preflight/secret codes;
+    # the canonical enum must be their single source, never a second hand-kept list.
+    assert {"provider_config_invalid", "provider_secret_missing"}.issubset(set(LLM_ERROR_CODES))
+
+
 def test_capability_names_cover_baseline_section_3_2() -> None:
     assert set(CAPABILITY_NAMES) == _BASELINE_CAPABILITIES
 
