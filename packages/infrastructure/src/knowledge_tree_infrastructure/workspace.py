@@ -1349,7 +1349,13 @@ def _build_diff_patch(current: JsonObject, incoming: Mapping[str, Any]) -> JsonO
         inc = inc_concepts[concept_id]
         revision = _rev(concept_id)
         target = {"type": "concept", "id": concept_id}
+        changes: JsonObject = {}
         if cur.get("label") != inc.get("label"):
+            changes["label"] = inc["label"]
+        for field in ("review_state", "confidence", "evidence_ids"):
+            if cur.get(field) != inc.get(field):
+                changes[field] = inc.get(field)
+        if changes:
             operations.append(
                 {
                     "op_id": _uuid7(),
@@ -1357,7 +1363,7 @@ def _build_diff_patch(current: JsonObject, incoming: Mapping[str, Any]) -> JsonO
                     "target": target,
                     "expected_updated_revision_no": revision,
                     "evidence_ids": [],
-                    "changes": {"label": inc["label"]},
+                    "changes": changes,
                 }
             )
         if _note_value(cur) != _note_value(inc):
@@ -1382,34 +1388,19 @@ def _build_diff_patch(current: JsonObject, incoming: Mapping[str, Any]) -> JsonO
                         "value": inc["locks"][dimension],
                     }
                 )
-        changes: JsonObject = {}
-        for field in ("review_state", "confidence", "evidence_ids"):
-            if cur.get(field) != inc.get(field):
-                changes[field] = inc.get(field)
-        if changes:
-            operations.append(
-                {
-                    "op_id": _uuid7(),
-                    "op": "update_concept",
-                    "target": target,
-                    "expected_updated_revision_no": revision,
-                    "evidence_ids": [],
-                    "changes": changes,
-                }
-            )
 
-    # 6. move layout items.
+    # 6. move layout items (including newly created concepts' layout).
     cur_layout = {(str(li["view_id"]), str(li["concept_id"])): li for li in current["layout_items"]}
     inc_layout = {
         (str(li["view_id"]), str(li["concept_id"])): li for li in incoming["layout_items"]
     }
-    for key in sorted(set(cur_layout) & set(inc_layout)):
-        cur_li = cur_layout[key]
+    for key in sorted(set(inc_layout)):
         inc_li = inc_layout[key]
         concept_id = key[1]
         if concept_id not in inc_concepts:
             continue
-        if (
+        cur_li = cur_layout.get(key)
+        if cur_li is None or (
             cur_li.get("x") != inc_li.get("x")
             or cur_li.get("y") != inc_li.get("y")
             or cur_li.get("pinned") != inc_li.get("pinned")

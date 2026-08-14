@@ -491,6 +491,18 @@ def _apply_delete_concept(
                 dimension=dimension,
             )
     concept_id = str(target["id"])
+    # Before cascading edges, ensure the surviving endpoint of each removed
+    # edge does not have its relations locked (mirrors _apply_delete_edge).
+    for edge in graph["edges"]:
+        if edge["source_concept_id"] == concept_id or edge["target_concept_id"] == concept_id:
+            other_id = (
+                str(edge["target_concept_id"])
+                if edge["source_concept_id"] == concept_id
+                else str(edge["source_concept_id"])
+            )
+            other = concepts.get(other_id)
+            if other is not None:
+                _ensure_unlocked(other, "relations", operation_id=operation_id)
     graph["concepts"] = [concept for concept in graph["concepts"] if concept["id"] != concept_id]
     graph["edges"] = [
         edge
