@@ -40,7 +40,7 @@ uv run ruff format --check packages scripts tests apps
 uv run ruff check .
 uv run mypy scripts
 uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
-uv run pytest
+uv run python -m pytest
 pnpm install --frozen-lockfile
 pnpm peers check
 pnpm check
