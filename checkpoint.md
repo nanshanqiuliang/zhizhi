@@ -782,3 +782,31 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   add regression tests for any finding, then preserve evidence and move to the
   front-end patch-save / lock UI work item (WORK-2026-020). Keep real
   Provider/Web, user data, and owner acceptance disabled.
+
+## Step 6 lock/undo UI checkpoint — 2026-08-14 17:20 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate` (WORK-2026-020 carried on the
+  same branch; commits `618420c`, `b5e2680`, `c70d339`).
+- Backend: `save_course_graph` now guards locked dimensions on whole-graph save
+  — `lock_downgraded` / `content_changed` / `concept_deleted` all reject with
+  `target_locked`, so a locked item can no longer be silently overwritten at the
+  storage boundary (NFR-2026-001 "锁定项误改为 0").
+- Frontend: four-dimension lock round-trip (`locks` + `revision` in api.ts);
+  `toggleLock(content|position)` applies through the patch gate when a backend
+  is attached (syncing the snapshot first for first-run), or stays session-local
+  otherwise; undo/redo falls back to backend history when the session stack is
+  empty; content-lock badge on nodes.
+- Verification: backend lock-guard 4/4; Web lock/undo tests 2/2; full gates
+  (validator, Ruff, mypy scripts 9 + strict 11, pytest 241/241, Web 22/22,
+  frozen pnpm install/peers/check/build) all pass.
+- Real-browser CDP check PASS: click "锁定内容" → content-locked badge appears →
+  backend `locks.content=true` → locked label edit returns 409 `target_locked` →
+  undo → badge gone and `locks.content=false` (cross-session undo round-trip).
+- Natural-language Step 6 progress: approximately 60% (backend gate + lock
+  storage guard + lock/undo web UI verified). Remaining: conflict-preview UI,
+  crash-recovery UI, patch-based save for ordinary edits (their cross-session
+  undo), and role-separated QA.
+- Exact next action: send the frozen implementation SHA to role-separated QA,
+  add regression tests for any finding, then continue with conflict-preview /
+  crash-recovery UI. Keep real Provider/Web, user data, and owner acceptance
+  disabled.

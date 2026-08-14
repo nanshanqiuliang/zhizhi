@@ -34,7 +34,7 @@ HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..010`。
 | `anchor_invalid` | API/Anchor | 422 | no | 修正 page/payload | TC-VIEW-003 | verified |
 | `patch_invalid` | API/Graph | 422 | no | 修正 patch 或确认后重试 | TC-GATE-003 | verified |
 | `patch_revision_conflict` | API/Graph | 409 | maybe | 刷新并基于最新 revision 重试 | TC-GATE-003 | verified |
-| `target_locked` | API/Graph | 409 | no | 解锁或保留人工内容 | TC-GATE-003 | verified |
+| `target_locked` | API/Graph | 409 | no | 解锁或保留人工内容 | TC-GATE-003/TC-LOCK-001..003 | verified |
 | `permission_denied` | API/Graph | 422 | no | 使用已确认的 user patch | TC-GATE-003 | verified |
 | `history_empty` | API/History | 409 | no | 无更多撤销/重做项 | TC-GATE-002 | verified |
 | `history_conflict` | API/History | 409 | no | 从备份恢复 | TC-GATE-004 | verified |

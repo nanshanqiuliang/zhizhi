@@ -312,6 +312,17 @@
 - 回滚：回退 `e0a5ed9` 即回到整图 PUT-only；不改 GraphPatch preview 与纯领域 history；红灯保留。
 - 遗留风险与下一步：前端仍整图 PUT 保存（后端已加整图替换语义）；跨会话撤销/锁定前端 UI 待 WORK-2026-020；职责隔离 QA 签字后生成 TR 证据。
 
+## 2026-08-14 — 锁定维度存储保护与 WebUI 锁定/撤销接入
+
+- 关联 ID：WORK-2026-020、REQ-2026-006/008、NFR-2026-001/003、ADR-0005、WORK-2026-005/011/019。
+- 实际变化：后端 `save_course_graph` 新增锁定维度保护（`_guard_locked_dimensions`）——整图替换时拒绝锁降级（`lock_downgraded`）、锁定维度内容变化（`content_changed`）、锁定概念删除（`concept_deleted`），锁定项在存储边界不被覆盖；前端 `api.ts` 四维锁保真往返（`locks`/`revision` 读写）并新增 `applyPatch`/`undoGraph`/`redoGraph` 与 `buildSetLockPatch`；`App.tsx` 统一 `toggleLock(content|position)`——有后端走 patch 门 `set_lock`（先 `saveGraph` 同步首跑基础图）、无后端会话内；撤销/重做在会话栈空时回退后端 `undo/redo`；节点卡片显示内容锁标记。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；无新 canonical contract/ADR/migration/prompt。
+- 兼容性：锁保真后整图 PUT 不再丢失四维锁；`positionLocked` 与 `locks.position`/`layout.pinned` 一致；无后端（`<App />`）行为保持会话内不变，既有组件测试不受影响。
+- 验证与证据：后端 lock-guard 4/4；Web 新增 `App.lock.test.tsx` 2/2；全仓 pytest 241/241、Web 22/22、validator/Ruff/mypy/锁依赖/构建全绿；真实浏览器 CDP 端到端（点击锁定内容→后端 locks.content=true→锁定后改 label 409 target_locked→撤销→锁解除）PASS。
+- 性能/安全/运维影响：锁保护为纯内存 diff（O(概念数)），无网络/Provider/真实用户数据或费用；错误仅含 target_id/dimension/rule，不落正文。
+- 回滚：回退 `618420c`/`c70d339` 即回到无锁保护/无锁定 UI 状态；不改变已验证 GraphPatch 提交门与纯领域 history。
+- 遗留风险与下一步：普通编辑（增删改/拖动）仍走整图 PUT（清空历史），其跨会话撤销尚未覆盖；冲突预览 UI、崩溃恢复 UI、前端 patch 化保存待后续；职责隔离 QA 待执行。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
