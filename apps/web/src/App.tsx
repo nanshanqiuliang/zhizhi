@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   AnchorRef,
+  ConceptLocks,
   ConceptNode,
   PersistApi,
   ResourceInfo,
   SearchResultItem,
   WorkspaceSnapshot,
 } from "./api";
+import { buildSetLockPatch } from "./api";
 import { PdfRenderer } from "./PdfRenderer";
 
 type DragState = {
@@ -27,6 +29,13 @@ const sampleNotes = [
   { title: "连续的三个条件", detail: "存在、相等、可趋近", nodeId: "continuity" },
   { title: "可导为什么更强", detail: "连续与局部线性", nodeId: "derivative" },
 ] as const;
+
+const DEFAULT_LOCKS: ConceptLocks = {
+  content: false,
+  relations: false,
+  position: false,
+  annotations: false,
+};
 
 function createSampleWorkspace(): WorkspaceSnapshot {
   return {
@@ -399,24 +408,58 @@ export function App({ api }: { api?: PersistApi }) {
     setNoteDraft(node.note);
   }
 
-  function undo() {
+  async function undo() {
     const previous = past.at(-1);
-    if (!previous) return;
-    setPast(past.slice(0, -1));
-    setFuture([present, ...future]);
-    setPresent(previous);
-    restoreDrafts(previous, selectedId);
-    setStatus("已撤销上一步修改");
+    if (previous) {
+      setPast(past.slice(0, -1));
+      setFuture([present, ...future]);
+      setPresent(previous);
+      restoreDrafts(previous, selectedId);
+      setStatus("已撤销上一步修改");
+      return;
+    }
+    if (!api) return;
+    try {
+      await api.undoGraph();
+      const refreshed = await api.loadGraph();
+      if (refreshed) {
+        setPresent(refreshed);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(refreshed, selectedId);
+        setStatus("已撤销上一步持久修改");
+      }
+    } catch (error) {
+      const code = (error as Error).message;
+      setStatus(code === "history_empty" ? "没有可撤销的操作" : `撤销失败（${code}）`);
+    }
   }
 
-  function redo() {
+  async function redo() {
     const next = future[0];
-    if (!next) return;
-    setPast([...past, present]);
-    setFuture(future.slice(1));
-    setPresent(next);
-    restoreDrafts(next, selectedId);
-    setStatus("已重做上一步修改");
+    if (next) {
+      setPast([...past, present]);
+      setFuture(future.slice(1));
+      setPresent(next);
+      restoreDrafts(next, selectedId);
+      setStatus("已重做上一步修改");
+      return;
+    }
+    if (!api) return;
+    try {
+      await api.redoGraph();
+      const refreshed = await api.loadGraph();
+      if (refreshed) {
+        setPresent(refreshed);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(refreshed, selectedId);
+        setStatus("已重做上一步持久修改");
+      }
+    } catch (error) {
+      const code = (error as Error).message;
+      setStatus(code === "history_empty" ? "没有可重做的操作" : `重做失败（${code}）`);
+    }
   }
 
   function saveNode() {
@@ -480,17 +523,54 @@ export function App({ api }: { api?: PersistApi }) {
     setNoteDraft(parent.note);
   }
 
-  function togglePositionLock() {
-    const locked = !selectedNode.positionLocked;
-    commit(
-      {
+  async function toggleLock(dimension: "content" | "position") {
+    const node = selectedNode;
+    const locks = node.locks ?? DEFAULT_LOCKS;
+    const value = !locks[dimension];
+    const label = dimension === "content" ? "内容" : "位置";
+    const message = value
+      ? `已锁定“${node.title}”的${label}`
+      : `已解除“${node.title}”的${label}锁定`;
+
+    if (!api) {
+      // No backend: keep the session-local lock, preserving the existing demo.
+      const next = {
         ...present,
-        nodes: present.nodes.map((node) =>
-          node.id === selectedNode.id ? { ...node, positionLocked: locked } : node,
+        nodes: present.nodes.map((candidate) =>
+          candidate.id === node.id
+            ? {
+                ...candidate,
+                locks: { ...locks, [dimension]: value },
+                positionLocked: dimension === "position" ? value : candidate.positionLocked,
+              }
+            : candidate,
         ),
-      },
-      locked ? `已锁定“${selectedNode.title}”的位置` : `已解除“${selectedNode.title}”的位置锁定`,
-    );
+      };
+      commit(next, message);
+      return;
+    }
+
+    // Backend attached: apply through the protected patch gate so the lock is
+    // persisted, enforced, and recorded in the cross-session undo history.
+    try {
+      await api.applyPatch(buildSetLockPatch(present, node, dimension, value));
+      const refreshed = await api.loadGraph();
+      if (refreshed) {
+        setPresent(refreshed);
+        setPast([]);
+        setFuture([]);
+        const refreshedNode = refreshed.nodes.find((candidate) => candidate.id === node.id);
+        if (refreshedNode) {
+          setSelectedId(refreshedNode.id);
+          setTitleDraft(refreshedNode.title);
+          setNoteDraft(refreshedNode.note);
+        }
+      }
+      setStatus(message);
+    } catch (error) {
+      const code = (error as Error).message;
+      setStatus(code === "target_locked" ? "该维度已锁定，无法修改" : `锁定失败（${code}）`);
+    }
   }
 
   function autoLayout() {
@@ -681,8 +761,8 @@ export function App({ api }: { api?: PersistApi }) {
         <section className="canvas-column" aria-label="知识树画布">
           <div className="canvas-toolbar" role="toolbar" aria-label="知识树工具">
             <div className="toolbar-group">
-              <button type="button" onClick={undo} disabled={past.length === 0}><Icon name="undo" />撤销</button>
-              <button type="button" onClick={redo} disabled={future.length === 0}><Icon name="redo" />重做</button>
+              <button type="button" onClick={() => void undo()} disabled={past.length === 0 && !api}><Icon name="undo" />撤销</button>
+              <button type="button" onClick={() => void redo()} disabled={future.length === 0 && !api}><Icon name="redo" />重做</button>
             </div>
             <span className="toolbar-rule" />
             <button type="button" onClick={autoLayout}><Icon name="layout" />自动排布</button>
@@ -726,6 +806,7 @@ export function App({ api }: { api?: PersistApi }) {
                 >
                   <span className="node-type">{node.tone === "root" ? "主题" : node.tone === "branch" ? "概念" : "知识点"}</span>
                   <strong>{node.title}</strong>
+                  {(node.locks?.content ?? false) && <span className="lock-dot content-lock" aria-label="内容已锁定">锁</span>}
                   {node.positionLocked && <span className="lock-dot" aria-label="位置已锁定">⌑</span>}
                 </button>
               ))}
@@ -771,7 +852,8 @@ export function App({ api }: { api?: PersistApi }) {
           <p className="overline action-label">结构与位置</p>
           <div className="structure-actions">
             <button type="button" onClick={addChild}><Icon name="plus" />添加子概念</button>
-            <button type="button" onClick={togglePositionLock}><Icon name="lock" />{selectedNode.positionLocked ? "解除位置锁定" : "锁定位置"}</button>
+            <button type="button" onClick={() => void toggleLock("content")}><Icon name="lock" />{selectedNode.locks?.content ? "解除内容锁定" : "锁定内容"}</button>
+            <button type="button" onClick={() => void toggleLock("position")}><Icon name="lock" />{selectedNode.positionLocked ? "解除位置锁定" : "锁定位置"}</button>
             <button type="button" className="danger-button" onClick={deleteSelected}><Icon name="trash" />删除当前节点</button>
           </div>
 

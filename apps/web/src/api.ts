@@ -4,6 +4,13 @@
 // that UI shape and the canonical CourseGraph v1 contract that the local
 // FastAPI sidecar stores via `knowledge_tree_infrastructure.workspace`.
 
+export type ConceptLocks = {
+  content: boolean;
+  relations: boolean;
+  position: boolean;
+  annotations: boolean;
+};
+
 export type ConceptNode = {
   id: string;
   title: string;
@@ -12,6 +19,8 @@ export type ConceptNode = {
   y: number;
   positionLocked: boolean;
   tone: "root" | "branch" | "leaf";
+  locks?: ConceptLocks;
+  revisionNo?: number;
 };
 
 export type ConceptEdge = {
@@ -22,6 +31,7 @@ export type ConceptEdge = {
 export type WorkspaceSnapshot = {
   nodes: ConceptNode[];
   edges: ConceptEdge[];
+  revisionNo?: number;
 };
 
 export type SearchResultItem = {
@@ -63,6 +73,13 @@ export interface PersistApi {
   getPageText(resourceId: string, page: number): Promise<PageText>;
   listAnchors(resourceId: string): Promise<AnchorRef[]>;
   getFileUrl(resourceId: string): string;
+  applyPatch(patch: Record<string, unknown>): Promise<{
+    status: string;
+    change_id: string;
+    revision_no: number;
+  }>;
+  undoGraph(): Promise<{ status: string; revision_no: number }>;
+  redoGraph(): Promise<{ status: string; revision_no: number }>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -120,9 +137,14 @@ export function snapshotToGraph(snapshot: WorkspaceSnapshot): Record<string, unk
     review_state: "accepted",
     confidence: null,
     evidence_ids: [],
-    locks: { content: false, relations: false, position: false, annotations: false },
+    locks: {
+      content: node.locks?.content ?? false,
+      relations: node.locks?.relations ?? false,
+      position: node.locks?.position ?? node.positionLocked,
+      annotations: node.locks?.annotations ?? false,
+    },
     annotations: node.note ? [{ kind: "note", value: node.note }] : [],
-    revision_no: 0,
+    revision_no: node.revisionNo ?? 0,
   }));
   const edges = snapshot.edges.map((edge) => ({
     id: edgeId(edge.from, edge.to),
@@ -143,13 +165,13 @@ export function snapshotToGraph(snapshot: WorkspaceSnapshot): Record<string, unk
     x: node.x,
     y: node.y,
     pinned: node.positionLocked,
-    revision_no: 0,
+    revision_no: node.revisionNo ?? 0,
   }));
   return {
     schema_version: 1,
     workspace_id: WORKSPACE_ID,
     course_id: COURSE_ID,
-    revision_no: 0,
+    revision_no: snapshot.revisionNo ?? 0,
     concepts,
     edges,
     layout_items,
@@ -157,10 +179,25 @@ export function snapshotToGraph(snapshot: WorkspaceSnapshot): Record<string, unk
 }
 
 type CanonicalGraph = {
+  revision_no?: unknown;
   concepts?: Array<Record<string, unknown>>;
   edges?: Array<Record<string, unknown>>;
   layout_items?: Array<Record<string, unknown>>;
 };
+
+function readLocks(concept: Record<string, unknown>): ConceptLocks {
+  const raw = concept.locks;
+  const locks =
+    raw && typeof raw === "object"
+      ? (raw as Record<string, unknown>)
+      : {};
+  return {
+    content: locks.content === true,
+    relations: locks.relations === true,
+    position: locks.position === true,
+    annotations: locks.annotations === true,
+  };
+}
 
 // Convert a canonical CourseGraph back into the UI snapshot.
 export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
@@ -187,14 +224,17 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
     const hasParent = (parentsOf.get(id) ?? 0) > 0;
     const hasChildren = (childrenOf.get(id) ?? 0) > 0;
     const tone: ConceptNode["tone"] = !hasParent ? "root" : hasChildren ? "branch" : "leaf";
+    const locks = readLocks(concept);
     return {
       id,
       title: String(concept.label ?? "未命名"),
       note: noteAnnotation?.value != null ? String(noteAnnotation.value) : "",
       x: typeof item?.x === "number" ? item.x : 0,
       y: typeof item?.y === "number" ? item.y : 0,
-      positionLocked: item?.pinned === true,
+      positionLocked: locks.position,
       tone,
+      locks,
+      revisionNo: typeof concept.revision_no === "number" ? concept.revision_no : 0,
     };
   });
   return {
@@ -203,6 +243,7 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
       from: String(edge.source_concept_id),
       to: String(edge.target_concept_id),
     })),
+    revisionNo: typeof graph.revision_no === "number" ? graph.revision_no : 0,
   };
 }
 
@@ -224,8 +265,45 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         body: JSON.stringify(snapshotToGraph(graph)),
       });
       if (!response.ok) {
-        throw new Error(`save failed: ${response.status}`);
+        const body = await readError(response);
+        throw new Error(body.code ?? `save failed: ${response.status}`);
       }
+    },
+    async applyPatch(patch: Record<string, unknown>): Promise<{
+      status: string;
+      change_id: string;
+      revision_no: number;
+    }> {
+      const response = await fetch(`${endpoint}/patches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `patch failed: ${response.status}`);
+      }
+      return (await response.json()) as {
+        status: string;
+        change_id: string;
+        revision_no: number;
+      };
+    },
+    async undoGraph(): Promise<{ status: string; revision_no: number }> {
+      const response = await fetch(`${endpoint}/undo`, { method: "POST" });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `undo failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; revision_no: number };
+    },
+    async redoGraph(): Promise<{ status: string; revision_no: number }> {
+      const response = await fetch(`${endpoint}/redo`, { method: "POST" });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `redo failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; revision_no: number };
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/search?q=${encodeURIComponent(query)}`;
@@ -310,5 +388,43 @@ export function httpPersistApi(baseUrl: string): PersistApi {
     getFileUrl(resourceId: string): string {
       return `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/file`;
     },
+  };
+}
+
+async function readError(response: Response): Promise<{ code?: string }> {
+  try {
+    return (await response.json()) as { code?: string };
+  } catch {
+    return {};
+  }
+}
+
+// Build a confirmed user set_lock GraphPatch for a single lock dimension.
+export function buildSetLockPatch(
+  snapshot: WorkspaceSnapshot,
+  node: ConceptNode,
+  dimension: keyof ConceptLocks,
+  value: boolean,
+): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    patch_id: uuidv7(),
+    workspace_id: WORKSPACE_ID,
+    course_id: COURSE_ID,
+    base_revision_no: snapshot.revisionNo ?? 0,
+    actor: { type: "user", id: "local-user" },
+    reason: value ? "锁定" : "解锁",
+    requires_confirmation: true,
+    confirmed: true,
+    operations: [
+      {
+        op_id: uuidv7(),
+        op: "set_lock",
+        target: { type: "concept", id: toCanonicalId(node.id) },
+        expected_updated_revision_no: node.revisionNo ?? 0,
+        dimension,
+        value,
+      },
+    ],
   };
 }

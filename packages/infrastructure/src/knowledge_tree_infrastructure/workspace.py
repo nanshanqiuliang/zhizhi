@@ -212,9 +212,17 @@ def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None
     This is a whole-graph replacement: it also overwrites the initial-graph
     marker and clears the persisted history so an incremental record log can
     never be replayed against a snapshot it did not produce.
+
+    Any dimension locked on the currently saved graph must not be downgraded or
+    have its content changed by the incoming whole-graph replacement; that
+    guarantees "locked items are never silently overwritten" at the storage
+    boundary.
     """
 
     _validate_graph(graph)
+    current = _try_load_saved_graph(layout)
+    if current is not None:
+        _guard_locked_dimensions(current, graph)
     payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     try:
         with _connect(layout.db_path) as conn:
@@ -1192,6 +1200,133 @@ def _validate_graph(graph: Mapping[str, Any]) -> None:
         raise WorkspaceError(
             "graph_invalid", details={"rule": error.code, **error.details}
         ) from error
+
+
+_LOCK_DIMENSIONS = ("content", "relations", "position", "annotations")
+
+
+def _try_load_saved_graph(layout: WorkspaceLayout) -> JsonObject | None:
+    """Return the currently saved graph, or None when nothing was saved yet."""
+
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute("SELECT value FROM meta WHERE key=?", (_GRAPH_KEY,)).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "database_not_readable"}
+        ) from error
+    if row is None:
+        return None
+    try:
+        parsed = json.loads(str(row[0]))
+    except (TypeError, ValueError) as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "course_graph_not_json"}
+        ) from error
+    if not isinstance(parsed, dict):
+        _reject("workspace_corrupt", rule="course_graph_not_object")
+    _validate_graph(parsed)
+    return parsed
+
+
+def _guard_locked_dimensions(current: JsonObject, incoming: Mapping[str, Any]) -> None:
+    """Reject a whole-graph replacement that downgrades or mutates a locked dimension."""
+
+    current_concepts = {
+        str(item["id"]): item
+        for item in current.get("concepts", [])
+        if isinstance(item, dict)
+    }
+    incoming_concepts = {
+        str(item["id"]): item
+        for item in incoming.get("concepts", [])
+        if isinstance(item, dict)
+    }
+    for concept_id, before in current_concepts.items():
+        locks = before.get("locks")
+        if not isinstance(locks, dict):
+            continue
+        after = incoming_concepts.get(concept_id)
+        if after is None:
+            for dimension in _LOCK_DIMENSIONS:
+                if locks.get(dimension) is True:
+                    _reject(
+                        "target_locked",
+                        rule="concept_deleted",
+                        target_id=concept_id,
+                        dimension=dimension,
+                    )
+            continue
+        after_locks = after.get("locks")
+        after_locks = after_locks if isinstance(after_locks, dict) else {}
+        for dimension in _LOCK_DIMENSIONS:
+            if locks.get(dimension) is not True:
+                continue
+            if after_locks.get(dimension) is not True:
+                _reject(
+                    "target_locked",
+                    rule="lock_downgraded",
+                    target_id=concept_id,
+                    dimension=dimension,
+                )
+            if _dimension_value(current, concept_id, dimension) != _dimension_value(
+                incoming, concept_id, dimension
+            ):
+                _reject(
+                    "target_locked",
+                    rule="content_changed",
+                    target_id=concept_id,
+                    dimension=dimension,
+                )
+
+
+def _dimension_value(graph: Mapping[str, Any], concept_id: str, dimension: str) -> str:
+    if dimension == "content":
+        concept = _find_concept(graph, concept_id)
+        return _canonical_json({"label": concept.get("label"), "note": _note_annotation(concept)})
+    if dimension == "relations":
+        edges = [
+            (str(e["source_concept_id"]), str(e["target_concept_id"]), str(e["edge_type"]))
+            for e in graph.get("edges", [])
+            if isinstance(e, dict)
+            and (
+                str(e.get("source_concept_id")) == concept_id
+                or str(e.get("target_concept_id")) == concept_id
+            )
+        ]
+        return _canonical_json(sorted(edges))
+    if dimension == "position":
+        items = [
+            (str(item["view_id"]), item.get("x"), item.get("y"), item.get("pinned"))
+            for item in graph.get("layout_items", [])
+            if isinstance(item, dict) and str(item.get("concept_id")) == concept_id
+        ]
+        return _canonical_json(sorted(items))
+    if dimension == "annotations":
+        concept = _find_concept(graph, concept_id)
+        return _canonical_json(concept.get("annotations", []))
+    _reject("graph_invalid", rule="lock_dimension_unsupported", dimension=dimension)
+
+
+def _find_concept(graph: Mapping[str, Any], concept_id: str) -> Mapping[str, Any]:
+    for item in graph.get("concepts", []):
+        if isinstance(item, dict) and str(item.get("id")) == concept_id:
+            return item
+    _reject("graph_invalid", rule="concept_missing", target_id=concept_id)
+
+
+def _note_annotation(concept: Mapping[str, Any]) -> str:
+    annotations = concept.get("annotations")
+    if not isinstance(annotations, list):
+        return ""
+    for annotation in annotations:
+        if isinstance(annotation, dict) and annotation.get("kind") == "note":
+            return str(annotation.get("value", ""))
+    return ""
+
+
+def _canonical_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _reject(code: str, *, rule: str, **safe_details: Any) -> Never:
