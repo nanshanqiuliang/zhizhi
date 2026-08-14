@@ -125,7 +125,7 @@ describe("knowledge tree persistence hookup", () => {
     });
     fireEvent.change(input, { target: { value: "又失败" } });
     await waitFor(() => {
-      expect(screen.getByText("搜索失败")).toBeInTheDocument();
+      expect(screen.getByText("搜索失败，请检查搜索词")).toBeInTheDocument();
     });
   });
 });

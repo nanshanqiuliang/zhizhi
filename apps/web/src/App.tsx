@@ -471,6 +471,7 @@ export function App({ api }: { api?: PersistApi }) {
             id="concept-search"
             type="search"
             placeholder="搜索概念或笔记…"
+            maxLength={100}
             value={searchQuery}
             onChange={(event) => {
               setSearchQuery(event.target.value);
@@ -478,7 +479,7 @@ export function App({ api }: { api?: PersistApi }) {
             }}
           />
           {searchStatus === "searching" && <span className="search-note">搜索中…</span>}
-          {searchStatus === "failed" && <span className="search-note">搜索失败</span>}
+          {searchStatus === "failed" && <span className="search-note">搜索失败，请检查搜索词</span>}
           {searchQuery.trim() && searchStatus === "done" && searchResults.length > 0 && (
             <ul className="search-results" aria-label="搜索结果">
               {searchResults.map((result) => (
