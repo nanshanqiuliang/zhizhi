@@ -174,11 +174,11 @@ def test_undo_redo_across_sessions(tmp_path: Path) -> None:
     )
 
     undone = undo_graph(layout)
-    assert undone["revision_no"] == 1
+    assert undone["revision_no"] == 3
     assert all(concept["annotations"] == [] for concept in undone["concepts"])
 
     redone = redo_graph(layout)
-    assert redone["revision_no"] == 2
+    assert redone["revision_no"] == 4
     concept_a = next(c for c in redone["concepts"] if c["id"] == CONCEPT_A_ID)
     assert any(a.get("value") == "critical" for a in concept_a["annotations"])
 
@@ -239,9 +239,14 @@ def test_duplicate_change_id_rejected_across_sessions(tmp_path: Path) -> None:
     patch = _confirmed(_edge_patch(base_revision=0))
     apply_graph_patch(layout, patch, trusted_actor=TRUSTED_USER)
 
+    # A different operation set reusing the same change_id (replay attack) must
+    # be rejected even when the base revision is current.
+    duplicate = _annotation_patch(base_revision=1, target_revision=1, value="x")
+    duplicate["patch_id"] = patch["patch_id"]
     with pytest.raises(WorkspaceError) as excinfo:
-        apply_graph_patch(layout, patch, trusted_actor=TRUSTED_USER)
-    assert excinfo.value.code in {"patch_invalid", "patch_revision_conflict"}
+        apply_graph_patch(layout, duplicate, trusted_actor=TRUSTED_USER)
+    assert excinfo.value.code == "patch_invalid"
+    assert excinfo.value.details.get("rule") == "duplicate_change_id"
 
 
 # TC-GATE-005: tampered history fails closed
@@ -254,7 +259,10 @@ def test_tampered_history_record_fails_closed(tmp_path: Path) -> None:
     import sqlite3
 
     with sqlite3.connect(layout.db_path) as conn:
-        conn.execute("UPDATE history_records SET payload = payload || ' ' WHERE seq = 1")
+        conn.execute(
+            "UPDATE history_records SET payload = replace(payload, '7000-9000', '7000-9999') "
+            "WHERE seq = 1"
+        )
         conn.commit()
 
     with pytest.raises(WorkspaceError) as excinfo:

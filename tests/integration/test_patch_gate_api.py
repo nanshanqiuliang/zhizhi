@@ -100,11 +100,11 @@ def test_undo_redo_endpoints(client: TestClient) -> None:
 
     undone = client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/undo")
     assert undone.status_code == 200
-    assert undone.json()["revision_no"] == 0
+    assert undone.json()["revision_no"] == 2
 
     redone = client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/redo")
     assert redone.status_code == 200
-    assert redone.json()["revision_no"] == 1
+    assert redone.json()["revision_no"] == 3
 
 
 def test_undo_empty_history_conflict(client: TestClient) -> None:

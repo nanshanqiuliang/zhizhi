@@ -23,13 +23,18 @@ from typing import Any, Never
 from knowledge_tree_domain import (
     EntityDelta,
     GraphChangeRecord,
+    GraphHistory,
+    GraphHistoryError,
     GraphPatchError,
+    semantic_graph_hash,
     validate_course_graph,
 )
 
 JsonObject = dict[str, Any]
 SUPPORTED_SCHEMA_VERSION = 3
 _GRAPH_KEY = "course_graph"
+_INITIAL_GRAPH_KEY = "course_graph_initial"
+_APPLIED_COUNT_KEY = "course_graph_applied"
 _MAX_QUERY_LENGTH = 100
 _SNIPPET_LENGTH = 60
 _SEARCH_TABLE = "concept_search"
@@ -202,7 +207,12 @@ def migrate(db_path: Path) -> None:
 
 
 def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None:
-    """Validate and persist a CourseGraph, then rebuild the search index."""
+    """Validate and persist a CourseGraph, then rebuild the search index.
+
+    This is a whole-graph replacement: it also overwrites the initial-graph
+    marker and clears the persisted history so an incremental record log can
+    never be replayed against a snapshot it did not produce.
+    """
 
     _validate_graph(graph)
     payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -213,6 +223,13 @@ def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (_GRAPH_KEY, payload),
             )
+            conn.execute(
+                "INSERT INTO meta(key, value) VALUES(?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (_INITIAL_GRAPH_KEY, payload),
+            )
+            conn.execute("DELETE FROM history_records")
+            conn.execute("DELETE FROM meta WHERE key=?", (_APPLIED_COUNT_KEY,))
             _rebuild_search_index(conn, graph)
     except sqlite3.DatabaseError as error:
         raise WorkspaceError("save_failed", details={"rule": "database_not_writable"}) from error
@@ -294,6 +311,208 @@ def load_course_graph(layout: WorkspaceLayout) -> JsonObject:
     graph = parsed
     _validate_graph(graph)
     return graph
+
+
+def apply_graph_patch(
+    layout: WorkspaceLayout,
+    patch: Mapping[str, Any],
+    *,
+    trusted_actor: Mapping[str, str],
+) -> GraphChangeRecord:
+    """Apply a confirmed user GraphPatch through the protected commit gate.
+
+    Rebuilds the persisted history from the initial graph plus the recorded
+    change log, applies the patch through `GraphHistory.apply_patch` (which
+    enforces the confirmation gate, four-dimension locks, revision conflicts and
+    duplicate change ids), then commits the new graph, the new record and the
+    initial-graph marker in a single transaction.
+    """
+
+    history = _rebuild_history(layout)
+    initial_graph = history.snapshot
+    try:
+        next_history = history.apply_patch(patch, trusted_actor=trusted_actor)
+    except (GraphHistoryError, GraphPatchError) as error:
+        raise _convert_domain_error(error) from error
+    record = next_history.undo_records[-1]
+    _atomic_commit_graph(
+        layout,
+        graph=next_history.snapshot,
+        new_record=record,
+        initial_graph=initial_graph,
+        applied_count=len(next_history.undo_records),
+    )
+    return record
+
+
+def undo_graph(layout: WorkspaceLayout) -> JsonObject:
+    """Undo the most recent persisted change in strict LIFO order."""
+
+    history = _rebuild_history(layout)
+    try:
+        next_history = history.undo()
+    except GraphHistoryError as error:
+        raise _convert_domain_error(error) from error
+    _atomic_commit_graph(
+        layout,
+        graph=next_history.snapshot,
+        applied_count=len(next_history.undo_records),
+    )
+    return next_history.snapshot
+
+
+def redo_graph(layout: WorkspaceLayout) -> JsonObject:
+    """Redo the most recently undone change in strict LIFO order."""
+
+    history = _rebuild_history(layout)
+    try:
+        next_history = history.redo()
+    except GraphHistoryError as error:
+        raise _convert_domain_error(error) from error
+    _atomic_commit_graph(
+        layout,
+        graph=next_history.snapshot,
+        applied_count=len(next_history.undo_records),
+    )
+    return next_history.snapshot
+
+
+def _rebuild_history(layout: WorkspaceLayout) -> GraphHistory:
+    """Rebuild an in-memory history from the persisted initial graph and log."""
+
+    current = load_course_graph(layout)
+    records = load_history_records(layout)
+    if not records:
+        return GraphHistory.start(current)
+    initial = _load_initial_graph(layout)
+    if initial is None:
+        _reject("workspace_corrupt", rule="initial_graph_absent")
+    applied = _read_applied_count(layout)
+    if applied is None:
+        applied = len(records)
+    if applied < 0 or applied > len(records):
+        _reject("history_conflict", rule="applied_count_invalid", applied_count=applied)
+    active = records[:applied]
+    try:
+        history = GraphHistory.replay(initial, active)
+    except GraphHistoryError as error:
+        raise _convert_domain_error(error) from error
+    if semantic_graph_hash(history.snapshot) != semantic_graph_hash(current):
+        _reject("history_conflict", rule="saved_graph_history_mismatch")
+    # Replay resets the revision counter to the deterministic replayed value;
+    # preserve the runtime revision stored on the persisted graph so subsequent
+    # apply/undo/redo keeps the revision strictly monotonic.
+    snapshot = history.snapshot
+    snapshot["revision_no"] = current["revision_no"]
+    snapshot_json = json.dumps(
+        snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    return GraphHistory(
+        _snapshot_json=snapshot_json,
+        undo_records=history.undo_records,
+        redo_records=tuple(reversed(records[applied:])),
+    )
+
+
+def _read_applied_count(layout: WorkspaceLayout) -> int | None:
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT value FROM meta WHERE key=?", (_APPLIED_COUNT_KEY,)
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "database_not_readable"}
+        ) from error
+    if row is None:
+        return None
+    try:
+        return int(str(row[0]))
+    except (TypeError, ValueError) as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "applied_count_invalid"}
+        ) from error
+
+
+def _load_initial_graph(layout: WorkspaceLayout) -> JsonObject | None:
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT value FROM meta WHERE key=?", (_INITIAL_GRAPH_KEY,)
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "database_not_readable"}
+        ) from error
+    if row is None:
+        return None
+    try:
+        parsed = json.loads(str(row[0]))
+    except (TypeError, ValueError) as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "initial_graph_not_json"}
+        ) from error
+    if not isinstance(parsed, dict):
+        _reject("workspace_corrupt", rule="initial_graph_not_object")
+    _validate_graph(parsed)
+    return parsed
+
+
+def _atomic_commit_graph(
+    layout: WorkspaceLayout,
+    *,
+    graph: Mapping[str, Any],
+    new_record: GraphChangeRecord | None = None,
+    initial_graph: Mapping[str, Any] | None = None,
+    applied_count: int | None = None,
+) -> None:
+    """Commit the graph, optional record/initial marker/applied count atomically."""
+
+    payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    try:
+        with _connect(layout.db_path) as conn:
+            conn.execute(
+                "INSERT INTO meta(key, value) VALUES(?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (_GRAPH_KEY, payload),
+            )
+            if initial_graph is not None:
+                initial_payload = json.dumps(
+                    initial_graph, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                )
+                conn.execute(
+                    "INSERT OR IGNORE INTO meta(key, value) VALUES(?, ?)",
+                    (_INITIAL_GRAPH_KEY, initial_payload),
+                )
+            if new_record is not None:
+                conn.execute(
+                    "INSERT INTO history_records(change_id, payload) VALUES(?, ?)",
+                    (new_record.change_id, record_to_json(new_record)),
+                )
+            if applied_count is not None:
+                conn.execute(
+                    "INSERT INTO meta(key, value) VALUES(?, ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                    (_APPLIED_COUNT_KEY, str(applied_count)),
+                )
+            _rebuild_search_index(conn, graph)
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError("save_failed", details={"rule": "database_not_writable"}) from error
+
+
+def _convert_domain_error(error: ValueError) -> WorkspaceError:
+    """Map a domain graph error to a stable workspace error code."""
+
+    code = str(getattr(error, "code", "patch_invalid"))
+    details = dict(getattr(error, "details", {"rule": code}))
+    mapped = {
+        "revision_conflict": "patch_revision_conflict",
+        "target_locked": "target_locked",
+        "permission_denied": "permission_denied",
+        "history_empty": "history_empty",
+        "history_conflict": "history_conflict",
+    }.get(code, "patch_invalid")
+    return WorkspaceError(mapped, details=details)
 
 
 def backup_workspace(layout: WorkspaceLayout) -> Path:

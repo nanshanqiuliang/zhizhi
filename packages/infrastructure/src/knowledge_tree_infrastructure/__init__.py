@@ -7,6 +7,7 @@ from .workspace import (
     SearchResult,
     WorkspaceError,
     WorkspaceLayout,
+    apply_graph_patch,
     backup_workspace,
     create_workspace,
     export_course_graph,
@@ -23,12 +24,14 @@ from .workspace import (
     purge_workspace,
     record_from_json,
     record_to_json,
+    redo_graph,
     register_anchor,
     resolve_workspace,
     restore_backup,
     save_course_graph,
     save_history_records,
     search_course_graph,
+    undo_graph,
 )
 
 __all__ = [
@@ -38,6 +41,7 @@ __all__ = [
     "SearchResult",
     "WorkspaceError",
     "WorkspaceLayout",
+    "apply_graph_patch",
     "backup_workspace",
     "create_workspace",
     "export_course_graph",
@@ -54,10 +58,12 @@ __all__ = [
     "purge_workspace",
     "record_from_json",
     "record_to_json",
+    "redo_graph",
     "register_anchor",
     "resolve_workspace",
     "restore_backup",
     "save_course_graph",
     "save_history_records",
     "search_course_graph",
+    "undo_graph",
 ]

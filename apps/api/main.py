@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from knowledge_tree_domain import GraphPatchError, validate_course_graph
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
+    apply_graph_patch,
     backup_workspace,
     create_workspace,
     get_page_text,
@@ -28,16 +29,20 @@ from knowledge_tree_infrastructure.workspace import (
     list_anchors,
     list_resources,
     load_course_graph,
+    load_history_records,
     migrate,
     parse_pdf_resource,
+    redo_graph,
     register_anchor,
     resolve_workspace,
     save_course_graph,
     search_course_graph,
+    undo_graph,
 )
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 JsonObject = dict[str, Any]
+_LOCAL_ACTOR = {"type": "user", "id": "local-user"}
 
 
 def _is_uuidv7(value: str) -> bool:
@@ -69,6 +74,18 @@ def _http_error(error: WorkspaceError) -> HTTPException:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "file_not_found":
         return HTTPException(status_code=404, detail={"code": error.code, **error.details})
+    if error.code == "patch_invalid":
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code in {
+        "patch_revision_conflict",
+        "target_locked",
+        "permission_denied",
+        "history_empty",
+        "history_conflict",
+        "record_tampered",
+        "record_invalid",
+    }:
+        return HTTPException(status_code=409, detail={"code": error.code, **error.details})
     if error.code == "workspace_corrupt" and error.details.get("rule") == "course_graph_absent":
         # A workspace without a saved graph is equivalent to "not found".
         return HTTPException(status_code=404, detail={"code": "workspace_missing"})
@@ -134,6 +151,63 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
             migrate(layout.db_path)
             save_course_graph(layout, payload)
             return {"status": "saved", "workspace_id": workspace_id}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/graph/patches")
+    async def post_graph_patch(workspace_id: str, request: Request) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        try:
+            layout = resolve_workspace(workspace_root)
+            record = apply_graph_patch(layout, payload, trusted_actor=_LOCAL_ACTOR)
+            return {
+                "status": "applied",
+                "change_id": record.change_id,
+                "revision_no": record.after_revision_no,
+            }
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/graph/undo")
+    def post_graph_undo(workspace_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = undo_graph(layout)
+            return {"status": "undone", "revision_no": graph["revision_no"]}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/graph/redo")
+    def post_graph_redo(workspace_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = redo_graph(layout)
+            return {"status": "redone", "revision_no": graph["revision_no"]}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/history")
+    def get_history(workspace_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            records = load_history_records(layout)
+            return {
+                "records": [
+                    {
+                        "change_id": record.change_id,
+                        "before_revision_no": record.before_revision_no,
+                        "after_revision_no": record.after_revision_no,
+                    }
+                    for record in records
+                ]
+            }
         except WorkspaceError as error:
             raise _http_error(error) from error
 
