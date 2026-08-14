@@ -378,6 +378,17 @@
 - 回滚：回退 `0310061` 即回到 Markdown 纯文本查看；不影响导入/查看器/提交门证据。
 - 遗留风险与下一步：Markdown 富文本仅支持最小语法子集（无表格/链接/任务列表）；文本层与页面文本高亮联动、多页连续滚动、tombstone 软删除仍为后续；真实 Provider/Web 与 owner 接受保持禁用。
 
+## 2026-08-14 — 知识树画布平移与缩放（WORK-2026-025）
+
+- 关联 ID：WORK-2026-025、REQ-2026-006、WORK-2026-012。
+- 实际变化：`App.tsx` 画布新增平移/缩放——滚轮缩放（0.5×–2.5×，步进 0.1）、拖动空白区域平移、节点拖动按 zoom 换算屏幕增量；`canvas-surface` 用 `transform: translate(pan) scale(zoom)`，`canvas-viewport` 由 scroll 改为 `overflow: hidden`；`centerOnNode`（pan 定位）取代原 scrollLeft 的选中/搜索定位；`styles.css` 加 `transform-origin:0 0`/`touch-action:none`/grab 光标。
+- 影响模块/接口/schema/migration/prompt：仅扩展 apps/web；无后端/schema/migration/prompt 变化。
+- 兼容性：节点世界坐标不变（仅渲染变换）；拖动/排布/锁定/撤销行为不变；现有移动节点测试经事件冒泡仍通过。
+- 验证与证据：`8563fad`；Web 新增 `zooms the canvas with the wheel`（transform scale 断言）；全仓 pytest 256/256、Web 32/32、validator/Ruff/mypy/构建全绿。
+- 性能/安全/运维影响：纯 CSS transform 渲染，无重排；`touch-action:none` 抑制浏览器默认手势；无网络/Provider/真实用户数据。
+- 回滚：回退 `8563fad` 即回到 scroll-only 画布；不影响持久化/提交门/查看器证据。
+- 遗留风险与下一步：缩放为左上角原点缩放（未做鼠标位置为中心）；文本层与页面文本高亮联动、多页连续滚动、tombstone 软删除仍为后续；真实 Provider/Web 与 owner 接受保持禁用。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

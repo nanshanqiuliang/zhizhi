@@ -342,3 +342,13 @@
 - 证据：`markdown.test.ts` 3/3（含注入转义）；pytest 256/256、Web 31/31、ruff、validator、build 全绿。
 - 缓解/回滚：回退 `0310061` 即回到 Markdown 纯文本查看。
 - 遗留风险/Owner/期限：Markdown 仅最小语法子集（无表格/链接）；真实 Provider/Web、owner 接受保持禁用。
+
+## 2026-08-14 21:05 — 知识树画布平移与缩放（WORK-2026-025）运维记录
+
+- 关联 ID：WORK-2026-025、REQ-2026-006、WORK-2026-012。
+- 环境/版本/build/config：commit `8563fad`（feature/WORK-2026-019-patch-gate）；本地 local-dev Windows x64。
+- 变更或症状：画布从 scroll-only 升级为 transform 平移/缩放——滚轮缩放（0.5–2.5×）、拖动空白平移、节点拖动按 zoom 换算；`canvas-viewport` 改为 `overflow:hidden`、`touch-action:none`；选中/搜索定位由 scrollLeft 改为 `centerOnNode` pan 定位。
+- 影响：无部署或常驻服务变化；仅前端画布交互，无后端/schema 变化。
+- 证据：Web 新增 wheel 缩放测试（transform scale 断言）；pytest 256/256、Web 32/32、ruff、validator、build 全绿。
+- 缓解/回滚：回退 `8563fad` 即回到 scroll-only 画布。
+- 遗留风险/Owner/期限：缩放为左上角原点（未做鼠标为中心）；真实 Provider/Web、owner 接受保持禁用。

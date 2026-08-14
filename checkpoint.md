@@ -958,3 +958,17 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: continue offline enhancements (tombstone soft delete,
   text-layer highlight linkage, multi-page continuous scroll) or advance to
   Step 7 after the owner provides an API key and budget.
+
+## Canvas pan/zoom checkpoint — 2026-08-14 21:05 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- WORK-2026-025 (offline enhancement): canvas pan and zoom. Wheel zooms
+  (0.5x-2.5x), dragging the empty canvas pans, node drag delta scales by zoom;
+  `canvas-surface` uses `transform: translate(pan) scale(zoom)`, viewport is
+  `overflow:hidden`; `centerOnNode` replaces scroll-based focus.
+- Verification: Web 32/32 (new wheel-zoom test), pytest 256/256,
+  ruff/mypy/validator/build all pass.
+- Step 6 remains 100%, MVP ~75%.
+- Exact next action: continue offline enhancements (mouse-centered zoom,
+  text-layer highlight linkage, multi-page scroll, tombstone soft delete) or
+  advance to Step 7 after the owner provides an API key and budget.
