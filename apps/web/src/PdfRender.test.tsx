@@ -64,6 +64,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
     backupGraph: vi.fn(async () => ({ status: "backed_up", backup_path: "b.sqlite3" })),
     listBackups: vi.fn(async () => []),
     restoreBackup: vi.fn(async () => ({ status: "restored" })),
+    listHistory: vi.fn(async () => []),
     ...overrides,
   };
   return api;

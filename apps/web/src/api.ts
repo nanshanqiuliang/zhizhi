@@ -63,6 +63,12 @@ export type AnchorRef = {
   bboxNorm?: [number, number, number, number];
 };
 
+export type HistoryRecord = {
+  change_id: string;
+  before_revision_no: number;
+  after_revision_no: number;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -83,6 +89,7 @@ export interface PersistApi {
   backupGraph(): Promise<{ status: string; backup_path: string }>;
   listBackups(): Promise<string[]>;
   restoreBackup(filename: string): Promise<{ status: string }>;
+  listHistory(): Promise<HistoryRecord[]>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -336,6 +343,14 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(body.code ?? `restore failed: ${response.status}`);
       }
       return (await response.json()) as { status: string };
+    },
+    async listHistory(): Promise<HistoryRecord[]> {
+      const response = await fetch(`${endpoint}/history`);
+      if (!response.ok) {
+        throw new Error(`history failed: ${response.status}`);
+      }
+      const body = (await response.json()) as { records: HistoryRecord[] };
+      return body.records;
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/search?q=${encodeURIComponent(query)}`;

@@ -4,6 +4,7 @@ import type {
   AnchorRef,
   ConceptLocks,
   ConceptNode,
+  HistoryRecord,
   PersistApi,
   ResourceInfo,
   SearchResultItem,
@@ -221,6 +222,7 @@ export function App({ api }: { api?: PersistApi }) {
   const [resources, setResources] = useState<ResourceInfo[]>([]);
   const [importStatus, setImportStatus] = useState<"idle" | "importing" | "failed">("idle");
   const [backups, setBackups] = useState<string[]>([]);
+  const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
   const [viewerResource, setViewerResource] = useState<ResourceInfo | null>(null);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerText, setViewerText] = useState("");
@@ -263,6 +265,7 @@ export function App({ api }: { api?: PersistApi }) {
           setStatus("本地暂无保存内容，当前显示示例知识树");
         }
         setConnection("connected");
+        void refreshHistory();
       })
       .catch((error) => {
         if (cancelled) return;
@@ -384,6 +387,15 @@ export function App({ api }: { api?: PersistApi }) {
     }
   }
 
+  async function refreshHistory() {
+    if (!api) return;
+    try {
+      setHistoryRecords(await api.listHistory());
+    } catch {
+      setHistoryRecords([]);
+    }
+  }
+
   async function openViewer(resource: ResourceInfo) {
     if (!api) return;
     setViewerResource(resource);
@@ -484,6 +496,7 @@ export function App({ api }: { api?: PersistApi }) {
         setFuture([]);
         restoreDrafts(refreshed, selectedId);
         setStatus("已撤销上一步持久修改");
+        void refreshHistory();
       }
     } catch (error) {
       const code = (error as Error).message;
@@ -512,6 +525,7 @@ export function App({ api }: { api?: PersistApi }) {
         setFuture([]);
         restoreDrafts(refreshed, selectedId);
         setStatus("已重做上一步持久修改");
+        void refreshHistory();
       }
     } catch (error) {
       const code = (error as Error).message;
@@ -639,6 +653,7 @@ export function App({ api }: { api?: PersistApi }) {
         }
       }
       setStatus(message);
+      void refreshHistory();
     } catch (error) {
       const code = (error as Error).message;
       setStatus(code === "target_locked" ? "该维度已锁定，无法修改" : `锁定失败（${code}）`);
@@ -849,6 +864,21 @@ export function App({ api }: { api?: PersistApi }) {
               </div>
             )}
           </div>
+          {api && historyRecords.length > 0 && (
+            <div className="history-panel" aria-label="版本历史">
+              <p className="overline">版本历史</p>
+              <ul className="history-list">
+                {historyRecords.map((record) => (
+                  <li key={record.change_id}>
+                    <span className="history-rev">
+                      v{record.before_revision_no} → v{record.after_revision_no}
+                    </span>
+                    <span className="history-id">{record.change_id.slice(0, 8)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </nav>
 
         <section className="canvas-column" aria-label="知识树画布">
