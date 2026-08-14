@@ -334,6 +334,17 @@
 - 回滚：回退 `a6a471a` 回到 QA 前实现；QA FAIL evidence 保留；不回退既已验证 GraphPatch/纯领域 history。
 - 遗留风险与下一步：第 6 步核心完成标志已兑现（锁定项不被覆盖、失败/重启不重复写入）；普通编辑跨会话撤销、冲突预览 UI、崩溃恢复 UI 归 WORK-2026-021；真实 Provider/Web 与 owner 接受保持禁用。
 
+## 2026-08-14 — 冲突预览与备份/恢复 UI（WORK-2026-021）
+
+- 关联 ID：WORK-2026-021、REQ-2026-006/008、NFR-2026-001、WORK-2026-019/020。
+- 实际变化：后端新增 `list_backups`/`restore_backup_by_name`（纯文件名 + backups_dir 内 + 存在三重守卫）与 `GET .../backups`、`POST .../restore` 端点（`backup_invalid` 422 / `backup_checksum_mismatch` 409）；前端 `api.ts` 新增 `backupGraph`/`listBackups`/`restoreBackup` 且 `loadGraph`/`saveGraph` 错误透传 `code`；`App.tsx` 新增 `saveErrorMessage`（锁定/版本冲突/数据损坏 → 具体提示）、`loadGraph` 区分 `workspace_corrupt`、侧边栏"备份数据"按钮与备份列表恢复入口。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；新增稳定错误码 `backup_invalid`/`backup_checksum_mismatch`；无 schema/migration/prompt。
+- 兼容性：恢复走 checksum 校验；备份名守卫防路径逃逸；旧库无备份时列表为空。
+- 验证与证据：`fb745bd`；后端 backup_api 3/3（round trip/路径遍历/缺失）；Web 新增冲突提示 + 备份按钮 2/2；全仓 pytest 246/246、Web 25/25、validator/Ruff/mypy/锁依赖/构建全绿。
+- 性能/安全/运维影响：备份为 sqlite 在线备份 + sha256 sidecar；恢复替换 db 前校验和；无网络/Provider/真实用户数据。
+- 回滚：回退 `fb745bd` 即回到无备份/恢复 UI 状态；不影响已验证提交门/锁定保护。
+- 遗留风险与下一步：第 6 步产物基本齐全（锁定/撤销/冲突预览/崩溃恢复），普通编辑 patch 化保存（跨会话撤销覆盖所有编辑）与版本历史 UI 面板仍待；真实 Provider/Web 与 owner 接受保持禁用。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

@@ -35,6 +35,8 @@ HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..011`。
 | `patch_invalid` | API/Graph | 422 | no | 修正 patch 或确认后重试 | TC-GATE-003 | verified |
 | `patch_revision_conflict` | API/Graph | 409 | maybe | 刷新并基于最新 revision 重试 | TC-GATE-003 | verified |
 | `revision_conflict` | API/Graph | 409 | no | 刷新并保留最新 revision | TC-LOCK-006 | verified |
+| `backup_invalid` | API/Recovery | 422 | no | 选择有效备份文件 | TC-BACKUP-002 | verified |
+| `backup_checksum_mismatch` | API/Recovery | 409 | no | 换一个校验通过的备份 | TC-BACKUP-001 | verified |
 | `target_locked` | API/Graph | 409 | no | 解锁或保留人工内容 | TC-GATE-003/TC-LOCK-001..003 | verified |
 | `permission_denied` | API/Graph | 422 | no | 使用已确认的 user patch | TC-GATE-003 | verified |
 | `history_empty` | API/History | 409 | no | 无更多撤销/重做项 | TC-GATE-002 | verified |

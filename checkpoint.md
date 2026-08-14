@@ -840,3 +840,24 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: enter WORK-2026-021 (conflict-preview UI + crash-recovery
   UI, offline; ordinary-edit patch-based save deferred by owner decision). Keep
   real Provider/Web, user data, and owner acceptance disabled.
+
+## Step 6 conflict/crash-recovery checkpoint — 2026-08-14 18:45 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- WORK-2026-021 (offline): conflict-preview UI + backup/restore crash recovery.
+- Backend: `list_backups` / `restore_backup_by_name` (filename + in-backups-dir +
+  exists guards) and `GET .../backups` + `POST .../restore` endpoints; new stable
+  errors `backup_invalid` (422) and `backup_checksum_mismatch` (409).
+- Frontend: `saveErrorMessage` maps `target_locked`/`revision_conflict`/
+  `workspace_corrupt` to specific save messages; `loadGraph` distinguishes
+  corruption from offline; sidebar gains "备份数据" + restore list.
+- Verification: backend backup_api 3/3, Web conflict/backup 2/2, full pytest
+  246/246, Web 25/25, ruff/mypy/validator/frozen pnpm check+build all pass.
+- Natural-language Step 6 progress: approximately 70% — lock, undo/redo,
+  conflict preview and crash recovery are now all verified; remaining are the
+  ordinary-edit patch-based save (deferred) and a version-history UI panel.
+  Overall personal MVP approximately 73%.
+- Exact next action: either add the version-history UI panel to finish Step 6's
+  visible surface, or advance to Step 7 (DeepSeek live adapter) after the owner
+  provides an API key and approves a budget. Keep real Provider/Web, user data,
+  and owner acceptance disabled.
