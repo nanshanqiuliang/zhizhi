@@ -34,13 +34,11 @@ class HttpJsonClient:
         *,
         base_url: str,
         api_key: str,
-        connect_timeout_s: float = 10.0,
         read_timeout_s: float = 120.0,
         user_agent: str = "knowledge-tree-agent",
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
-        self._connect_timeout_s = connect_timeout_s
         self._read_timeout_s = read_timeout_s
         self._user_agent = user_agent
 
@@ -66,9 +64,7 @@ class HttpJsonClient:
 
         request = self._request(path, payload)
         try:
-            with urlrequest.urlopen(  # type: ignore[call-overload]
-                request, timeout=(self._connect_timeout_s, self._read_timeout_s)
-            ) as response:
+            with urlrequest.urlopen(request, timeout=self._read_timeout_s) as response:
                 body = response.read().decode("utf-8")
         except urlerror.HTTPError as error:
             body = error.read().decode("utf-8", "replace") if error.fp else None
@@ -80,9 +76,7 @@ class HttpJsonClient:
 
         request = self._request(path, payload)
         try:
-            with urlrequest.urlopen(  # type: ignore[call-overload]
-                request, timeout=(self._connect_timeout_s, self._read_timeout_s)
-            ) as response:
+            with urlrequest.urlopen(request, timeout=self._read_timeout_s) as response:
                 for raw in response:
                     yield raw.decode("utf-8", "replace")
         except urlerror.HTTPError as error:

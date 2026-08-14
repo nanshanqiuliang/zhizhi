@@ -106,7 +106,6 @@ class DeepSeekLlmAdapter:
         self._http = http or HttpJsonClient(
             base_url=self._config.base_url,
             api_key=api_key,
-            connect_timeout_s=self._config.connect_timeout_s,
             read_timeout_s=self._config.read_timeout_s,
         )
         self._capabilities = dict(capabilities or {})
