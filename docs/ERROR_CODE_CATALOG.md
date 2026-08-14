@@ -11,10 +11,11 @@
 - 未知异常对外映射 `internal_error`，内部保留 correlation ID 和受控 stack；
 - 不把文件路径、SQL、Provider 原始秘密或用户内容编码到错误码/文案。
 
-## 已验证实现（WORK-2026-013..018，第 4–5 步）
+## 已验证实现（WORK-2026-013..020，第 4–6 步）
 
 以下错误码已在 `knowledge_tree_infrastructure`/`apps.api` 实现并有集成测试；
-HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..010`。
+HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..010`（第 6 步
+WORK-2026-019/020 职责隔离 QA 待执行）。
 
 | Code | Layer/Owner | HTTP | Retryable | 用户动作 | Test | 状态 |
 |---|---|---:|---|---|---|---|
@@ -89,8 +90,8 @@ HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..010`。
 - [x] 安全、脱敏且可行动的用户文案（用户手册"失败与恢复"）；
 - [x] 正确 HTTP/job/result 语义（见"已验证实现"表）；
 - [ ] event/span status/metric（遥测未建立，后续工作项）；
-- [x] 自动测试覆盖产生、传播和展示（TC-PERS/API/SEARCH/IMPORT/VIEW/RENDER）；
+- [x] 自动测试覆盖产生、传播和展示（TC-PERS/API/SEARCH/IMPORT/VIEW/RENDER/GATE/LOCK）；
 - [x] 需要时有 Runbook（本地存储/viewer Runbook 待建，记录于 TRACEABILITY_MATRIX）；
-- [x] CHANGELOG/用户手册影响已判断（CHANGELOG 保持空：无正式发布；用户手册已更新）。
+- [x] CHANGELOG/用户手册影响已判断（CHANGELOG 已补第 4–6 步用户可见变化；用户手册已更新锁定/撤销与失败恢复）。
 
-> 遥测 metric 为唯一未勾选项，归后续可观测性工作项；其余项在 WORK-2026-013..018 已交付。
+> 遥测 metric 为唯一未勾选项，归后续可观测性工作项；其余项在 WORK-2026-013..020 已交付。
