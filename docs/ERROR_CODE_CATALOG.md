@@ -54,7 +54,7 @@ enum 声明并被 RB-PROV-001 引用，但 raise 路径/专门测试仍待后续
 | Code | Layer/Owner | Retryable | 用户动作 | Test | 状态 |
 |---|---|---:|---|---|---|
 | `provider_invalid_request` | LLM port | no | 修正请求/配置 | TC-LLM-006/001、TC-DS-004 | verified |
-| `provider_config_invalid` | Config/Provider | no | 修复版本化配置 | 待建 | declared |
+| `provider_config_invalid` | Config/Provider | no | 修复版本化配置（如金额预算缺定价） | test_monetary_budget_requires_pricing | verified |
 | `provider_continuation_lost` | LLM port | no | 从安全 checkpoint 重启模型阶段 | TC-LLM-005 | verified |
 | `provider_secret_missing` | Secret/Provider | no | 配置或重新授权 API Key | 待建 | declared |
 | `provider_auth_failed` | LLM port | no | 检查密钥/权限（立即熔断） | TC-LLM-006/007、TC-DS-004 | verified |

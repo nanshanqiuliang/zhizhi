@@ -33,6 +33,9 @@
   Completions 协议适配器与 DeepSeek vendor profile、显式 thinking/流式/工具调用、
   错误映射与重试/熔断/预算，以及受控真实 smoke（文本/JSON/思考/工具/流式 5/5）。
   DeepSeek deployment 仍保持关闭，尚未接入产品界面。
+- 新增 LLM 费用与降级保护（第 7 步收口）：金额预算（`max_cost_usd` + 每 token 定价
+  快照）、受控回退（`ModelRunner` 仅瞬态错误回退）、HTTPS 强制、微积分金标基线
+  （`EVAL-LLM-001`）与 `RB-PROV-001` 演练；隔离审查发现并修复全部 blocking。
 
 ### Changed
 

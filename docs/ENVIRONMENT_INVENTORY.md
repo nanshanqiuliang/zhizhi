@@ -15,13 +15,13 @@
 
 ## Provider 与密钥状态（local-dev）
 
-| Provider | Protocol | Deployment | Model | Enabled | Capability snapshot | Secret reference 状态 |
-|---|---|---|---|---|---|---|
-| mock | mock | deterministic | mock-deterministic-v1 | true | 契约内嵌（text/JSON/stream/tool/thinking） | 无 |
-| deepseek | openai_chat_completions | fast / quality | deepseek-v4-flash / deepseek-v4-pro | **false** | `config/llm/providers.yaml` 快照 + `/models` 探测一致 | `env://DEEPSEEK_API_KEY`（开发 live smoke 用；present，仅环境变量，不落盘） |
-| openai / kimi / anthropic | openai_responses / openai_chat_completions / anthropic_messages | （未声明） | — | false | 配置预留 | 未配置 |
+| Provider | Protocol | Deployment | Model | Enabled | Pricing（USD/百万 token，待校准） | Capability snapshot | Secret reference 状态 |
+|---|---|---|---|---|---|---|---|
+| mock | mock | deterministic | mock-deterministic-v1 | true | — | 契约内嵌（text/JSON/stream/tool/thinking） | 无 |
+| deepseek | openai_chat_completions | fast / quality | deepseek-v4-flash / deepseek-v4-pro | **false** | 输入 0.28 / 输出 1.14 | `config/llm/providers.yaml` 快照 + `/models` 探测一致 | `env://DEEPSEEK_API_KEY`（开发 live smoke 用；present，仅环境变量，不落盘） |
+| openai / kimi / anthropic | openai_responses / openai_chat_completions / anthropic_messages | （未声明） | — | false | — | 配置预留 | 未配置 |
 
-真实 DeepSeek smoke 仅在 `RUN_LIVE_LLM_TESTS=1` 且 `DEEPSEEK_API_KEY` 存在时运行，默认跳过；其余 provider 无 secret、无 live 证据，保持关闭。
+真实 DeepSeek smoke/金标评测仅在 `RUN_LIVE_LLM_TESTS=1` 且 `DEEPSEEK_API_KEY` 存在时运行，默认跳过；金额预算（`max_cost_usd` + pricing）与受控回退（`ModelRunner`）已接线，其余 provider 无 secret、无 live 证据，保持关闭。
 
 ## 单个环境必须记录
 

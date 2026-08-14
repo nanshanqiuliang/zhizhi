@@ -76,9 +76,9 @@ updated_at: 2026-08-14T23:15:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-008-deepseek-adapter-live`；Ready → 红灯 `d6a7444`（1 collection error）→ 实现 `d81c574` → live smoke + timeout 修复 `a80f43d` → 文档收口。
-- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 `docs/contracts/llm.v1.schema.json` 与 config/llm v1。
-- Test Run：离线 fixture 契约测试 TC-DS-001..005 21/21；live smoke 5/5（RUN_LIVE_LLM_TESTS=1 + DEEPSEEK_API_KEY，约 817 token，费用远低于 3 元）；全仓 pytest 335/335 + 5 skipped；validator/Ruff/strict mypy（25 文件）/contracts-ts drift/pnpm build 全绿；职责隔离 QA 待执行。
-- Release：无托管发布；DeepSeek deployment 保持 `enabled: false`（正式批准待金标/RB-PROV-001）。
-- 观察结果：DeepSeek OpenAI Chat Completions adapter 真实可用（受控 smoke 验证）；密钥从未落盘。
-- 未完成项的新 ID：微积分金标评测 `EVAL-LLM-001` 与质量/成本/延迟门、`RB-PROV-001` 演练、DeepSeek deployment 正式批准、AI 草案流水线接入（第 8 步）。
+- Commit/PR：分支 `feature/WORK-2026-008-deepseek-adapter-live`；Ready → 红灯 `d6a7444`（1 collection error）→ 实现 `d81c574` → live smoke + timeout 修复 `a80f43d` → 金额预算/回退/金标/演练 `042f937` → review 修复 `dd49599` → 文档收口 `e76f4d7`。
+- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 `docs/contracts/llm.v1.schema.json` 与 config/llm v1（LlmErrorCode 已对齐 17 码）。
+- Test Run：离线契约测试 TC-DS-001..005 + 金额预算/回退 33/33；live smoke 5/5（~817 token）；金标 EVAL-LLM-001 基线（~$0.0012）；全仓 pytest 348/348 + 5 skipped；validator/Ruff/strict mypy（scripts 10 + packages 26）/contracts-ts drift 全绿；隔离审查（`correlated_review`）发现并修复 2 blocking + 4 should-fix。
+- Release：无托管发布；DeepSeek deployment 保持 `enabled: false`（正式启用为唯一待 owner 决定的残余项）。
+- 观察结果：DeepSeek adapter 真实可用，金额/attempt/回退三重预算约束生效，密钥从未落盘。
+- 未完成项的新 ID：DeepSeek deployment `enabled: true` 正式批准（待 owner）、金标质量阈值批准、AI 草案流水线接入（第 8 步）。
