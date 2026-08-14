@@ -34,6 +34,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi & { saved: Wor
       text_hash: "sha256:x",
     })),
     listAnchors: vi.fn(async () => []),
+    getFileUrl: vi.fn(() => "http://127.0.0.1:8000/file.pdf"),
     ...overrides,
   };
   return Object.assign(api, { saved });

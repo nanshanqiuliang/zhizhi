@@ -5,6 +5,24 @@ import { describe, expect, it, vi } from "vitest";
 import type { AnchorRef, PersistApi, ResourceInfo } from "./api";
 import { App } from "./App";
 
+// PdfRenderer performs real pdfjs loading; in jsdom tests we stub it so the
+// App-level behavior (view switching, bbox highlight rendering) is what is
+// verified.
+vi.mock("./PdfRenderer", () => ({
+  PdfRenderer: ({
+    page,
+    activeAnchor,
+  }: {
+    page: number;
+    activeAnchor: AnchorRef | null;
+  }) => (
+    <div aria-label="PDF 渲染视图">
+      <canvas aria-label="PDF 页面画布" data-page={page} />
+      {activeAnchor?.bboxNorm && <div aria-label="锚点高亮区域" />}
+    </div>
+  ),
+}));
+
 const PDF_RESOURCE: ResourceInfo = {
   id: "00000000-0000-7000-8100-000000000001",
   display_name: "chapter-02.pdf",
@@ -46,6 +64,10 @@ describe("pdf.js visual render and bbox highlight", () => {
       expect(screen.getByRole("button", { name: "打开" })).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: "打开" }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "渲染" })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "渲染" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("PDF 渲染视图")).toBeInTheDocument();
@@ -76,9 +98,13 @@ describe("pdf.js visual render and bbox highlight", () => {
     fireEvent.click(screen.getByRole("button", { name: "打开" }));
 
     await waitFor(() => {
-      expect(screen.getByText(/2\\.1 The Derivative of a Function/)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /The Derivative of a Function/ }),
+      ).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText(/2\\.1 The Derivative of a Function/));
+    fireEvent.click(
+      screen.getByRole("button", { name: /The Derivative of a Function/ }),
+    );
 
     await waitFor(() => {
       expect(screen.getByLabelText("锚点高亮区域")).toBeInTheDocument();

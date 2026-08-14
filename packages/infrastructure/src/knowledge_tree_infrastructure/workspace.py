@@ -832,6 +832,49 @@ def list_anchors(layout: WorkspaceLayout, resource_id: str) -> list[AnchorRef]:
         ) from error
 
 
+def get_resource_file_path(layout: WorkspaceLayout, resource_id: str) -> Path:
+    """Resolve the controlled storage path for a resource's current version."""
+
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT v.storage_key FROM resource_version v "
+                "WHERE v.resource_id=? AND v.id = "
+                "(SELECT current_version_id FROM resource WHERE id=?)",
+                (resource_id, resource_id),
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "resource_not_readable"}
+        ) from error
+    if row is None:
+        _reject("workspace_missing", rule="resource_missing")
+    storage_key = str(row[0])
+    if not _storage_key_within(layout, storage_key):
+        _reject("file_not_found", rule="storage_key_unsafe")
+    return layout.root / storage_key
+
+
+def get_resource_mime(layout: WorkspaceLayout, resource_id: str) -> str:
+    """Return the mime type of a resource's current version."""
+
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT v.mime FROM resource_version v "
+                "WHERE v.resource_id=? AND v.id = "
+                "(SELECT current_version_id FROM resource WHERE id=?)",
+                (resource_id, resource_id),
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "resource_not_readable"}
+        ) from error
+    if row is None:
+        _reject("workspace_missing", rule="resource_missing")
+    return str(row[0])
+
+
 def _safe_display_name(name: str) -> str:
     base = Path(name).name
     if not base or base in {".", ".."} or "/" in name or "\\" in name:

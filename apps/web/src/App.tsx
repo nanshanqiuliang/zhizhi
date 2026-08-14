@@ -8,6 +8,7 @@ import type {
   SearchResultItem,
   WorkspaceSnapshot,
 } from "./api";
+import { PdfRenderer } from "./PdfRenderer";
 
 type DragState = {
   nodeId: string;
@@ -199,6 +200,8 @@ export function App({ api }: { api?: PersistApi }) {
   const [viewerText, setViewerText] = useState("");
   const [viewerStatus, setViewerStatus] = useState<"idle" | "loading" | "failed" | "drift">("idle");
   const [anchors, setAnchors] = useState<AnchorRef[]>([]);
+  const [viewerMode, setViewerMode] = useState<"text" | "render">("text");
+  const [activeAnchor, setActiveAnchor] = useState<AnchorRef | null>(null);
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -322,6 +325,7 @@ export function App({ api }: { api?: PersistApi }) {
     setViewerResource(resource);
     setViewerPage(1);
     setViewerText("");
+    setActiveAnchor(null);
     setViewerStatus("loading");
     try {
       const [page, anchorList] = await Promise.all([
@@ -340,6 +344,7 @@ export function App({ api }: { api?: PersistApi }) {
     if (!api || !viewerResource) return;
     if (page < 1) return;
     setViewerPage(page);
+    setActiveAnchor(null);
     setViewerStatus("loading");
     try {
       const next = await api.getPageText(viewerResource.id, page);
@@ -354,6 +359,10 @@ export function App({ api }: { api?: PersistApi }) {
   async function jumpToAnchor(anchor: AnchorRef) {
     if (!api || !viewerResource) return;
     setViewerPage(anchor.page);
+    setActiveAnchor(anchor);
+    if (anchor.bboxNorm) {
+      setViewerMode("render");
+    }
     setViewerStatus("loading");
     try {
       const page = await api.getPageText(viewerResource.id, anchor.page);
@@ -783,6 +792,20 @@ export function App({ api }: { api?: PersistApi }) {
               <button type="button" onClick={() => changeViewerPage(viewerPage - 1)} disabled={viewerPage <= 1}>← 上一页</button>
               <span>第 {viewerPage} 页</span>
               <button type="button" onClick={() => changeViewerPage(viewerPage + 1)}>下一页 →</button>
+              <button
+                type="button"
+                className={viewerMode === "text" ? "viewer-mode active" : "viewer-mode"}
+                onClick={() => setViewerMode("text")}
+              >
+                文本
+              </button>
+              <button
+                type="button"
+                className={viewerMode === "render" ? "viewer-mode active" : "viewer-mode"}
+                onClick={() => setViewerMode("render")}
+              >
+                渲染
+              </button>
               <button type="button" className="viewer-close" onClick={() => setViewerResource(null)}>关闭</button>
             </div>
           </header>
@@ -793,7 +816,18 @@ export function App({ api }: { api?: PersistApi }) {
             <p className="viewer-warning">无法读取该资料，请确认文件已解析。</p>
           )}
           <div className="viewer-body" aria-live="polite">
-            {viewerStatus === "loading" ? "加载中…" : <pre>{viewerText}</pre>}
+            {viewerStatus === "loading" ? (
+              "加载中…"
+            ) : viewerMode === "render" && api ? (
+              <PdfRenderer
+                key={viewerPage}
+                fileUrl={api.getFileUrl(viewerResource.id)}
+                page={viewerPage}
+                activeAnchor={activeAnchor}
+              />
+            ) : (
+              <pre>{viewerText}</pre>
+            )}
           </div>
           {anchors.length > 0 && (
             <nav className="anchor-list" aria-label="锚点目录">

@@ -15,19 +15,22 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from knowledge_tree_domain import GraphPatchError, validate_course_graph
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     backup_workspace,
     create_workspace,
     get_page_text,
+    get_resource_file_path,
+    get_resource_mime,
     import_resource,
     list_anchors,
     list_resources,
     load_course_graph,
     migrate,
     parse_pdf_resource,
+    register_anchor,
     resolve_workspace,
     save_course_graph,
     search_course_graph,
@@ -64,6 +67,8 @@ def _http_error(error: WorkspaceError) -> HTTPException:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code in {"parse_failed", "parse_pending", "page_out_of_range", "source_changed"}:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code == "file_not_found":
+        return HTTPException(status_code=404, detail={"code": error.code, **error.details})
     if error.code == "workspace_corrupt" and error.details.get("rule") == "course_graph_absent":
         # A workspace without a saved graph is equivalent to "not found".
         return HTTPException(status_code=404, detail={"code": "workspace_missing"})
@@ -239,6 +244,17 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
         except WorkspaceError as error:
             raise _http_error(error) from error
 
+    @app.get("/api/workspaces/{workspace_id}/resources/{resource_id}/file")
+    def get_file(workspace_id: str, resource_id: str) -> FileResponse:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            mime = get_resource_mime(layout, resource_id)
+            file_path = get_resource_file_path(layout, resource_id)
+            return FileResponse(file_path, media_type=mime, filename=Path(resource_id).name)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
     @app.get("/api/workspaces/{workspace_id}/resources/{resource_id}/anchors")
     def get_anchors(workspace_id: str, resource_id: str) -> JsonObject:
         workspace_root = _workspace_root(root, workspace_id)
@@ -255,6 +271,37 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
                     }
                     for anchor in anchors
                 ]
+            }
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/resources/{resource_id}/anchors")
+    async def post_anchor(workspace_id: str, resource_id: str, request: Request) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        page = payload.get("page")
+        anchor_payload = payload.get("payload")
+        if not isinstance(page, int) or page < 1 or not isinstance(anchor_payload, dict):
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "anchor_invalid", "rule": "page_or_payload_invalid"},
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            anchor = register_anchor(
+                layout,
+                resource_id=resource_id,
+                page=page,
+                payload=anchor_payload,
+            )
+            return {
+                "id": anchor.id,
+                "resource_id": anchor.resource_id,
+                "page": anchor.page,
+                "payload": anchor.payload,
             }
         except WorkspaceError as error:
             raise _http_error(error) from error

@@ -10,14 +10,13 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-
-from apps.api.main import create_app
 from knowledge_tree_infrastructure.workspace import (
     create_workspace,
     import_resource,
     migrate,
 )
 
+from apps.api.main import create_app
 from tests.contract.test_graph_contracts import WORKSPACE_ID
 
 ALLOWED_ORIGIN = "http://localhost:5173"
@@ -61,8 +60,6 @@ def test_file_endpoint_missing_resource_404(client: TestClient) -> None:
 
 
 def test_file_endpoint_non_pdf_resource_rejected(tmp_path: Path) -> None:
-    from fastapi.testclient import TestClient as TC
-
     workspace = create_workspace(tmp_path / "ws")
     migrate(workspace.db_path)
     info = import_resource(workspace, display_name="notes.md", content=b"# hi")

@@ -170,3 +170,39 @@ def test_api_page_text_missing_resource_404(client: TestClient) -> None:
     response = client.get(f"/api/workspaces/{WORKSPACE_ID}/resources/{missing}/pages/1")
     assert response.status_code == 404
     assert response.json()["code"] == "workspace_missing"
+
+
+def test_api_register_anchor(client: TestClient) -> None:
+    with open(GOLD_PDF, "rb") as handle:
+        response = client.post(
+            f"/api/workspaces/{WORKSPACE_ID}/resources",
+            files={"file": ("ch.pdf", handle, "application/pdf")},
+        )
+    resource_id = response.json()["id"]
+
+    created = client.post(
+        f"/api/workspaces/{WORKSPACE_ID}/resources/{resource_id}/anchors",
+        json={"page": 3, "payload": {"topic_zh": "导数定义", "bbox_norm": [0.1, 0.2, 0.6, 0.35]}},
+    )
+    assert created.status_code == 200
+    assert created.json()["page"] == 3
+
+    listed = client.get(f"/api/workspaces/{WORKSPACE_ID}/resources/{resource_id}/anchors")
+    assert listed.status_code == 200
+    assert any(a["page"] == 3 for a in listed.json()["anchors"])
+
+
+def test_api_register_anchor_invalid_payload(client: TestClient) -> None:
+    with open(GOLD_PDF, "rb") as handle:
+        response = client.post(
+            f"/api/workspaces/{WORKSPACE_ID}/resources",
+            files={"file": ("ch2.pdf", handle, "application/pdf")},
+        )
+    resource_id = response.json()["id"]
+
+    bad = client.post(
+        f"/api/workspaces/{WORKSPACE_ID}/resources/{resource_id}/anchors",
+        json={"page": 0, "payload": "not-an-object"},
+    )
+    assert bad.status_code == 422
+    assert bad.json()["code"] == "anchor_invalid"

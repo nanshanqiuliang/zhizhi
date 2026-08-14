@@ -50,6 +50,7 @@ export type AnchorRef = {
   id: string;
   page: number;
   label: string;
+  bboxNorm?: [number, number, number, number];
 };
 
 export interface PersistApi {
@@ -61,6 +62,7 @@ export interface PersistApi {
   parsePdf(resourceId: string): Promise<{ page_count: number }>;
   getPageText(resourceId: string, page: number): Promise<PageText>;
   listAnchors(resourceId: string): Promise<AnchorRef[]>;
+  getFileUrl(resourceId: string): string;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -283,13 +285,30 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(`anchors failed: ${response.status}`);
       }
       const body = (await response.json()) as {
-        anchors: Array<{ id: string; page: number; payload: { topic_zh?: string } }>;
+        anchors: Array<{
+          id: string;
+          page: number;
+          payload: { topic_zh?: string; bbox_norm?: number[] };
+        }>;
       };
-      return body.anchors.map((anchor) => ({
-        id: anchor.id,
-        page: anchor.page,
-        label: anchor.payload.topic_zh ?? `第 ${anchor.page} 页`,
-      }));
+      return body.anchors.map((anchor) => {
+        const raw = anchor.payload.bbox_norm;
+        const bboxNorm =
+          Array.isArray(raw) &&
+          raw.length === 4 &&
+          raw.every((item) => typeof item === "number")
+            ? ([raw[0], raw[1], raw[2], raw[3]] as [number, number, number, number])
+            : undefined;
+        return {
+          id: anchor.id,
+          page: anchor.page,
+          label: anchor.payload.topic_zh ?? `第 ${anchor.page} 页`,
+          bboxNorm,
+        };
+      });
+    },
+    getFileUrl(resourceId: string): string {
+      return `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/file`;
     },
   };
 }
