@@ -451,8 +451,9 @@ a:focus-visible {
   position: relative;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .canvas-surface {
@@ -461,9 +462,16 @@ a:focus-visible {
   min-width: 100%;
   height: max(650px, 100%);
   overflow: hidden;
+  transform-origin: 0 0;
+  touch-action: none;
+  cursor: grab;
   background:
     radial-gradient(circle at 50% 5%, rgb(255 255 255 / 62%), transparent 24rem),
     #e9eee7;
+}
+
+.canvas-surface:active {
+  cursor: grabbing;
 }
 
 .canvas-grid {
@@ -850,7 +858,7 @@ a:focus-visible {
     scrollbar-width: none;
   }
   .canvas-toolbar button { white-space: nowrap; }
-  .canvas-viewport { overflow: auto; }
+  .canvas-viewport { overflow: hidden; }
   .canvas-surface { min-width: 920px; }
   .detail-panel {
     overflow: visible;

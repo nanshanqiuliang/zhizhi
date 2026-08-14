@@ -94,4 +94,15 @@ describe("knowledge tree workspace", () => {
     expect(boundary).toHaveTextContent("AI 未连接");
     expect(boundary).toHaveTextContent("未连接数据库");
   });
+
+  it("zooms the canvas with the wheel", () => {
+    const { container } = render(<App />);
+    const viewport = container.querySelector(".canvas-viewport");
+    expect(viewport).not.toBeNull();
+
+    fireEvent.wheel(viewport!, { deltaY: -100 });
+
+    const surface = container.querySelector(".canvas-surface") as HTMLElement;
+    expect(surface.style.transform).toContain("scale(1.1)");
+  });
 });

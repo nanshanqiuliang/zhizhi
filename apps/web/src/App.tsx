@@ -15,6 +15,7 @@ import { renderMarkdown } from "./markdown";
 import { PdfRenderer } from "./PdfRenderer";
 
 type DragState = {
+  mode: "node" | "pan";
   nodeId: string;
   pointerId: number;
   startX: number;
@@ -23,6 +24,8 @@ type DragState = {
   originY: number;
   currentX: number;
   currentY: number;
+  startPanX: number;
+  startPanY: number;
   before: WorkspaceSnapshot;
 };
 
@@ -224,6 +227,8 @@ export function App({ api }: { api?: PersistApi }) {
   const [importStatus, setImportStatus] = useState<"idle" | "importing" | "failed">("idle");
   const [backups, setBackups] = useState<string[]>([]);
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [viewerResource, setViewerResource] = useState<ResourceInfo | null>(null);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerText, setViewerText] = useState("");
@@ -241,12 +246,6 @@ export function App({ api }: { api?: PersistApi }) {
     () => new Map(present.nodes.map((node) => [node.id, node])),
     [present.nodes],
   );
-
-  useEffect(() => {
-    const viewport = canvasViewport.current;
-    if (!viewport) return;
-    viewport.scrollLeft = Math.max(0, selectedNode.x + 75 - viewport.clientWidth / 2);
-  }, [selectedId, selectedNode.x]);
 
   useEffect(() => {
     if (!api) return;
@@ -335,10 +334,6 @@ export function App({ api }: { api?: PersistApi }) {
     const node = present.nodes.find((candidate) => candidate.id === resultId);
     if (!node) return;
     selectNode(node.id);
-    const viewport = canvasViewport.current;
-    if (viewport) {
-      viewport.scrollLeft = Math.max(0, node.x + 75 - viewport.clientWidth / 2);
-    }
   }
 
   async function handleImport(event: React.ChangeEvent<HTMLInputElement>) {
@@ -472,9 +467,21 @@ export function App({ api }: { api?: PersistApi }) {
     scheduleAutoSave(next);
   }
 
+  function centerOnNode(node: ConceptNode) {
+    const viewport = canvasViewport.current;
+    if (!viewport) return;
+    const nodeCenterX = (node.x + 75) * zoom;
+    const nodeCenterY = (node.y + 34) * zoom;
+    setPan({
+      x: viewport.clientWidth / 2 - nodeCenterX,
+      y: viewport.clientHeight / 2 - nodeCenterY,
+    });
+  }
+
   function selectNode(nodeId: string) {
     const node = present.nodes.find((candidate) => candidate.id === nodeId);
     if (!node) return;
+    centerOnNode(node);
     setSelectedId(node.id);
     setTitleDraft(node.title);
     setNoteDraft(node.note);
@@ -694,7 +701,9 @@ export function App({ api }: { api?: PersistApi }) {
       setStatus("位置已锁定，无法移动");
       return;
     }
+    event.stopPropagation();
     drag.current = {
+      mode: "node",
       nodeId: node.id,
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -703,15 +712,43 @@ export function App({ api }: { api?: PersistApi }) {
       originY: node.y,
       currentX: node.x,
       currentY: node.y,
+      startPanX: 0,
+      startPanY: 0,
       before: present,
     };
   }
 
-  function moveDrag(event: React.PointerEvent<HTMLButtonElement>) {
+  function startPan(event: React.PointerEvent<HTMLDivElement>) {
+    drag.current = {
+      mode: "pan",
+      nodeId: "",
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: 0,
+      originY: 0,
+      currentX: 0,
+      currentY: 0,
+      startPanX: pan.x,
+      startPanY: pan.y,
+      before: present,
+    };
+  }
+
+  function moveDrag(event: React.PointerEvent<HTMLElement>) {
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId) return;
-    const x = Math.max(8, Math.min(835, active.originX + event.clientX - active.startX));
-    const y = Math.max(8, Math.min(555, active.originY + event.clientY - active.startY));
+    if (active.mode === "pan") {
+      setPan({
+        x: active.startPanX + (event.clientX - active.startX),
+        y: active.startPanY + (event.clientY - active.startY),
+      });
+      return;
+    }
+    const deltaX = (event.clientX - active.startX) / zoom;
+    const deltaY = (event.clientY - active.startY) / zoom;
+    const x = Math.max(8, Math.min(835, active.originX + deltaX));
+    const y = Math.max(8, Math.min(555, active.originY + deltaY));
     active.currentX = x;
     active.currentY = y;
     setPresent((snapshot) => ({
@@ -720,10 +757,11 @@ export function App({ api }: { api?: PersistApi }) {
     }));
   }
 
-  function endDrag(event: React.PointerEvent<HTMLButtonElement>) {
+  function endDrag(event: React.PointerEvent<HTMLElement>) {
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId) return;
     drag.current = null;
+    if (active.mode === "pan") return;
     if (active.currentX === active.originX && active.currentY === active.originY) return;
     setPast([...past, active.before]);
     setFuture([]);
@@ -734,6 +772,12 @@ export function App({ api }: { api?: PersistApi }) {
         node.id === active.nodeId ? { ...node, x: active.currentX, y: active.currentY } : node,
       ),
     });
+  }
+
+  function handleWheel(event: React.WheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const step = event.deltaY > 0 ? -0.1 : 0.1;
+    setZoom((current) => Math.max(0.5, Math.min(2.5, current + step)));
   }
 
   return (
@@ -909,11 +953,17 @@ export function App({ api }: { api?: PersistApi }) {
             <span className="toolbar-rule" />
             <button type="button" onClick={autoLayout}><Icon name="layout" />自动排布</button>
             <button type="button" onClick={resetDemo}><Icon name="reset" />重新载入示例</button>
-            <span className="canvas-tip">拖动节点调整位置</span>
+            <span className="canvas-tip">滚轮缩放 · 拖动空白平移 · 拖动节点调整位置</span>
           </div>
 
-          <div className="canvas-viewport" ref={canvasViewport}>
-            <div className="canvas-surface">
+          <div className="canvas-viewport" ref={canvasViewport} onWheel={handleWheel}>
+            <div
+              className="canvas-surface"
+              style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+              onPointerDown={startPan}
+              onPointerMove={moveDrag}
+              onPointerUp={endDrag}
+            >
               <div className="canvas-grid" aria-hidden="true" />
               <svg className="edge-layer" viewBox="0 0 1000 650" aria-hidden="true">
                 {present.edges.map((edge) => {
@@ -943,8 +993,6 @@ export function App({ api }: { api?: PersistApi }) {
                   style={{ left: node.x, top: node.y }}
                   onClick={() => selectNode(node.id)}
                   onPointerDown={(event) => startDrag(event, node)}
-                  onPointerMove={moveDrag}
-                  onPointerUp={endDrag}
                 >
                   <span className="node-type">{node.tone === "root" ? "主题" : node.tone === "branch" ? "概念" : "知识点"}</span>
                   <strong>{node.title}</strong>
