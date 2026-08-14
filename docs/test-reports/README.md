@@ -20,6 +20,7 @@
 | [TR-20260814-009](TR-20260814-009_pdf-viewer-anchor.md) | `267fb7e` | schema v3、pypdf 页文本、页文本/锚点端点、漂移不误跳、金标 50 锚点 | GO（仅 prototype；correlated） | WORK-2026-017 |
 | [TR-20260814-010](TR-20260814-010_pdfjs-render.md) | `d56e7ef` | PDF.js canvas 渲染、bbox 高亮、窄视口对齐、file/anchors 端点、真实浏览器验证 | GO（仅 prototype；correlated） | WORK-2026-018 |
 | [TR-20260814-011](TR-20260814-011_patch-gate-undo-redo-lock-guard.md) | `a6a471a` | 持久化 GraphPatch 提交门、跨会话 undo/redo、锁定维度存储保护、Web 锁定/撤销、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-019/020 |
+| [TR-20260814-012](TR-20260814-012_recovery-history-ui.md) | `2cfa883` | 冲突预览、备份/恢复崩溃恢复、版本历史面板、URL 契约、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-021 |
 
 正式执行时：
 

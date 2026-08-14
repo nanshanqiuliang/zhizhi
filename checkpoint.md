@@ -877,3 +877,29 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: either finish Step 6 with ordinary-edit patch-based save
   (needs a GraphPatch contract extension) or advance to Step 7 (DeepSeek live
   adapter) once the owner provides an API key and budget.
+
+## Step 6 recovery/history QA closure checkpoint — 2026-08-14 19:35 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- Role-separated QA (graph_qa_fresh) reviewed frozen `b962978` (WORK-2026-021
+  conflict preview + backup/restore + version history) and returned FAIL with
+  1 P0 (front-end backup/restore/history URLs hit /graph/* -> 404), 1 P1
+  (restore skipped checksum when sidecar missing) + 5 P2.
+- Fixes `2cd8270` (workspaceBase URLs + checksum required + `_recovery_layout`
+  db-lost recovery + text split + contract test), `8562ee7` (db-lost restore
+  regression), `2cfa883` (millisecond backup stamp) close them; superseding
+  reviews PASS (3 runs, no blocking findings).
+- Full gates at `2cfa883`: repository validator, Ruff, mypy (scripts 9 + strict
+  11), pytest 249/249 (backup_api 6/6), locked pnpm install/peers, Web 27/27
+  (incl api URL contract), production build all pass.
+- Evidence/report: `evidence/TR-20260814-012/` and
+  `docs/test-reports/TR-20260814-012_recovery-history-ui.md` (GO, prototype,
+  correlated_review).
+- Natural-language Step 6 progress: approximately 85% — all Step 6 artifacts
+  (lock, undo/redo, conflict preview, crash recovery, duplicate-task protection,
+  version history) are now verified. Only ordinary-edit patch-based save remains
+  (needs GraphPatch delete/tombstone). Overall personal MVP approximately 74%.
+- Exact next action: finish Step 6 with ordinary-edit patch-based save
+  (WORK-2026-022, needs GraphPatch contract extension + re-QA), or advance to
+  Step 7 (DeepSeek live adapter) once the owner provides an API key and budget.
+  Keep real Provider/Web, user data, and owner acceptance disabled.

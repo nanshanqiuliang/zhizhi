@@ -9,7 +9,7 @@
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感进行中（约 85%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做、WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入（均经 `TR-20260814-011` 验证），WORK-2026-021 冲突预览 + 备份/恢复崩溃恢复 + 版本历史面板（已实现待 QA）；普通编辑 patch 化保存（跨会话撤销覆盖所有编辑，需 GraphPatch delete/tombstone 语义）待建；个人可用 MVP 粗略完成度约 74%。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感进行中（约 85%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做、WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入（均经 `TR-20260814-011` 验证），WORK-2026-021 冲突预览 + 备份/恢复崩溃恢复 + 版本历史面板（经 `TR-20260814-012` 验证）；普通编辑 patch 化保存（跨会话撤销覆盖所有编辑，需 GraphPatch delete/tombstone 语义）待建；个人可用 MVP 粗略完成度约 74%。
 
 ## 当前阶段出口门
 
@@ -49,13 +49,13 @@
 | WORK-2026-018 | PDF.js 可视化渲染与 bbox 区域高亮 | 已验证 prototype（第 5 步完成） | viewer-render + QA | WORK-2026-017 已验证（页文本/锚点）；pdfjs-dist 6.2.108 | PDF.js canvas 渲染、bbox 高亮层、file/anchors 端点、渲染视图与锚点联动 | `275d7c6` 红灯；`2601215` 实现；`d56e7ef` P1/P2 修复；`TR-20260814-010` QA FAIL→修复→浏览器验证；224/224、Web 20/20 |
 | WORK-2026-019 | 持久化 GraphPatch 提交门与跨会话撤销/重做 | 已验证 prototype | persistence + api + QA | WORK-2026-005/011/013/014 已验证 | `apply_graph_patch`/`undo_graph`/`redo_graph`（重建→apply/undo/redo→原子提交）、持久化 initial graph + applied 栈指针、幂等拒绝、`POST graph/patches|undo|redo` + `GET history` 端点 | `4f5fbd3` Ready；`db3cb26` 红灯；`e0a5ed9` 实现；`a6a471a` QA 修复；`TR-20260814-011` QA FAIL→修复；全仓 243/243、Web 23/23 |
 | WORK-2026-020 | 锁定维度存储保护与 WebUI 锁定/撤销接入 | 已验证 prototype | persistence + api + web + QA | WORK-2026-005/019 已实现 | `save_course_graph` 锁定维度保护（锁降级/内容变化/删除/revision 回退拒绝）；前端四维锁保真往返 + `toggleLock` patch 门 + 撤销/重做回退后端 + 编辑前查锁 | `618420c` 实现；`a6a471a` QA 修复；lock-guard 6/6、Web 23/23、全仓 243/243；`TR-20260814-011` QA FAIL→修复 |
-| WORK-2026-021 | 冲突预览与备份/恢复崩溃恢复 UI | 已实现（待职责隔离 QA） | recovery + api + web + QA | WORK-2026-019/020 已验证 | `list_backups`/`restore_backup_by_name`（路径守卫）+ `GET backups`/`POST restore` 端点；前端错误码细化提示 + 侧边栏备份/恢复入口 | `fb745bd`；backup_api 3/3、Web 25/25、全仓 246/246；QA 待执行 |
+| WORK-2026-021 | 冲突预览与备份/恢复崩溃恢复 UI | 已验证 prototype | recovery + api + web + QA | WORK-2026-019/020 已验证 | `list_backups`/`restore_backup_by_name`（路径守卫 + checksum 必需）+ `GET backups`/`POST restore` 端点（含 `_recovery_layout` db 缺失恢复）；前端错误码细化提示 + 侧边栏备份/恢复 + 版本历史面板 | `fb745bd` 实现；`2cd8270`/`8562ee7`/`2cfa883` QA 修复；backup_api 6/6、Web 27/27、全仓 249/249；`TR-20260814-012` QA FAIL→修复 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 6 步普通编辑 patch 化保存 | 提交门 + 跨会话撤销 + 锁定保护 + 冲突预览 + 备份/恢复 + 版本历史面板均已实现（019/020 已验证，021 待 QA）；普通编辑（增删改/拖动）仍整图 PUT 保存（清空历史） | 建立 WORK-2026-022：普通编辑 patch 化保存（含 delete/tombstone 语义）；不得把未接入能力宣称为用户已可见 |
+| 第 6 步普通编辑 patch 化保存 | 提交门 + 跨会话撤销 + 锁定保护 + 冲突预览 + 备份/恢复 + 版本历史面板均已实现（019/020 经 TR-011、021 经 TR-012 验证）；普通编辑（增删改/拖动）仍整图 PUT 保存（清空历史） | 建立 WORK-2026-022：普通编辑 patch 化保存（含 delete/tombstone 语义）；不得把未接入能力宣称为用户已可见 |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门
