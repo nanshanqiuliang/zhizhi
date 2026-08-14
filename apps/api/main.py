@@ -124,7 +124,10 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
     def post_backup(workspace_id: str) -> JsonObject:
         workspace_root = _workspace_root(root, workspace_id)
         try:
-            layout = create_workspace(workspace_root)
+            # Do not silently create an empty workspace on backup: require an
+            # existing saved graph, matching the GET semantics.
+            layout = resolve_workspace(workspace_root)
+            load_course_graph(layout)
             backup_path = backup_workspace(layout)
             return {"status": "backed_up", "backup_path": str(backup_path)}
         except WorkspaceError as error:

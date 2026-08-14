@@ -95,3 +95,11 @@ def test_backup_creates_checksummed_backup(client: TestClient, tmp_path: Path) -
     backup_path = Path(response.json()["backup_path"])
     assert backup_path.exists()
     assert backup_path.with_suffix(backup_path.suffix + ".sha256").exists()
+
+
+def test_backup_missing_workspace_returns_404(client: TestClient) -> None:
+    # A backup must not silently create an empty workspace; it must behave like
+    # GET and return workspace_missing when nothing was saved yet.
+    response = client.post(f"/api/workspaces/{WORKSPACE_ID}/backup")
+    assert response.status_code == 404
+    assert response.json()["code"] == "workspace_missing"
