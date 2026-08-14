@@ -175,7 +175,6 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
                 layout,
                 display_name=str(upload.filename or "upload"),
                 content=content,
-                mime=None,
             )
             return {
                 "id": info.id,

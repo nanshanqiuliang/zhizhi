@@ -476,13 +476,14 @@ def import_resource(
     *,
     display_name: str,
     content: bytes,
-    mime: str | None,
 ) -> ResourceInfo:
     """Import a whitelisted file into the workspace and register it.
 
     Content is stored under a generated UUIDv7 filename inside
     `resources/`; the client-supplied name is metadata only. Identical
     content (same SHA-256) is idempotent and returns the existing resource.
+    The file is written to disk first and the database row is committed only
+    after a successful write, so a failed write never leaves an orphan record.
     """
 
     display_name = _safe_display_name(display_name)
@@ -493,16 +494,22 @@ def import_resource(
         _reject("import_type_rejected", rule="mime_not_in_whitelist")
     content_hash = f"sha256:{hashlib.sha256(content).hexdigest()}"
     storage_key = f"resources/{_uuid7()}/{_uuid7()}"
+    storage_path = layout.root / storage_key
+    try:
+        storage_path.parent.mkdir(parents=True, exist_ok=True)
+        storage_path.write_bytes(content)
+    except OSError as error:
+        raise WorkspaceError("import_failed", details={"rule": "storage_not_writable"}) from error
     created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     try:
         with _connect(layout.db_path) as conn:
             existing = conn.execute(
-                "SELECT resource_id, version_no, content_hash, mime, byte_size, created_at "
-                "FROM resource_version WHERE content_hash=?",
+                "SELECT resource_id, version_no FROM resource_version WHERE content_hash=?",
                 (content_hash,),
             ).fetchone()
             if existing is not None:
-                resource_id, version_no, *_ = existing
+                resource_id, version_no = existing
+                storage_path.unlink(missing_ok=True)
                 return _resource_info(conn, str(resource_id), int(version_no))
             resource_id = _uuid7()
             version_id = _uuid7()
@@ -529,9 +536,6 @@ def import_resource(
                 "UPDATE resource SET current_version_id=? WHERE id=?",
                 (version_id, resource_id),
             )
-        storage_path = layout.root / storage_key
-        storage_path.parent.mkdir(parents=True, exist_ok=True)
-        storage_path.write_bytes(content)
         return ResourceInfo(
             id=resource_id,
             display_name=display_name,
@@ -541,6 +545,7 @@ def import_resource(
             created_at=created_at,
         )
     except sqlite3.DatabaseError as error:
+        storage_path.unlink(missing_ok=True)
         raise WorkspaceError("import_failed", details={"rule": "database_not_writable"}) from error
 
 

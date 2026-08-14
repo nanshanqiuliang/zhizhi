@@ -66,7 +66,7 @@ def test_migrate_rejects_unknown_version(tmp_path: Path) -> None:
 
 # TC-IMPORT-002: import MD/TXT/PDF
 def test_import_markdown(layout) -> None:
-    info = import_resource(layout, display_name="notes.md", content=MD_CONTENT, mime=None)
+    info = import_resource(layout, display_name="notes.md", content=MD_CONTENT)
     assert isinstance(info, ResourceInfo)
     assert info.display_name == "notes.md"
     assert info.mime == "text/markdown"
@@ -75,25 +75,25 @@ def test_import_markdown(layout) -> None:
 
 
 def test_import_txt(layout) -> None:
-    info = import_resource(layout, display_name="notes.txt", content=TXT_CONTENT, mime=None)
+    info = import_resource(layout, display_name="notes.txt", content=TXT_CONTENT)
     assert info.mime == "text/plain"
 
 
 def test_import_pdf(layout) -> None:
-    info = import_resource(layout, display_name="book.pdf", content=PDF_HEADER, mime=None)
+    info = import_resource(layout, display_name="book.pdf", content=PDF_HEADER)
     assert info.mime == "application/pdf"
 
 
 def test_import_duplicate_is_idempotent(layout) -> None:
-    first = import_resource(layout, display_name="a.md", content=MD_CONTENT, mime=None)
-    second = import_resource(layout, display_name="b.md", content=MD_CONTENT, mime=None)
+    first = import_resource(layout, display_name="a.md", content=MD_CONTENT)
+    second = import_resource(layout, display_name="b.md", content=MD_CONTENT)
     assert first.content_hash == second.content_hash
     assert len(list_resources(layout)) == 1  # same hash -> one resource
 
 
 def test_list_resources_metadata_only(layout) -> None:
-    import_resource(layout, display_name="a.md", content=MD_CONTENT, mime=None)
-    import_resource(layout, display_name="b.txt", content=TXT_CONTENT, mime=None)
+    import_resource(layout, display_name="a.md", content=MD_CONTENT)
+    import_resource(layout, display_name="b.txt", content=TXT_CONTENT)
     resources = list_resources(layout)
     assert len(resources) == 2
     for info in resources:
@@ -104,28 +104,40 @@ def test_list_resources_metadata_only(layout) -> None:
 # TC-IMPORT-003: rejection without writes
 def test_import_rejects_out_of_whitelist(layout) -> None:
     with pytest.raises(Exception) as excinfo:
-        import_resource(layout, display_name="evil.exe", content=b"MZ\x90\x00", mime=None)
+        import_resource(layout, display_name="evil.exe", content=b"MZ\x90\x00")
     assert "import_type_rejected" in str(excinfo.value)
     assert list_resources(layout) == []
 
 
 def test_import_rejects_forged_extension(layout) -> None:
     with pytest.raises(Exception) as excinfo:
-        import_resource(layout, display_name="fake.pdf", content=b"not a pdf at all", mime=None)
+        import_resource(layout, display_name="fake.pdf", content=b"not a pdf at all")
     assert "import_type_rejected" in str(excinfo.value)
 
 
 def test_import_rejects_too_large(layout) -> None:
     oversized = b"x" * (25 * 1024 * 1024 + 1)
     with pytest.raises(Exception) as excinfo:
-        import_resource(layout, display_name="big.txt", content=oversized, mime=None)
+        import_resource(layout, display_name="big.txt", content=oversized)
     assert "import_too_large" in str(excinfo.value)
 
 
 def test_import_rejects_traversal_name(layout) -> None:
     with pytest.raises(Exception) as excinfo:
-        import_resource(layout, display_name="../../evil.md", content=MD_CONTENT, mime=None)
+        import_resource(layout, display_name="../../evil.md", content=MD_CONTENT)
     assert "import_type_rejected" in str(excinfo.value) or "invalid_name" in str(excinfo.value)
+
+
+def test_import_write_failure_leaves_no_orphan(tmp_path: Path) -> None:
+    workspace = create_workspace(tmp_path / "ws")
+    migrate(workspace.db_path)
+    # Make the resources directory unwritable by placing a file where the
+    # directory would be created.
+    (workspace.root / "resources").write_text("blocked", encoding="utf-8")
+    with pytest.raises(Exception) as excinfo:
+        import_resource(workspace, display_name="notes.md", content=MD_CONTENT)
+    assert "import_failed" in str(excinfo.value)
+    assert list_resources(workspace) == []
 
 
 # TC-IMPORT-004: API endpoints
