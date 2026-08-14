@@ -11,6 +11,7 @@ import type {
   WorkspaceSnapshot,
 } from "./api";
 import { buildSetLockPatch } from "./api";
+import { renderMarkdown } from "./markdown";
 import { PdfRenderer } from "./PdfRenderer";
 
 type DragState = {
@@ -1052,6 +1053,12 @@ export function App({ api }: { api?: PersistApi }) {
                 fileUrl={api.getFileUrl(viewerResource.id)}
                 page={viewerPage}
                 activeAnchor={activeAnchor}
+              />
+            ) : viewerResource.mime === "text/markdown" ? (
+              <div
+                className="markdown-body"
+                // renderMarkdown escapes raw text first, so this is XSS-safe.
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(viewerText) }}
               />
             ) : (
               <pre>{viewerText}</pre>
