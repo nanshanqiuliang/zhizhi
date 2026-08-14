@@ -1,0 +1,26 @@
+TR-20260814-011 / WORK-2026-019 + WORK-2026-020
+reviewed commit: a6a471ad8400467305e0d8461b579aaf0317b9f1
+qa attempt-001 commit: c70d339aea3d17993d77bc95d0860e2576cd411e
+red baseline: db3cb26aa2d5ad024a8fef288cae68fa4031b303
+ready commit: 4f5fbd3a26aae5411cd6d1a15577cac618ccfb27
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 11 source files)
+pytest: PASS (243/243; lock guard 6/6, patch gate 8/8, patch gate api 5/5)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (23/23, incl lock/undo/锁检查 regressions)
+web production build: PASS
+QA attempt 001 (c70d339): FAIL 2 P0 + 3 P1 + 3 P2
+  P0-1: ordinary-edit cross-session undo lost (PUT clears history) -> boundary: WORK-2026-021
+  P0-2: undo/redo not autosaved -> fixed (scheduleAutoSave)
+  P1-1: content lock only compared label+note -> fixed (whole concept)
+  P1-2: PUT revision regression allowed -> fixed (409 revision_conflict)
+  P1-3: frontend edits ignore locks -> fixed (pre-edit lock checks)
+  P2-1: positionLocked drops legacy pinned -> fixed (locks.position || pinned)
+  P2-2: concurrent TOCTOU -> boundary (single-user loopback)
+  P2-3: unbounded JSON body -> fixed (10 MiB)
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test dirs only
