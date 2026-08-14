@@ -24,7 +24,7 @@ from knowledge_tree_infrastructure.llm.canonical import (
     TraceContext,
 )
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError
-from knowledge_tree_infrastructure.llm.http_client import HttpTransportError
+from knowledge_tree_infrastructure.llm.http_client import HttpJsonClient, HttpTransportError
 from knowledge_tree_infrastructure.llm.protocols.openai_chat import (
     build_chat_request,
     parse_chat_response,
@@ -453,7 +453,10 @@ def test_runner_falls_back_on_rate_limited() -> None:
         allowed_fallback_codes=["provider_rate_limited", "provider_unavailable"],
     )
 
-    result = runner.generate(make_request(), thinking="disabled")
+    result = runner.generate(
+        make_request(budget=Budget(max_attempts=2, max_output_tokens=4096, max_fallbacks=1)),
+        thinking="disabled",
+    )
 
     assert result.text == "极限是……"
 
@@ -480,5 +483,99 @@ def test_runner_raises_when_all_adapters_fail() -> None:
     )
 
     with pytest.raises(LLMProviderError) as raised:
-        runner.generate(make_request(), thinking="disabled")
+        runner.generate(
+            make_request(
+                budget=Budget(max_attempts=2, max_output_tokens=4096, max_fallbacks=1)
+            ),
+            thinking="disabled",
+        )
     assert raised.value.code == "provider_unavailable"
+
+
+# ---------------------------------------------------------------------------
+# Review-fix regressions (monetary budget, retry cap, protocol robustness)
+# ---------------------------------------------------------------------------
+
+
+def test_monetary_budget_requires_pricing() -> None:
+    adapter = _adapter([_ok_response()])  # config has no pricing
+    request = make_request(
+        budget=Budget(max_attempts=2, max_output_tokens=4096, max_cost_usd=0.01)
+    )
+
+    with pytest.raises(LLMProviderError) as raised:
+        adapter.generate(request, thinking="disabled")
+    assert raised.value.code == "provider_config_invalid"
+
+
+def test_adapter_respects_request_max_attempts() -> None:
+    fake = _FakeHttp(
+        [HttpTransportError(status=429, body="{}"), _ok_response()]
+    )
+    adapter = DeepSeekLlmAdapter(
+        api_key="test-key",
+        http=fake,
+        config=DeepSeekConfig(model_id="deepseek-v4-flash", retry_backoff_ms=(0, 0)),
+    )
+    request = make_request(budget=Budget(max_attempts=1, max_output_tokens=4096))
+
+    with pytest.raises(LLMProviderError) as raised:
+        adapter.generate(request, thinking="disabled")
+    assert raised.value.code == "provider_rate_limited"
+    assert len(fake.requests) == 1  # no retry beyond the request budget
+
+
+def test_runner_respects_max_fallbacks_zero() -> None:
+    primary = _adapter([HttpTransportError(status=429, body="{}")])
+    secondary = _adapter([_ok_response()])
+    runner = ModelRunner(
+        adapters=[primary, secondary],
+        allowed_fallback_codes=["provider_rate_limited"],
+    )
+
+    with pytest.raises(LLMProviderError) as raised:
+        runner.generate(make_request(), thinking="disabled")
+    assert raised.value.code == "provider_rate_limited"
+
+
+def test_parse_chat_response_rejects_negative_tokens() -> None:
+    with pytest.raises(LLMProviderError) as raised:
+        parse_chat_response(
+            {
+                "id": "chatcmpl-300",
+                "choices": [
+                    {"message": {"role": "assistant", "content": "x"}, "finish_reason": "stop"}
+                ],
+                "usage": {"prompt_tokens": -1, "completion_tokens": 5},
+                "model": "deepseek-v4-flash",
+            },
+            model_run_id=MODEL_RUN_ID,
+            provider_id="deepseek",
+            protocol="openai_chat_completions",
+            model_id="deepseek-v4-flash",
+            capability_snapshot=None,
+        )
+    assert raised.value.code == "provider_protocol_mismatch"
+
+
+def test_parse_chat_response_rejects_missing_finish_reason() -> None:
+    with pytest.raises(LLMProviderError) as raised:
+        parse_chat_response(
+            {
+                "id": "chatcmpl-301",
+                "choices": [{"message": {"role": "assistant", "content": "x"}}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+                "model": "deepseek-v4-flash",
+            },
+            model_run_id=MODEL_RUN_ID,
+            provider_id="deepseek",
+            protocol="openai_chat_completions",
+            model_id="deepseek-v4-flash",
+            capability_snapshot=None,
+        )
+    assert raised.value.code == "provider_protocol_mismatch"
+
+
+def test_http_client_rejects_http_base_url() -> None:
+    with pytest.raises(ValueError, match="HTTPS"):
+        HttpJsonClient(base_url="http://api.deepseek.com", api_key="test-key")

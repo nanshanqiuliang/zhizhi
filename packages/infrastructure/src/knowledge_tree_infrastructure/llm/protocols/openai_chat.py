@@ -34,6 +34,16 @@ def _reject(code: str, **details: Any) -> NoReturn:
     raise LLMProviderError(code, details=dict(details))
 
 
+def _non_negative_int(value: object, field: str) -> int:
+    """Parse a non-negative integer token count, failing closed on garbage."""
+
+    if isinstance(value, bool) or not isinstance(value, int):
+        _reject("provider_protocol_mismatch", rule="usage_token_not_integer", field=field)
+    if value < 0:
+        _reject("provider_protocol_mismatch", rule="usage_token_negative", field=field)
+    return value
+
+
 def _map_finish_reason(raw: object) -> str:
     if not isinstance(raw, str) or raw not in _OPENAI_FINISH_REASONS:
         _reject("provider_protocol_mismatch", rule="unknown_finish_reason", finish_reason=raw)
@@ -107,10 +117,15 @@ def build_chat_request(
 
     messages = [_message_to_openai(message) for message in request.messages]
     if reasoning_continuation is not None:
-        for message in messages:
-            if message["role"] == "assistant":
-                message["reasoning_content"] = reasoning_continuation
-                break
+        # Attach to the assistant message that issued the tool calls, falling
+        # back to the first assistant message for plain reasoning replay.
+        target = next(
+            (m for m in messages if m["role"] == "assistant" and "tool_calls" in m), None
+        )
+        if target is None:
+            target = next((m for m in messages if m["role"] == "assistant"), None)
+        if target is not None:
+            target["reasoning_content"] = reasoning_continuation
 
     payload: JsonObject = {
         "model": model_id,
@@ -199,14 +214,18 @@ def parse_chat_response(
     if not isinstance(usage, dict):
         usage = {}
     canonical_usage = CanonicalUsage(
-        input_tokens=int(usage.get("prompt_tokens", 0)),
-        output_tokens=int(usage.get("completion_tokens", 0)),
+        input_tokens=_non_negative_int(usage.get("prompt_tokens", 0), "prompt_tokens"),
+        output_tokens=_non_negative_int(usage.get("completion_tokens", 0), "completion_tokens"),
         cache_read_tokens=(
-            int(usage["prompt_cache_hit_tokens"])
+            _non_negative_int(usage["prompt_cache_hit_tokens"], "prompt_cache_hit_tokens")
             if usage.get("prompt_cache_hit_tokens") is not None
             else None
         ),
     )
+
+    raw_finish = first.get("finish_reason")
+    if raw_finish is None:
+        _reject("provider_protocol_mismatch", rule="missing_finish_reason")
 
     return GenerationResult(
         model_run_id=model_run_id,
@@ -217,7 +236,7 @@ def parse_chat_response(
         typed_output=None,
         tool_calls=tool_calls,
         usage=canonical_usage,
-        finish_reason=_map_finish_reason(first.get("finish_reason") or "stop"),
+        finish_reason=_map_finish_reason(raw_finish),
         provider_response_id=payload.get("id") if isinstance(payload.get("id"), str) else None,
         model_revision=None,
         capability_snapshot=capability_snapshot,

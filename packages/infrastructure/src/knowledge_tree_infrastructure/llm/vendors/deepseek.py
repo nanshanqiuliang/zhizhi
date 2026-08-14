@@ -154,12 +154,22 @@ class DeepSeekLlmAdapter:
 
         if max_tokens is None:
             max_tokens = request.budget.max_output_tokens
-        cost_budget = (
-            CostBudget(max_cost_usd=request.budget.max_cost_usd, pricing=self._config.pricing)
-            if self._config.pricing is not None and request.budget.max_cost_usd is not None
-            else None
-        )
-        max_attempts = self._config.max_network_attempts
+        if request.budget.max_cost_usd is not None:
+            if self._config.pricing is None:
+                # A monetary budget without a price snapshot would silently
+                # under-spend; fail closed instead of skipping the budget.
+                raise LLMProviderError(
+                    "provider_config_invalid",
+                    details={"rule": "monetary_budget_requires_pricing"},
+                )
+            cost_budget = CostBudget(
+                max_cost_usd=request.budget.max_cost_usd, pricing=self._config.pricing
+            )
+        else:
+            cost_budget = None
+        # The request-level attempt budget must cap retries; the config value is
+        # only an upper bound for the adapter, never a way to exceed the request.
+        max_attempts = min(self._config.max_network_attempts, request.budget.max_attempts)
         backoffs = self._config.retry_backoff_ms
         last_error: LLMProviderError | None = None
 
@@ -208,6 +218,8 @@ class DeepSeekLlmAdapter:
 
         if max_tokens is None:
             max_tokens = request.budget.max_output_tokens
+        if not self._breaker.allow_request():
+            raise LLMProviderError("provider_unavailable", details={"rule": "circuit_open"})
         payload = build_chat_request(
             model_id=self._config.model_id,
             request=request,
@@ -218,6 +230,18 @@ class DeepSeekLlmAdapter:
         )
         try:
             lines = self._http.post_stream_lines(self._config.chat_path, payload)
+            yield from sse_stream_events(lines)
         except HttpTransportError as http_error:
-            raise map_deepseek_http_error(http_error) from http_error
-        yield from sse_stream_events(lines)
+            error = map_deepseek_http_error(http_error)
+            if error.code in _IMMEDIATE_OPEN_CODES:
+                self._breaker.open_immediately()
+            raise error from http_error
+        except urlerror.URLError as url_error:
+            reason = url_error.reason
+            if isinstance(reason, TimeoutError):
+                raise LLMProviderError(
+                    "provider_timeout", details={"rule": "timeout"}
+                ) from url_error
+            raise LLMProviderError(
+                "provider_connection_failed", details={"rule": "connection"}
+            ) from url_error

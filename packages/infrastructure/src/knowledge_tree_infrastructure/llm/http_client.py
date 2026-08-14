@@ -37,6 +37,8 @@ class HttpJsonClient:
         read_timeout_s: float = 120.0,
         user_agent: str = "knowledge-tree-agent",
     ) -> None:
+        if not base_url.startswith("https://"):
+            raise ValueError("base_url must use HTTPS; refusing to send a bearer key in cleartext")
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._read_timeout_s = read_timeout_s

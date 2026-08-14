@@ -36,16 +36,23 @@ class ModelRunner:
         self._allowed = set(allowed_fallback_codes)
 
     def generate(self, request: GenerationRequest, **kwargs: Any) -> GenerationResult:
-        """Try adapters in order; fall back only on allowed transient errors."""
+        """Try adapters in order; fall back only on allowed transient errors.
 
+        The number of fallbacks is capped by `request.budget.max_fallbacks`
+        (0 means no automatic fallback).
+        """
+
+        max_fallbacks = request.budget.max_fallbacks
+        fallbacks_used = 0
         last_error: LLMProviderError | None = None
         for adapter in self._adapters:
             try:
                 return adapter.generate(request, **kwargs)
             except LLMProviderError as error:
                 last_error = error
-                if error.code not in self._allowed:
+                if error.code not in self._allowed or fallbacks_used >= max_fallbacks:
                     raise error
+                fallbacks_used += 1
         if last_error is not None:
             raise last_error
         raise LLMProviderError("provider_unknown_error", details={"rule": "no_adapters"})
