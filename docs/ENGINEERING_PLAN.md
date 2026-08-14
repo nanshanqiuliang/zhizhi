@@ -9,7 +9,7 @@
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感已完成（100%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做、WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入（均经 `TR-20260814-011` 验证），WORK-2026-021 冲突预览 + 备份/恢复崩溃恢复 + 版本历史面板（经 `TR-20260814-012` 验证），WORK-2026-022 普通编辑 patch 化保存（GraphPatch delete 契约 + 后端 diff，经 `TR-20260814-013` 验证）；"不依赖 AI 也能使用"的手工 Alpha 完成；个人可用 MVP 粗略完成度约 75%。第 7 步（安全接入真实 AI）已完成（100%）：WORK-2026-007 冻结 canonical LLM contract + mock + TC-LLM-001..009（`b2e215b`）；WORK-2026-008 实现 DeepSeek OpenAI Chat Completions 协议适配器 + vendor profile + 金额预算 + 受控回退 + 受控 live smoke 5/5 + 金标 EVAL-LLM-001 基线 + RB-PROV-001 演练 + 隔离审查（`042f937`/`dd49599`）；workspace owner 已批准 DeepSeek deployment `enabled: true`（config 已生效，路由已验证指向 deepseek）。第 8 步（AI 自动生成知识树草案）为下一主工作项。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感已完成（100%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做、WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入（均经 `TR-20260814-011` 验证），WORK-2026-021 冲突预览 + 备份/恢复崩溃恢复 + 版本历史面板（经 `TR-20260814-012` 验证），WORK-2026-022 普通编辑 patch 化保存（GraphPatch delete 契约 + 后端 diff，经 `TR-20260814-013` 验证）；"不依赖 AI 也能使用"的手工 Alpha 完成；个人可用 MVP 粗略完成度约 75%。第 7 步（安全接入真实 AI）已完成（100%）：WORK-2026-007 冻结 canonical LLM contract + mock + TC-LLM-001..009（`b2e215b`）；WORK-2026-008 实现 DeepSeek OpenAI Chat Completions 协议适配器 + vendor profile + 金额预算 + 受控回退 + 受控 live smoke 5/5 + 金标 EVAL-LLM-001 基线 + RB-PROV-001 演练 + 隔离审查（`042f937`/`dd49599`）；workspace owner 已批准 DeepSeek deployment `enabled: true`（config 已生效，路由已验证指向 deepseek）。第 8 步（AI 自动生成知识树草案）切片 1（纯领域草案内核 + 离线编排，`136f7fa`）已实现并经全仓门验证；真实 DeepSeek 概念抽取/关系候选为切片 2。
 
 ## 当前阶段出口门
 
@@ -51,7 +51,7 @@
 | WORK-2026-020 | 锁定维度存储保护与 WebUI 锁定/撤销接入 | 已验证 prototype | persistence + api + web + QA | WORK-2026-005/019 已实现 | `save_course_graph` 锁定维度保护（锁降级/内容变化/删除/revision 回退拒绝）；前端四维锁保真往返 + `toggleLock` patch 门 + 撤销/重做回退后端 + 编辑前查锁 | `618420c` 实现；`a6a471a` QA 修复；lock-guard 6/6、Web 23/23、全仓 243/243；`TR-20260814-011` QA FAIL→修复 |
 | WORK-2026-021 | 冲突预览与备份/恢复崩溃恢复 UI | 已验证 prototype | recovery + api + web + QA | WORK-2026-019/020 已验证 | `list_backups`/`restore_backup_by_name`（路径守卫 + checksum 必需）+ `GET backups`/`POST restore` 端点（含 `_recovery_layout` db 缺失恢复）；前端错误码细化提示 + 侧边栏备份/恢复 + 版本历史面板 | `fb745bd` 实现；`2cd8270`/`8562ee7`/`2cfa883` QA 修复；backup_api 6/6、Web 27/27、全仓 249/249；`TR-20260814-012` QA FAIL→修复 |
 | WORK-2026-022 | 普通编辑 patch 化保存与跨会话撤销 | 已验证 prototype | patch + persistence + QA | WORK-2026-005/019 已验证 | GraphPatch v1 新增 delete_concept/delete_edge；后端 save 改为 diff 生成 patch 走提交门（普通编辑保留历史、跨会话撤销覆盖所有编辑） | `ab50aa2` 实现；`7106621` QA 修复；diff_save_undo 4/4、delete 单元 3/3、全仓 256/256、Web 27/27；`TR-20260814-013` QA FAIL→修复 |
-| WORK-2026-009 | AI 从笔记/资料自动生成知识树草案（第 8 步） | 规划完成/待实现 | AI + persistence + web + QA | WORK-2026-004/005/008/016/017/018 已验证 | 文档分块、概念抽取、别名合并、关系候选、置信度、DAG 校验、自动布局、批量接受/拒绝、来源绑定 | 待红灯/TR（DeepSeek adapter 与 GraphPatch 提交门已就绪，可复用） |
+| WORK-2026-009 | AI 从笔记/资料自动生成知识树草案（第 8 步） | 切片 1 已实现（纯领域内核+离线编排） | AI + persistence + web + QA | WORK-2026-004/005/008/016/017/018 已验证 | 文档分块、别名合并、DAG 校验、自动布局、草案→GraphPatch、来源绑定（切片 1）；概念抽取/关系候选/批量接受拒绝/Web（切片 2/3） | `c9f2875` 红灯；`136f7fa` 实现；TC-AIDRAFT-001..006 20/20、全仓 368/368 + 5 skipped、Web 32/32 |
 
 ## 当前受阻项
 
@@ -61,4 +61,4 @@
 
 ## 下一门
 
-`第 8 步（WORK-2026-009：AI 从笔记/资料自动生成知识树草案）`：第 0–7 步已全部完成（第 7 步经 owner 批准 deployment `enabled: true`）。下一动作：创建 Ready 工作项 WORK-2026-009（文档分块、概念抽取、别名合并、关系候选、置信度、DAG 校验、自动布局、批量接受/拒绝、来源绑定），复用已验证的 DeepSeek adapter 与 GraphPatch 提交门，从失败测试启动。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
+`第 8 步（WORK-2026-009：AI 从笔记/资料自动生成知识树草案）`：切片 1（纯领域草案内核 + 离线编排）已实现并经全仓门验证（`136f7fa`）。下一动作：实现切片 2——真实 DeepSeek 概念抽取/关系候选，复用 `concept_extract`/`relation_validate` task profile 与已验证 adapter，从离线 fixture 契约测试启动，真实调用受 `RUN_LIVE_LLM_TESTS` + 预算门控；随后切片 3（草案 API 端点 + Web 批量接受/拒绝）复用 `POST graph/patches` 提交门。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。

@@ -1084,3 +1084,38 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: create Ready WORK-2026-009 (AI draft pipeline, Step 8)
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
+
+## Step 8 slice 1 checkpoint — 2026-08-15 02:05 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Roadmap Step 8 (AI auto-generates knowledge-tree drafts) has begun with its
+  pure-domain slice: WORK-2026-009 slice 1 implements the draft kernel and an
+  offline orchestration path.
+- Committed chain: Ready/red `c9f2875` (3 collection errors) → implementation
+  `136f7fa` → unrelated pre-existing ruff-format fix `cc23c91`.
+- New modules:
+  - `knowledge_tree_domain/ai_draft.py`: `chunk_text` (paragraph-aligned,
+    bounded overlap), `normalize_concept_label`/`merge_concept_candidates`
+    (alias merge, evidence union, max confidence), `validate_draft` /
+    `detect_prerequisite_cycle` (dedupe/self-edge/endpoint/DAG cycle),
+    `assign_draft_layout` (topological layers), `build_draft_patch` (AiDraft →
+    GraphPatch v1: create_concept + create_edge + set_layout_item; origin=ai,
+    review_state=proposed, evidence bound, requires_confirmation=true,
+    confirmed=false), `uuid7`.
+  - `knowledge_tree_infrastructure/ai_draft.py`: `ConceptExtractor` /
+    `RelationCandidateProvider` protocols + deterministic offline extractors +
+    `build_ai_draft` (text → chunks → extract → merge → relations → AiDraft).
+- Contract safety: generated draft patch passes `preview_graph_patch` under an
+  `ai` trusted actor and `validate_contract("graph_patch")`; AI concepts and
+  `prerequisite_of` edges must carry non-empty evidence or fail closed. Drafts
+  never write the DB or bypass confirmation.
+- Verification: TC-AIDRAFT-001..006 20/20; full pytest 368/368 + 5 skipped;
+  validator, Ruff format/check, strict mypy (28 files), Web 32/32, pnpm build
+  all green. No network / real LLM / key usage this round.
+- Natural-language Step 8 ~30% (slice 1); personal MVP stays ~80% (no
+  user-visible AI draft yet).
+- Exact next action: implement slice 2 — real DeepSeek concept extraction and
+  relation candidates reusing concept_extract/relation_validate task profiles
+  and the approved adapter, from offline fixture contract tests (live stays
+  gated by RUN_LIVE_LLM_TESTS + budget); then slice 3 (draft API endpoint +
+  Web batch accept/reject) reusing `POST graph/patches`.

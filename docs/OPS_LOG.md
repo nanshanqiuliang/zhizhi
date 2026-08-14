@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层与 mock adapter 已冻结（第 7 步离线第 1 期）。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核与离线编排已实现（第 8 步切片 1，无真实 LLM 调用）。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 8 步切片 1：AI 草案流水线离线内核（WORK-2026-009）运维记录
+
+- 关联 ID：WORK-2026-009、REQ-2026-006、NFR-2026-006。
+- 环境/版本/build/config：commit `136f7fa`（feature/WORK-2026-009-ai-draft-pipeline）；本地 local-dev Windows x64；ruff 0.16.2。
+- 变更或症状：新增纯领域 AI 草案内核与离线编排（分块/别名合并/DAG 校验/自动布局/patch 生成 + 确定性启发式抽取器）；草案仅产出 `proposed` + `requires_confirmation` 的 GraphPatch，经既有提交门才可能落库；本轮无真实 LLM 调用、无网络、无部署/常驻服务变化。
+- 影响：无部署或常驻服务变化；仅新增两个 Python 模块与三个测试文件；`config/llm` 与真实 Provider 门控不变。
+- 证据：pytest 368/368 + 5 skipped（新增 TC-AIDRAFT 20 个）；ruff format/check、strict mypy、validator、Web 32/32、pnpm build 全绿。
+- 缓解/回滚：回退 `136f7fa` 即回到无 AI 草案能力；真实 DeepSeek 抽取为后续切片。
+- 遗留风险/Owner/期限：真实 LLM 概念抽取（切片 2）与草案 API/Web 接入（切片 3）未做；本轮启发式抽取不冒充真实 AI 质量。
 
 ## 2026-08-14 — DeepSeek deployment 正式启用（owner 批准）
 

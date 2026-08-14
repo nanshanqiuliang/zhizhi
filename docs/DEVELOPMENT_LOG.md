@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 1：AI 草案流水线纯领域内核与离线编排（WORK-2026-009）
+
+- 关联 ID：WORK-2026-009、WORK-2026-005、WORK-2026-007、WORK-2026-008、REQ-2026-006。
+- 实际变化：新增 `knowledge_tree_domain/ai_draft.py` 纯领域草案内核——`chunk_text`（段落对齐分块+可控重叠）、`normalize_concept_label`/`merge_concept_candidates`（别名合并/evidence 并集/confidence 取 max）、`validate_draft`/`detect_prerequisite_cycle`（关系去重/自环/端点/DAG 环检测）、`assign_draft_layout`（prerequisite 拓扑分层自动布局）、`build_draft_patch`（AiDraft → GraphPatch v1：create_concept+create_edge+set_layout_item，origin=ai/review_state=proposed/confidence/evidence 绑定/requires_confirmation=true/confirmed=false）、`uuid7`。新增 `knowledge_tree_infrastructure/ai_draft.py` 离线编排——`ConceptExtractor`/`RelationCandidateProvider` Protocol（注入式，未来接 DeepSeek 不侵入领域）+ 确定性启发式抽取器 + `build_ai_draft`（文本→分块→抽取→合并→关系→AiDraft）。
+- 影响模块/接口/schema/migration/prompt：扩展 domain/infrastructure 两包各新增 `ai_draft` 子模块；无 canonical contract/ADR/migration/prompt 变更；复用 GraphPatch v1 提交门，`config/llm` 语义不变。
+- 兼容性：草案仅产出 `proposed` + `requires_confirmation` 的不可信 patch，确认/落库仍由既有提交门与用户控制；不写库、不覆盖锁定项；本轮无真实 LLM 调用、无网络。
+- 验证与证据：红灯 `c9f2875`（3 collection error）→ 实现 `136f7fa`；TC-AIDRAFT-001..006 20/20；全仓 pytest 368/368 + 5 skipped；validator/Ruff/strict mypy（28 文件）/Web 32/32/pnpm build 全绿；`136f7fa` 后另有无关历史文件的 ruff format 修复 `cc23c91`。
+- 性能/安全/运维影响：分块/合并/布局为 O(n)/O(V+E) 纯内存，零模型成本；错误仅含标识不含正文；不发起网络调用；密钥无涉及。
+- 回滚：回退 `136f7fa` 即回到无 AI 草案能力；不触碰 `config/llm` 与真实 Provider 门控；红灯与证据保留。
+- 遗留风险与下一步：真实 DeepSeek 概念抽取/关系候选为第 8 步切片 2（复用 concept_extract/relation_validate task profile）；草案 API 端点与 Web 批量接受/拒绝为切片 3；本轮确定性启发式抽取仅作骨架，不冒充真实 AI 质量。
+
 ## 2026-08-14 — owner 批准 DeepSeek deployment，第 7 步正式完成（100%）
 
 - 关联 ID：WORK-2026-008、LLM-COMPAT-BASELINE-001、OPS-2026-003、NFR-2026-008。

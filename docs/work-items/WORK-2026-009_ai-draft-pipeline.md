@@ -48,33 +48,33 @@ updated_at: 2026-08-15T01:30:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1 (c1)：`chunk_text` 稳定分块（段落边界优先、重叠可控、边界不切碎句子），同输入同输出。
-- [ ] AC-2 (c2)：`merge_concept_candidates` 按规范化标签去重合并（label 保留首现原文、aliases 并集、evidence 并集、confidence 取 max）。
-- [ ] AC-3 (c3)：关系去重 + 自环/端点缺失拒绝 + `detect_prerequisite_cycle` 检出环并返回环路径。
-- [ ] AC-4 (c4)：`assign_draft_layout` 按 prerequisite 拓扑分层，同层水平排布，view_id 固定，布局项与概念一一对应。
-- [ ] AC-5 (c5)：`build_draft_patch` 生成的 GraphPatch 通过 `preview_graph_patch`（trusted_actor=ai）与 `validate_contract("graph_patch")`；concept/edge 为 `origin=ai`、`review_state=proposed`、`confidence∈[0,1]`、AI 概念与 `prerequisite_of` 边 `evidence_ids` 非空、`requires_confirmation=true`、`confirmed=false`。
-- [ ] AC-6 (c6)：离线编排 `build_ai_draft` 端到端"文本 → AiDraft → 合法 patch"，确定性、无网络。
-- [ ] AC-7 (c7)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
-- [ ] 错误和恢复路径：空文本/空概念/成环草案以稳定错误码拒绝，不产出半成品 patch；抽取器失败不掩盖纯领域校验结果。
-- [ ] 回滚/禁用方法：回退本工作项提交即回到无 AI 草案能力；不触碰 `config/llm` 与真实 Provider 门控；红灯与证据保留。
+- [x] AC-1 (c1)：`chunk_text` 稳定分块（段落边界优先、重叠可控、边界不切碎句子），同输入同输出。
+- [x] AC-2 (c2)：`merge_concept_candidates` 按规范化标签去重合并（label 保留首现原文、aliases 并集、evidence 并集、confidence 取 max）。
+- [x] AC-3 (c3)：关系去重 + 自环/端点缺失拒绝 + `detect_prerequisite_cycle` 检出环并返回环路径。
+- [x] AC-4 (c4)：`assign_draft_layout` 按 prerequisite 拓扑分层，同层水平排布，view_id 固定，布局项与概念一一对应。
+- [x] AC-5 (c5)：`build_draft_patch` 生成的 GraphPatch 通过 `preview_graph_patch`（trusted_actor=ai）与 `validate_contract("graph_patch")`；concept/edge 为 `origin=ai`、`review_state=proposed`、`confidence∈[0,1]`、AI 概念与 `prerequisite_of` 边 `evidence_ids` 非空、`requires_confirmation=true`、`confirmed=false`。
+- [x] AC-6 (c6)：离线编排 `build_ai_draft` 端到端"文本 → AiDraft → 合法 patch"，确定性、无网络。
+- [x] AC-7 (c7)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
+- [x] 错误和恢复路径：空文本/空概念/成环草案以稳定错误码拒绝，不产出半成品 patch；抽取器失败不掩盖纯领域校验结果。
+- [x] 回滚/禁用方法：回退本工作项提交即回到无 AI 草案能力；不触碰 `config/llm` 与真实 Provider 门控；红灯与证据保留。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-AIDRAFT-001 | unit | 文档分块（段落边界/重叠/确定性） | 稳定 chunk，不切碎句子 | 待红灯/TR |
-| TC-AIDRAFT-002 | unit | 别名合并（大小写/空白/全半角） | 去重合并、evidence 并集、confidence max | 待红灯/TR |
-| TC-AIDRAFT-003 | unit | 关系去重/自环/端点缺失/DAG 环检测 | 稳定拒绝、返回环路径 | 待红灯/TR |
-| TC-AIDRAFT-004 | unit | 自动布局（拓扑分层） | 分层正确、布局一一对应 | 待红灯/TR |
-| TC-AIDRAFT-005 | contract | 草案 → GraphPatch 通过提交门 | preview/validate 通过、origin=ai、evidence 非空 | 待红灯/TR |
-| TC-AIDRAFT-006 | integration | 离线编排端到端 | 文本→AiDraft→合法 patch，确定性无网络 | 待红灯/TR |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 待 TR |
+| TC-AIDRAFT-001 | unit | 文档分块（段落边界/重叠/确定性） | 稳定 chunk，不切碎句子 | 20/20（`136f7fa`） |
+| TC-AIDRAFT-002 | unit | 别名合并（大小写/空白/全半角） | 去重合并、evidence 并集、confidence max | 20/20（`136f7fa`） |
+| TC-AIDRAFT-003 | unit | 关系去重/自环/端点缺失/DAG 环检测 | 稳定拒绝、返回环路径 | 20/20（`136f7fa`） |
+| TC-AIDRAFT-004 | unit | 自动布局（拓扑分层） | 分层正确、布局一一对应 | 20/20（`136f7fa`） |
+| TC-AIDRAFT-005 | contract | 草案 → GraphPatch 通过提交门 | preview/validate 通过、origin=ai、evidence 非空 | 20/20（`136f7fa`） |
+| TC-AIDRAFT-006 | integration | 离线编排端到端 | 文本→AiDraft→合法 patch，确定性无网络 | 20/20（`136f7fa`） |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 368/368 + 5 skipped、Web 32/32（`136f7fa`） |
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-009-ai-draft-pipeline`；Ready → 红灯 → 实现 → 文档收口（本轮切片 1）。
+- Commit/PR：分支 `feature/WORK-2026-009-ai-draft-pipeline`；Ready `c9f2875` → 红灯 `c9f2875`（3 collection error）→ 实现 `136f7fa` → 无关历史文件 ruff format 修复 `cc23c91`（本轮切片 1 收口）。
 - Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 `docs/contracts/knowledge-tree-graph.v1.schema.json`（GraphPatch v1）与 `config/llm` v1。
-- Test Run：TC-AIDRAFT-001..006 待执行；全仓 pytest/validator/Ruff/strict mypy/Web 待 TR。
+- Test Run：TC-AIDRAFT-001..006 20/20；全仓 pytest 368/368 + 5 skipped；validator/Ruff/strict mypy（28 文件）/Web 32/32/pnpm build 全绿。
 - Release：无托管发布；真实 DeepSeek 抽取为后续切片，`config/llm` 与 Provider 门控不变。
-- 观察结果：待填。
+- 观察结果：草案流水线纯领域内核确定性可测、无网络、零模型成本；草案 patch 经 `preview_graph_patch` 以 ai actor 预览通过，`requires_confirmation=true`，绝不直写库。
 - 未完成项的新 ID：真实 DeepSeek 概念抽取/关系候选（第 8 步切片 2）、草案 API 端点与 Web 批量接受/拒绝（切片 3）。
