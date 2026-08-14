@@ -43,12 +43,13 @@
 | WORK-2026-012 | 示例数据知识树 Web Demo | 已验证 developer demo | Web frontend + QA | WORK-2026-005/011 prototype verified | 三栏工作台、树画布、人工编辑/拖动/layout/会话 undo | `4caa76a` 原红灯；`5aab0e3` 实现；`c8c6bf9` QA P1 红灯；`fff1ce6` 修复；`TR-20260814-004` QA PASS；Web 6/6、Python 154/154 |
 | WORK-2026-013 | 本地 SQLite 持久化工作区 prototype | 已验证 prototype（UI/API 接入待后续） | local persistence + QA | WORK-2026-005/011 prototype verified；WORK-2026-012 已收口 | 数据目录、SQLite schema/migration、save/load 重启存活、备份/导出/删除、回滚、故障注入证据 | `1420b68` 红灯；`8e34a40` 实现；`TR-20260814-005` QA PASS；目标 21/21、全仓 175/175、Web 6/6 |
 | WORK-2026-014 | 本地持久化 API sidecar 与 Web 自动保存接入 | 已验证 prototype（Tauri/认证/FTS5 待后续） | api + web integration + QA | WORK-2026-013 prototype verified | `apps/api` FastAPI loopback、CourseGraph GET/PUT/备份、Web 自动保存与保存状态 | `4fe918b` 红灯；`6c0c33c` 实现；`e0a4c72` P2-1 修复；`TR-20260814-006` QA-001/002 PASS；API 8/8、全仓 183/183、Web 10/10 |
+| WORK-2026-015 | FTS5 基础搜索（笔记/概念全文检索） | Ready | search + api + web + QA | WORK-2026-013/014 prototype verified | FTS5 索引、search 端点、Web 搜索框与结果定位 | TC-SEARCH-001..003 待红灯→绿灯 |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| 第 4 步搜索/导入/安全 | 持久化闭环已由 TR-20260814-006 验证（API+Web 自动保存）；FTS5 搜索、文件导入、Tauri 打包与认证/token 尚未建项 | 分别建立独立 Ready 工作项；不得把未实现能力宣称为已上线 |
+| 第 4 步收尾 | 持久化闭环已由 TR-20260814-006 验证；FTS5 基础搜索已建项，文件导入属于第 5 步 | WORK-2026-015 Ready；从失败 search 测试开始实现；完成基础搜索后第 4 步可标记 100% |
 | DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
 
 ## 下一门

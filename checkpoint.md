@@ -494,3 +494,22 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   sources), each as a separate Ready work item starting from failing tests.
 - Current blocker: none for offline Step 4/5 preparation. Real Provider/Web and
   owner acceptance remain separately gated and disabled.
+
+## Step 4C Ready checkpoint — 2026-08-14 08:15 +08:00
+
+- Active branch: `feature/WORK-2026-015-fts5-search`.
+- Ready work item: `docs/work-items/WORK-2026-015_fts5-search.md`.
+- Scope: FTS5 full-text search over saved CourseGraph concept labels and note
+  annotations — FTS5 index in the workspace adapter (rebuilt on save), a
+  read-only `GET /api/workspaces/{id}/search?q=...` endpoint with query length/
+  syntax guards, and a Web search box listing matches with click-to-locate.
+- Explicit non-capabilities: Chinese word segmentation (FTS5 unicode61 space/
+  punctuation tokenization; whole-phrase Chinese matching limited — recorded
+  boundary), fuzzy/corrected search, file-content search (Step 5), multi-
+  workspace search, vector search.
+- Acceptance: TC-SEARCH-001..003 — FTS5 index hits label and note; search
+  endpoint positive/negative paths (matches, empty/overlong/invalid 422,
+  missing workspace 404); Web search box interaction with click-to-locate.
+- Exact next action: commit this Ready boundary, then add failing FTS5/API/Web
+  tests before any implementation. Completing this work item makes natural-
+  language Step 4 100%.
