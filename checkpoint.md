@@ -595,3 +595,24 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   page-level samples are ready for acceptance.
 - Current blocker: none for offline Step 5 preparation. Real Provider/Web and
   owner acceptance remain separately gated and disabled.
+
+## Step 5B Ready checkpoint — 2026-08-14 09:30 +08:00
+
+- Active branch: `feature/WORK-2026-017-pdf-viewer-anchor`.
+- Ready work item: `docs/work-items/WORK-2026-017_pdf-viewer-anchor.md`.
+- Scope: PDF text parsing + Anchor-based source jump — schema v3
+  (`resource_segment` table), pypdf page-text extraction (idempotent, bound
+  to resource_version + content_hash), `GET .../pages/{n}` and
+  `GET .../anchors` endpoints, anchor-aware locate (no fuzzy matching;
+  drift → `source_changed`, missing → `anchor_not_found`), and a Web page-text
+  viewer with a "jump to source" entry. Calculus gold 50 page anchors are the
+  acceptance fixture.
+- Reuses frozen Anchor v1 contract (WORK-2026-005) and safe-import resources
+  (WORK-2026-016). No new canonical contract, no prompt changes.
+- Explicit non-capabilities: PDF.js visual rendering, bbox highlighting,
+  Markdown/TXT viewer, OCR, Chinese segmentation, cloud, encryption.
+- Acceptance: TC-VIEW-001..005 — PDF parse → segments (idempotent); page-text
+  endpoint positive/negative; anchors endpoint lists gold 50; drift/missing
+  locate fails closed; Web viewer + jump + drift notice.
+- Exact next action: commit this Ready boundary, then add failing viewer/anchor
+  tests (expected ImportError/collection failure) before any implementation.
