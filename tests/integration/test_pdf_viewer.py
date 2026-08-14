@@ -102,6 +102,26 @@ def test_register_and_list_anchors(layout, pdf_resource) -> None:
     assert pages == list(range(1, 51))
 
 
+def test_register_anchor_returns_stored_id_on_upsert(layout, pdf_resource) -> None:
+    register_anchor(layout, resource_id=pdf_resource, page=1, payload={"v": 1})
+    second = register_anchor(layout, resource_id=pdf_resource, page=1, payload={"v": 2})
+    stored = list_anchors(layout, pdf_resource)
+    page_one = [anchor for anchor in stored if anchor.page == 1]
+    # The upsert must not create a duplicate row for the same page, and the
+    # returned id must match the row actually stored.
+    assert len(page_one) == 1
+    assert second.id == page_one[0].id
+
+
+def test_list_anchors_missing_resource_rejected(tmp_path: Path) -> None:
+    workspace = create_workspace(tmp_path / "ws")
+    migrate(workspace.db_path)
+    missing = "00000000-0000-7000-8100-000000000099"
+    with pytest.raises(Exception) as excinfo:
+        list_anchors(workspace, missing)
+    assert "workspace_missing" in str(excinfo.value)
+
+
 # TC-VIEW-004: drift / missing locate fails closed
 def test_page_text_drift_detected(tmp_path: Path) -> None:
     workspace = create_workspace(tmp_path / "ws")

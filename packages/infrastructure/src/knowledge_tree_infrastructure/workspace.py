@@ -130,7 +130,7 @@ def resolve_workspace(root: Path) -> WorkspaceLayout:
 
 
 def migrate(db_path: Path) -> None:
-    """Migrate a database to schema v2; reject unknown/future versions."""
+    """Migrate a database to schema v3; reject unknown/future versions."""
 
     db_path = Path(db_path)
     try:
@@ -656,6 +656,8 @@ def parse_pdf_resource(layout: WorkspaceLayout, resource_id: str) -> int:
     if row is None:
         _reject("parse_failed", rule="resource_missing")
     version_id, content_hash, storage_key = str(row[0]), str(row[1]), str(row[2])
+    if not _storage_key_within(layout, storage_key):
+        _reject("parse_failed", rule="storage_key_unsafe")
     pdf_path = layout.root / storage_key
     try:
         reader = PdfReader(pdf_path, strict=True)
@@ -682,6 +684,18 @@ def parse_pdf_resource(layout: WorkspaceLayout, resource_id: str) -> int:
     except sqlite3.DatabaseError as error:
         raise WorkspaceError("parse_failed", details={"rule": "database_not_writable"}) from error
     return len(segments)
+
+
+def _storage_key_within(layout: WorkspaceLayout, storage_key: str) -> bool:
+    """Return True only for a relative key that resolves inside the workspace."""
+
+    candidate = (layout.root / storage_key).resolve()
+    root = layout.root.resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return False
+    return not Path(storage_key).is_absolute()
 
 
 def get_page_text(layout: WorkspaceLayout, resource_id: str, page: int) -> PageSegment:
@@ -750,26 +764,41 @@ def register_anchor(
     page: int,
     payload: Mapping[str, Any],
 ) -> AnchorRef:
-    """Register a page anchor for a resource (idempotent per resource+page)."""
+    """Register a page anchor for a resource (idempotent per resource+page).
 
-    anchor_id = _uuid7()
+    Validates the resource exists and returns the id actually stored, so an
+    upsert on the same resource+page never returns a dangling reference.
+    """
+
     created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     try:
         with _connect(layout.db_path) as conn:
+            exists = conn.execute("SELECT 1 FROM resource WHERE id=?", (resource_id,)).fetchone()
+            if exists is None:
+                _reject("workspace_missing", rule="resource_missing")
             conn.execute(
                 "INSERT INTO anchor(id, resource_id, page, payload, created_at) "
                 "VALUES(?, ?, ?, ?, ?) "
                 "ON CONFLICT(resource_id, page) DO UPDATE SET payload=excluded.payload",
                 (
-                    anchor_id,
+                    _uuid7(),
                     resource_id,
                     page,
                     json.dumps(dict(payload), ensure_ascii=False),
                     created_at,
                 ),
             )
+            stored = conn.execute(
+                "SELECT id FROM anchor WHERE resource_id=? AND page=?",
+                (resource_id, page),
+            ).fetchone()
+            if stored is None:
+                _reject("import_failed", rule="anchor_missing")
             return AnchorRef(
-                id=anchor_id, resource_id=resource_id, page=page, payload=dict(payload)
+                id=str(stored[0]),
+                resource_id=resource_id,
+                page=page,
+                payload=dict(payload),
             )
     except sqlite3.DatabaseError as error:
         raise WorkspaceError("import_failed", details={"rule": "database_not_writable"}) from error
@@ -780,6 +809,9 @@ def list_anchors(layout: WorkspaceLayout, resource_id: str) -> list[AnchorRef]:
 
     try:
         with _connect(layout.db_path) as conn:
+            exists = conn.execute("SELECT 1 FROM resource WHERE id=?", (resource_id,)).fetchone()
+            if exists is None:
+                _reject("workspace_missing", rule="resource_missing")
             rows = conn.execute(
                 "SELECT id, resource_id, page, payload FROM anchor "
                 "WHERE resource_id=? ORDER BY page",
