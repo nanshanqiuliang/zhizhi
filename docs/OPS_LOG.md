@@ -322,3 +322,13 @@
 - 证据：repository validator PASS；pytest 241/241、Web 22/22、CDP 浏览器端到端（锁定→409→撤销）PASS。
 - 缓解/回滚：回退本次文档提交仅撤销文档修正；不影响实现与证据。
 - 遗留风险/Owner/期限：职责隔离 QA（WORK-2026-019/020）仍待执行；普通编辑跨会话撤销、冲突预览/崩溃恢复 UI 归 WORK-2026-021；真实 Provider/Web 与 owner 接受保持禁用。
+
+## 2026-08-14 20:30 — 第 6 步完成与 MD/TXT 查看器（WORK-2026-022/023）运维记录
+
+- 关联 ID：WORK-2026-022/023、TR-20260814-013、REQ-2026-006/008/010、NFR-2026-001/003。
+- 环境/版本/build/config：commit `962d165`（第 6 步完成）+ `78c5264`（MD/TXT 查看器），feature/WORK-2026-019-patch-gate；本地 local-dev Windows x64。
+- 变更或症状：第 6 步人工编辑安全感完成（100%）——GraphPatch v1 新增 delete 契约，`save_course_graph` 改为 diff 生成 patch 走提交门，普通编辑跨会话撤销覆盖所有编辑；随后新增 Markdown/TXT 文本查看器（复用 file 端点，前端按 mime 分流）。职责隔离 QA（TR-013）FAIL（3 P1+2 P2）→ 修复 → 复审 PASS。
+- 影响：无部署或常驻服务变化；后端写入路径从"整图替换"改为"diff + 提交门"（历史保留），删除了整图锁/revision 守卫（由提交门接管）；前端新增 `getResourceText` 方法。
+- 证据：pytest 256/256、Web 28/28、ruff、strict mypy、validator、contracts-ts drift、pnpm 锁依赖/check/build 全绿；TR-013 evidence checksums OK。
+- 缓解/回滚：回退 `78c5264` 回到 PDF-only 查看器；回退 `ab50aa2`/`7106621` 回到整图替换保存；不回退已验证 GraphPatch 提交门/纯领域 history。
+- 遗留风险/Owner/期限：第 6 步 100%、MVP 约 75%；tombstone 软删除未引入（硬删除 + 历史可恢复）；真实 Provider/Web、owner 接受保持禁用，第 7 步 DeepSeek 适配待 owner 提供 API Key 与预算。

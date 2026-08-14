@@ -356,6 +356,17 @@
 - 回滚：回退 `ab50aa2`/`7106621` 即回到整图替换保存；不回退已验证 GraphPatch 提交门/纯领域 history。
 - 遗留风险与下一步：**第 6 步完成（100%）**，"不依赖 AI 也能使用"的手工 Alpha 形成；tombstone 软删除、真实 Provider/Web、owner 接受保持禁用，第 7 步 DeepSeek 适配待 owner 提供 API Key 与预算。
 
+## 2026-08-14 — Markdown/TXT 文本查看器（WORK-2026-023）
+
+- 关联 ID：WORK-2026-023、REQ-2026-010、WORK-2026-016。
+- 实际变化：前端 `api.ts` 新增 `getResourceText(resourceId)`（经 `GET .../resources/{id}/file` 读取原文，复用 WORK-2026-018 的 file 端点）；`App.tsx` `openViewer` 按 mime 分流——PDF 走页文本/锚点，`text/*`（Markdown/TXT）读取原文进入文本查看器；资源列表对 `text/*` 资源开放"打开"按钮；查看器控件按 mime 显示（PDF 显示翻页/文本/渲染，MD/TXT 仅显示关闭）。填补第 5 步"MD/TXT 导入后无法查看内容"的缺口。
+- 影响模块/接口/schema/migration/prompt：仅扩展 apps/web；后端复用既有 file 端点，无新端点/schema/migration/prompt。
+- 兼容性：PDF 查看器行为不变；`text/*` 资源无翻页/渲染/锚点，仅纯文本查看。
+- 验证与证据：`78c5264`；Web 新增 `opens a markdown resource in the text viewer`（getResourceText + 文本渲染）；全仓 pytest 256/256、Web 28/28、validator/Ruff/mypy/构建全绿。
+- 性能/安全/运维影响：file 端点受控读取 + storage_key 越界守卫；错误不含正文；无网络/Provider/真实用户数据。
+- 回滚：回退 `78c5264` 即回到 PDF-only 查看器；不影响持久化/导入/提交门证据。
+- 遗留风险与下一步：Markdown 渲染为纯文本（无富文本渲染）；文本层与页面文本高亮联动、多页连续滚动仍为后续；真实 Provider/Web 与 owner 接受保持禁用。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

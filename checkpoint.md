@@ -929,3 +929,18 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: enter Step 7 (DeepSeek live adapter) only after the owner
   provides a controlled API key and approves a budget (live gate); until then
   keep real Provider/Web, user data, and owner acceptance disabled.
+
+## MD/TXT viewer checkpoint — 2026-08-14 20:30 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- WORK-2026-023 (offline enhancement): Markdown/TXT text viewer. `api.ts`
+  gains `getResourceText()` (reads the raw file via the existing file endpoint);
+  `App.tsx` routes `text/*` resources into the text viewer (no paging/rendering/
+  anchors) and shows the "打开" button for them; viewer controls split by mime.
+- This closes the Step 5 gap where MD/TXT could be imported but not viewed.
+- Verification: Web 28/28 (new markdown-viewer test), full pytest 256/256,
+  ruff/mypy/validator/build all pass.
+- Natural-language Step 5 enhancement only; Step 6 remains 100%, MVP ~75%.
+- Exact next action: continue offline enhancements (e.g. tombstone soft delete,
+  Markdown rich rendering, multi-page continuous scroll) or advance to Step 7
+  (DeepSeek live adapter) after the owner provides an API key and budget.
