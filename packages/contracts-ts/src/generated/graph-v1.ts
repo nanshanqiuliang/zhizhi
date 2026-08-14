@@ -10,6 +10,6 @@ export type ReviewState = "unsupported_draft" | "proposed" | "accepted" | "locke
 export type EdgeType = "prerequisite_of" | "related_to" | "part_of" | "example_of";
 export type LockDimension = "content" | "relations" | "position" | "annotations";
 export type AnchorStatus = "valid" | "recovered" | "ambiguous" | "drifted" | "missing";
-export type GraphPatchOperation = "create_concept" | "update_concept" | "create_edge" | "set_lock" | "upsert_annotation" | "set_layout_item";
+export type GraphPatchOperation = "create_concept" | "update_concept" | "create_edge" | "set_lock" | "upsert_annotation" | "set_layout_item" | "delete_concept" | "delete_edge";
 
 export const graphContractSchemaVersion = 1 as const;

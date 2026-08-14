@@ -103,11 +103,12 @@ def test_reload_detects_revision_change(tmp_path: Path) -> None:
     save_course_graph(layout, graph)
 
     changed = dict(graph)
-    changed["revision_no"] = 3
+    changed["concepts"][1]["label"] = "连续函数"
     save_course_graph(layout, changed)
 
     reopened = load_course_graph(layout)
-    assert reopened["revision_no"] == 3
+    assert reopened["revision_no"] == 1
+    assert reopened["concepts"][1]["label"] == "连续函数"
 
 
 # TC-PERS-003: migration v1 建库/重复/乱序/回滚

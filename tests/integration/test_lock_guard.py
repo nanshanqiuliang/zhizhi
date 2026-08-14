@@ -56,7 +56,7 @@ def _drop_concept(graph: JsonObject, concept_id: str) -> JsonObject:
     return changed
 
 
-# TC-LOCK-001: locked content cannot be changed by a whole-graph save
+# TC-LOCK-001: locked content cannot be changed (enforced by the patch gate)
 def test_locked_content_rejects_label_change(tmp_path: Path) -> None:
     layout = _setup(tmp_path)
     locked = _set_lock(valid_graph(), CONCEPT_B_ID, "content", True)
@@ -66,23 +66,22 @@ def test_locked_content_rejects_label_change(tmp_path: Path) -> None:
     with pytest.raises(WorkspaceError) as excinfo:
         save_course_graph(layout, changed)
     assert excinfo.value.code == "target_locked"
-    assert excinfo.value.details["rule"] == "content_changed"
+    assert excinfo.value.details["rule"] == "content_lock"
     assert excinfo.value.details["dimension"] == "content"
 
     assert load_course_graph(layout)["concepts"][1]["label"] == "连续"
 
 
-# TC-LOCK-002: a locked dimension cannot be downgraded
-def test_locked_dimension_rejects_lock_downgrade(tmp_path: Path) -> None:
+# TC-LOCK-002: unlocking is a legitimate user set_lock (no longer a "downgrade")
+def test_unlock_is_allowed_via_set_lock(tmp_path: Path) -> None:
     layout = _setup(tmp_path)
     locked = _set_lock(valid_graph(), CONCEPT_B_ID, "content", True)
     save_course_graph(layout, locked)
 
-    downgraded = _set_lock(locked, CONCEPT_B_ID, "content", False)
-    with pytest.raises(WorkspaceError) as excinfo:
-        save_course_graph(layout, downgraded)
-    assert excinfo.value.code == "target_locked"
-    assert excinfo.value.details["rule"] == "lock_downgraded"
+    unlocked = _set_lock(locked, CONCEPT_B_ID, "content", False)
+    save_course_graph(layout, unlocked)
+
+    assert load_course_graph(layout)["concepts"][1]["locks"]["content"] is False
 
 
 # TC-LOCK-003: a locked concept cannot be deleted
@@ -95,7 +94,7 @@ def test_locked_concept_rejects_delete(tmp_path: Path) -> None:
     with pytest.raises(WorkspaceError) as excinfo:
         save_course_graph(layout, deleted)
     assert excinfo.value.code == "target_locked"
-    assert excinfo.value.details["rule"] == "concept_deleted"
+    assert excinfo.value.details["rule"] == "content_lock"
 
 
 # TC-LOCK-004: unlocked dimensions remain editable
@@ -127,19 +126,18 @@ def test_locked_content_rejects_evidence_change(tmp_path: Path) -> None:
     assert excinfo.value.details["dimension"] == "content"
 
 
-# TC-LOCK-006 (P1-2 regression): whole-graph save must not regress revision_no
-def test_revision_regression_rejected(tmp_path: Path) -> None:
+# TC-LOCK-006: revision advances only on business change (not on a bare number)
+def test_revision_advances_only_on_business_change(tmp_path: Path) -> None:
     layout = _setup(tmp_path)
     save_course_graph(layout, valid_graph())
+    assert load_course_graph(layout)["revision_no"] == 0
 
-    advanced = deepcopy(valid_graph())
-    advanced["revision_no"] = 5
-    save_course_graph(layout, advanced)
+    changed = _set_label(valid_graph(), CONCEPT_B_ID, "新名字")
+    save_course_graph(layout, changed)
+    assert load_course_graph(layout)["revision_no"] == 1
 
-    regressed = deepcopy(valid_graph())
-    regressed["revision_no"] = 3
-    with pytest.raises(WorkspaceError) as excinfo:
-        save_course_graph(layout, regressed)
-    assert excinfo.value.code == "revision_conflict"
-
-    assert load_course_graph(layout)["revision_no"] == 5
+    # A bare revision_no change carries no business delta and is ignored.
+    revision_only = deepcopy(changed)
+    revision_only["revision_no"] = 99
+    save_course_graph(layout, revision_only)
+    assert load_course_graph(layout)["revision_no"] == 1

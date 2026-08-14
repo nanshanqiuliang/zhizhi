@@ -471,6 +471,66 @@ def _apply_layout(
     target["revision_no"] = next_revision
 
 
+def _apply_delete_concept(
+    operation: JsonObject,
+    graph: JsonObject,
+    concepts: dict[str, JsonObject],
+    base_revisions: dict[str, int],
+    *,
+    next_revision: int,
+) -> None:
+    operation_id = str(operation["op_id"])
+    target = _concept_target(operation, concepts, base_revisions, operation_id=operation_id)
+    for dimension in ("content", "relations", "position", "annotations"):
+        if target["locks"][dimension]:
+            _reject(
+                "target_locked",
+                rule=f"{dimension}_lock",
+                operation_id=operation_id,
+                target_id=target["id"],
+                dimension=dimension,
+            )
+    concept_id = str(target["id"])
+    graph["concepts"] = [concept for concept in graph["concepts"] if concept["id"] != concept_id]
+    graph["edges"] = [
+        edge
+        for edge in graph["edges"]
+        if edge["source_concept_id"] != concept_id and edge["target_concept_id"] != concept_id
+    ]
+    graph["layout_items"] = [
+        item for item in graph["layout_items"] if item["concept_id"] != concept_id
+    ]
+    concepts.pop(concept_id, None)
+    base_revisions.pop(concept_id, None)
+
+
+def _apply_delete_edge(
+    operation: JsonObject,
+    graph: JsonObject,
+    concepts: dict[str, JsonObject],
+    *,
+    next_revision: int,
+) -> None:
+    operation_id = str(operation["op_id"])
+    edge_id = str(operation["target"]["id"])
+    edge = next((item for item in graph["edges"] if item["id"] == edge_id), None)
+    if edge is None:
+        _reject(
+            "validation_failed", rule="edge_missing", operation_id=operation_id, target_id=edge_id
+        )
+    source = concepts.get(str(edge["source_concept_id"]))
+    target = concepts.get(str(edge["target_concept_id"]))
+    if source is not None:
+        _ensure_unlocked(source, "relations", operation_id=operation_id)
+    if target is not None:
+        _ensure_unlocked(target, "relations", operation_id=operation_id)
+    graph["edges"] = [item for item in graph["edges"] if item["id"] != edge_id]
+    if source is not None:
+        source["revision_no"] = next_revision
+    if target is not None:
+        target["revision_no"] = next_revision
+
+
 def _apply_operation(
     operation: JsonObject,
     graph: JsonObject,
@@ -530,6 +590,21 @@ def _apply_operation(
             graph,
             concepts,
             base_revisions,
+            next_revision=next_revision,
+        )
+    elif operation_name == "delete_concept":
+        _apply_delete_concept(
+            operation,
+            graph,
+            concepts,
+            base_revisions,
+            next_revision=next_revision,
+        )
+    elif operation_name == "delete_edge":
+        _apply_delete_edge(
+            operation,
+            graph,
+            concepts,
             next_revision=next_revision,
         )
     else:

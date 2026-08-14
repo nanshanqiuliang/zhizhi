@@ -115,9 +115,7 @@ def test_restore_recovers_after_database_lost(client: TestClient, tmp_path: Path
     assert listed.json()["backups"] == [filename]
 
     # Restoring must recreate the db from the backup.
-    restored = client.post(
-        f"/api/workspaces/{WORKSPACE_ID}/restore", json={"filename": filename}
-    )
+    restored = client.post(f"/api/workspaces/{WORKSPACE_ID}/restore", json={"filename": filename})
     assert restored.status_code == 200
 
     loaded = client.get(f"/api/workspaces/{WORKSPACE_ID}/graph")

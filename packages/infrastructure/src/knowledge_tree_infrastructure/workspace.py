@@ -35,6 +35,7 @@ SUPPORTED_SCHEMA_VERSION = 3
 _GRAPH_KEY = "course_graph"
 _INITIAL_GRAPH_KEY = "course_graph_initial"
 _APPLIED_COUNT_KEY = "course_graph_applied"
+_LOCAL_ACTOR = {"type": "user", "id": "local-user"}
 _MAX_QUERY_LENGTH = 100
 _SNIPPET_LENGTH = 60
 _SEARCH_TABLE = "concept_search"
@@ -209,21 +210,30 @@ def migrate(db_path: Path) -> None:
 def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None:
     """Validate and persist a CourseGraph, then rebuild the search index.
 
-    This is a whole-graph replacement: it also overwrites the initial-graph
-    marker and clears the persisted history so an incremental record log can
-    never be replayed against a snapshot it did not produce.
-
-    Any dimension locked on the currently saved graph must not be downgraded or
-    have its content changed by the incoming whole-graph replacement; that
-    guarantees "locked items are never silently overwritten" at the storage
-    boundary.
+    On first save this is a whole-graph replacement (initialises the workspace).
+    On subsequent saves the incoming graph is diffed against the current one and
+    applied through the protected patch gate, so ordinary edits keep producing
+    history records and remain cross-session undoable. Locked dimensions and
+    revision conflicts are enforced by the patch gate itself.
     """
 
     _validate_graph(graph)
     current = _try_load_saved_graph(layout)
-    if current is not None:
-        _guard_locked_dimensions(current, graph)
-        _guard_revision_monotonic(current, graph)
+    if current is None:
+        _whole_graph_replace(layout, graph)
+        return
+    if semantic_graph_hash(current) == semantic_graph_hash(graph):
+        return
+    patch = _build_diff_patch(current, graph)
+    if not patch["operations"]:
+        _whole_graph_replace(layout, graph)
+        return
+    apply_graph_patch(layout, patch, trusted_actor=_LOCAL_ACTOR)
+
+
+def _whole_graph_replace(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None:
+    """Overwrite the current/initial graph and clear history (first save)."""
+
     payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     try:
         with _connect(layout.db_path) as conn:
@@ -1264,113 +1274,168 @@ def _try_load_saved_graph(layout: WorkspaceLayout) -> JsonObject | None:
     return parsed
 
 
-def _guard_locked_dimensions(current: JsonObject, incoming: Mapping[str, Any]) -> None:
-    """Reject a whole-graph replacement that downgrades or mutates a locked dimension."""
-
-    current_concepts = {
-        str(item["id"]): item for item in current.get("concepts", []) if isinstance(item, dict)
-    }
-    incoming_concepts = {
-        str(item["id"]): item for item in incoming.get("concepts", []) if isinstance(item, dict)
-    }
-    for concept_id, before in current_concepts.items():
-        locks = before.get("locks")
-        if not isinstance(locks, dict):
-            continue
-        after = incoming_concepts.get(concept_id)
-        if after is None:
-            for dimension in _LOCK_DIMENSIONS:
-                if locks.get(dimension) is True:
-                    _reject(
-                        "target_locked",
-                        rule="concept_deleted",
-                        target_id=concept_id,
-                        dimension=dimension,
-                    )
-            continue
-        after_locks = after.get("locks")
-        after_locks = after_locks if isinstance(after_locks, dict) else {}
-        for dimension in _LOCK_DIMENSIONS:
-            if locks.get(dimension) is not True:
-                continue
-            if after_locks.get(dimension) is not True:
-                _reject(
-                    "target_locked",
-                    rule="lock_downgraded",
-                    target_id=concept_id,
-                    dimension=dimension,
-                )
-            if _dimension_value(current, concept_id, dimension) != _dimension_value(
-                incoming, concept_id, dimension
-            ):
-                _reject(
-                    "target_locked",
-                    rule="content_changed",
-                    target_id=concept_id,
-                    dimension=dimension,
-                )
+def _note_value(concept: Mapping[str, Any]) -> str:
+    annotations = concept.get("annotations")
+    if not isinstance(annotations, list):
+        return ""
+    for annotation in annotations:
+        if isinstance(annotation, dict) and annotation.get("kind") == "note":
+            return str(annotation.get("value", ""))
+    return ""
 
 
-def _guard_revision_monotonic(current: JsonObject, incoming: Mapping[str, Any]) -> None:
-    """Reject a whole-graph replacement that regresses the graph revision."""
+def _build_diff_patch(current: JsonObject, incoming: Mapping[str, Any]) -> JsonObject:
+    """Diff two graphs into a confirmed user GraphPatch of ordered operations."""
 
-    current_revision = current.get("revision_no")
-    incoming_revision = incoming.get("revision_no")
-    if (
-        isinstance(current_revision, int)
-        and isinstance(incoming_revision, int)
-        and incoming_revision < current_revision
-    ):
-        _reject(
-            "revision_conflict",
-            rule="revision_regression",
-            expected_revision_no=current_revision,
-            actual_revision_no=incoming_revision,
+    cur_concepts = {str(c["id"]): c for c in current["concepts"]}
+    inc_concepts = {str(c["id"]): c for c in incoming["concepts"]}
+    cur_edges = {str(e["id"]): e for e in current["edges"]}
+    inc_edges = {str(e["id"]): e for e in incoming["edges"]}
+    operations: list[JsonObject] = []
+
+    def _rev(concept_id: str) -> int:
+        concept = cur_concepts.get(concept_id)
+        return int(concept["revision_no"]) if concept is not None else 0
+
+    # 1. delete edges whose endpoints both survive (others are cascaded).
+    for edge_id in sorted(set(cur_edges) - set(inc_edges)):
+        edge = cur_edges[edge_id]
+        if (
+            str(edge["source_concept_id"]) in inc_concepts
+            and str(edge["target_concept_id"]) in inc_concepts
+        ):
+            operations.append(
+                {
+                    "op_id": _uuid7(),
+                    "op": "delete_edge",
+                    "target": {"type": "edge", "id": edge_id},
+                }
+            )
+
+    # 2. delete concepts (cascades their remaining edges and layout).
+    for concept_id in sorted(set(cur_concepts) - set(inc_concepts)):
+        operations.append(
+            {
+                "op_id": _uuid7(),
+                "op": "delete_concept",
+                "target": {"type": "concept", "id": concept_id},
+                "expected_updated_revision_no": _rev(concept_id),
+            }
         )
 
+    # 3. create concepts.
+    for concept_id in sorted(set(inc_concepts) - set(cur_concepts)):
+        concept = json.loads(json.dumps(inc_concepts[concept_id]))
+        concept["revision_no"] = 0
+        operations.append({"op_id": _uuid7(), "op": "create_concept", "concept": concept})
 
-def _dimension_value(graph: Mapping[str, Any], concept_id: str, dimension: str) -> str:
-    if dimension == "content":
-        concept = _find_concept(graph, concept_id)
-        # Content lock protects the whole concept except its lock flags and
-        # revision counter (matching the domain content-lock semantics).
-        content = {
-            key: value for key, value in concept.items() if key not in ("locks", "revision_no")
-        }
-        return _canonical_json(content)
-    if dimension == "relations":
-        edges = [
-            (str(e["source_concept_id"]), str(e["target_concept_id"]), str(e["edge_type"]))
-            for e in graph.get("edges", [])
-            if isinstance(e, dict)
-            and (
-                str(e.get("source_concept_id")) == concept_id
-                or str(e.get("target_concept_id")) == concept_id
+    # 4. create edges.
+    for edge_id in sorted(set(inc_edges) - set(cur_edges)):
+        edge = json.loads(json.dumps(inc_edges[edge_id]))
+        edge["revision_no"] = 0
+        operations.append(
+            {
+                "op_id": _uuid7(),
+                "op": "create_edge",
+                "expected_source_revision_no": _rev(str(edge["source_concept_id"])),
+                "expected_target_revision_no": _rev(str(edge["target_concept_id"])),
+                "edge": edge,
+            }
+        )
+
+    # 5. update concept content, note, locks and review fields.
+    for concept_id in sorted(set(cur_concepts) & set(inc_concepts)):
+        cur = cur_concepts[concept_id]
+        inc = inc_concepts[concept_id]
+        revision = _rev(concept_id)
+        target = {"type": "concept", "id": concept_id}
+        if cur.get("label") != inc.get("label"):
+            operations.append(
+                {
+                    "op_id": _uuid7(),
+                    "op": "update_concept",
+                    "target": target,
+                    "expected_updated_revision_no": revision,
+                    "evidence_ids": [],
+                    "changes": {"label": inc["label"]},
+                }
             )
-        ]
-        return _canonical_json(sorted(edges))
-    if dimension == "position":
-        items = [
-            (str(item["view_id"]), item.get("x"), item.get("y"), item.get("pinned"))
-            for item in graph.get("layout_items", [])
-            if isinstance(item, dict) and str(item.get("concept_id")) == concept_id
-        ]
-        return _canonical_json(sorted(items))
-    if dimension == "annotations":
-        concept = _find_concept(graph, concept_id)
-        return _canonical_json(concept.get("annotations", []))
-    _reject("graph_invalid", rule="lock_dimension_unsupported", dimension=dimension)
+        if _note_value(cur) != _note_value(inc):
+            operations.append(
+                {
+                    "op_id": _uuid7(),
+                    "op": "upsert_annotation",
+                    "target": target,
+                    "expected_updated_revision_no": revision,
+                    "annotation": {"kind": "note", "value": _note_value(inc)},
+                }
+            )
+        for dimension in _LOCK_DIMENSIONS:
+            if cur["locks"][dimension] != inc["locks"][dimension]:
+                operations.append(
+                    {
+                        "op_id": _uuid7(),
+                        "op": "set_lock",
+                        "target": target,
+                        "expected_updated_revision_no": revision,
+                        "dimension": dimension,
+                        "value": inc["locks"][dimension],
+                    }
+                )
+        changes: JsonObject = {}
+        for field in ("review_state", "confidence", "evidence_ids"):
+            if cur.get(field) != inc.get(field):
+                changes[field] = inc.get(field)
+        if changes:
+            operations.append(
+                {
+                    "op_id": _uuid7(),
+                    "op": "update_concept",
+                    "target": target,
+                    "expected_updated_revision_no": revision,
+                    "evidence_ids": [],
+                    "changes": changes,
+                }
+            )
 
+    # 6. move layout items.
+    cur_layout = {(str(li["view_id"]), str(li["concept_id"])): li for li in current["layout_items"]}
+    inc_layout = {
+        (str(li["view_id"]), str(li["concept_id"])): li for li in incoming["layout_items"]
+    }
+    for key in sorted(set(cur_layout) & set(inc_layout)):
+        cur_li = cur_layout[key]
+        inc_li = inc_layout[key]
+        concept_id = key[1]
+        if concept_id not in inc_concepts:
+            continue
+        if (
+            cur_li.get("x") != inc_li.get("x")
+            or cur_li.get("y") != inc_li.get("y")
+            or cur_li.get("pinned") != inc_li.get("pinned")
+        ):
+            operations.append(
+                {
+                    "op_id": _uuid7(),
+                    "op": "set_layout_item",
+                    "target": {"type": "concept", "id": concept_id},
+                    "expected_updated_revision_no": _rev(concept_id),
+                    "layout_item": json.loads(json.dumps(inc_li)),
+                }
+            )
 
-def _find_concept(graph: Mapping[str, Any], concept_id: str) -> Mapping[str, Any]:
-    for item in graph.get("concepts", []):
-        if isinstance(item, dict) and str(item.get("id")) == concept_id:
-            return item
-    _reject("graph_invalid", rule="concept_missing", target_id=concept_id)
-
-
-def _canonical_json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return {
+        "schema_version": 1,
+        "patch_id": _uuid7(),
+        "workspace_id": incoming["workspace_id"],
+        "course_id": incoming["course_id"],
+        "base_revision_no": current["revision_no"],
+        "actor": dict(_LOCAL_ACTOR),
+        "reason": "自动保存",
+        "requires_confirmation": True,
+        "confirmed": True,
+        "operations": operations,
+    }
 
 
 def _reject(code: str, *, rule: str, **safe_details: Any) -> Never:

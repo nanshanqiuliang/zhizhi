@@ -781,6 +781,67 @@ GRAPH_V1_SCHEMA_JSON = r"""{
         }
       }
     },
+    "EdgeTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "const": "edge"
+        },
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        }
+      }
+    },
+    "DeleteConceptOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op_id",
+        "op",
+        "target",
+        "expected_updated_revision_no"
+      ],
+      "properties": {
+        "op_id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "op": {
+          "const": "delete_concept"
+        },
+        "target": {
+          "$ref": "#/$defs/ConceptTarget"
+        },
+        "expected_updated_revision_no": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DeleteEdgeOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op_id",
+        "op",
+        "target"
+      ],
+      "properties": {
+        "op_id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "op": {
+          "const": "delete_edge"
+        },
+        "target": {
+          "$ref": "#/$defs/EdgeTarget"
+        }
+      }
+    },
     "Operation": {
       "oneOf": [
         {
@@ -800,6 +861,12 @@ GRAPH_V1_SCHEMA_JSON = r"""{
         },
         {
           "$ref": "#/$defs/SetLayoutItemOperation"
+        },
+        {
+          "$ref": "#/$defs/DeleteConceptOperation"
+        },
+        {
+          "$ref": "#/$defs/DeleteEdgeOperation"
         }
       ]
     },

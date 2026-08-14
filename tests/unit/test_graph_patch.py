@@ -376,3 +376,67 @@ def test_preview_supports_500_node_engineering_baseline() -> None:
 
     assert len(result.snapshot["concepts"]) == 500
     assert len(result.snapshot["edges"]) == 500
+
+
+def test_delete_concept_removes_concept() -> None:
+    graph = valid_graph()
+    patch = valid_patch()
+    patch["confirmed"] = True
+    patch["operations"] = [
+        {
+            "op_id": "00000000-0000-7000-8017-000000000001",
+            "op": "delete_concept",
+            "target": {"type": "concept", "id": CONCEPT_B_ID},
+            "expected_updated_revision_no": 0,
+        }
+    ]
+
+    result = preview_graph_patch(graph, patch)
+
+    assert result.status == "ready_to_apply"
+    assert [c["id"] for c in result.snapshot["concepts"]] == [CONCEPT_A_ID]
+
+
+def test_delete_locked_concept_rejected() -> None:
+    graph = valid_graph()
+    graph["concepts"][1]["locks"]["content"] = True
+    patch = valid_patch()
+    patch["confirmed"] = True
+    patch["operations"] = [
+        {
+            "op_id": "00000000-0000-7000-8017-000000000002",
+            "op": "delete_concept",
+            "target": {"type": "concept", "id": CONCEPT_B_ID},
+            "expected_updated_revision_no": 0,
+        }
+    ]
+
+    with pytest.raises(GraphPatchError) as raised:
+        preview_graph_patch(graph, patch)
+
+    assert raised.value.code == "target_locked"
+
+
+def test_delete_edge_removes_edge() -> None:
+    graph = valid_graph()
+    create = valid_patch()
+    create["confirmed"] = True
+    created = preview_graph_patch(graph, create)
+    edge_id = created.snapshot["edges"][0]["id"]
+
+    delete = valid_patch()
+    delete["confirmed"] = True
+    delete["base_revision_no"] = 1
+    delete["patch_id"] = "00000000-0000-7000-8017-000000000003"
+    delete["operations"] = [
+        {
+            "op_id": "00000000-0000-7000-8017-000000000004",
+            "op": "delete_edge",
+            "target": {"type": "edge", "id": edge_id},
+        }
+    ]
+
+    result = preview_graph_patch(created.snapshot, delete)
+
+    assert result.status == "ready_to_apply"
+    assert result.snapshot["edges"] == []
