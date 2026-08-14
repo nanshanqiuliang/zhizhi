@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-14 — 交付检查第三轮：同步第 7 步状态、环境清单、风险与 Runbook
+
+- 关联 ID：WORK-2026-007/008、RB-PROV-001、OPS-2026-003、RISK-2026-015。
+- 实际变化：README 当前状态更新到第 6 步 100%/第 7 步约 45%/MVP 约 77% 并补充 live gate 说明；CHANGELOG 补第 7 步 Added 条目并修正 Security 段（LLM live 门控）；USER_MANUAL status 更新到第 4–6 步完成/第 7 步后端进行中并补 AI 状态说明；ENVIRONMENT_INVENTORY 更新 local-dev/ci 行并新增"Provider 与密钥状态"表（deepseek `enabled:false`、secret 仅 env）；RISK_REGISTER 更新 RISK-007/009 预防证据并新增 RISK-015（LLM 费用失控，`max_cost_usd` 金额预算缺口）；test-reports 索引补 WORK-2026-007/008 待 QA 封存说明；RB-PROV-001 维护记录 + runbooks 索引补部分演练。
+- 影响模块/接口/schema/migration/prompt：仅文档；无代码/schema/migration/prompt 变化。
+- 兼容性：无行为变化。
+- 验证与证据：见本轮收口提交；全仓 pytest 335/335 + 5 skipped、validator/Ruff/mypy 全绿（无代码改动，回归确认）。
+- 性能/安全/运维影响：无；明确记录 `max_cost_usd` 金额预算为未实现缺口，不冒充已具备费用上限。
+- 回滚：回退本轮文档提交即恢复上一版描述；不影响实现与证据。
+- 遗留风险与下一步：`max_cost_usd` 金额预算、EVAL-LLM-001 金标评测、RB-PROV-001 完整演练与职责隔离 QA（TR 封存）仍待后续。
+
 ## 2026-08-14 — 实现 DeepSeek OpenAI Chat Completions adapter 与受控 live smoke（WORK-2026-008，第 7 步真实接入第 1 期）
 
 - 关联 ID：WORK-2026-008、LLM-COMPAT-BASELINE-001、NFR-2026-006/007/008、WORK-2026-007、OPS-2026-003、TC-DS-001..005、TC-DS-LIVE-001..005。

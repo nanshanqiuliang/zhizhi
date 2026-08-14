@@ -12,6 +12,14 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-14 — 交付检查：环境清单、费用风险与 Runbook 部分演练登记
+
+- 关联：WORK-2026-007/008、RISK-2026-015、RB-PROV-001。
+- 已完成：ENVIRONMENT_INVENTORY 记录 local-dev 的 DeepSeek provider snapshot 与 secret 引用状态（`env://DEEPSEEK_API_KEY`，present，不落盘）；新增 RISK-2026-015（LLM 费用失控，`max_cost_usd` 金额预算缺口）；RB-PROV-001 标记 adapter + live smoke 部分演练（5/5，金标与完整演练待后续）。
+- 未完成：`max_cost_usd` 金额预算实现、EVAL-LLM-001 金标、RB-PROV-001 完整演练、职责隔离 QA 封存。
+- 当前缓解：除 `mock` 外所有 provider `enabled: false`；live 仅 env 门控；max_tokens/attempt 约束（本轮 817 token 远低于 3 元）。
+- 下一门：实现金额预算 + 金标评测，再 QA 批准 deployment。
+
 ## 2026-08-14 — 实现 DeepSeek adapter 与受控 live smoke（WORK-2026-008）
 
 - 关联：WORK-2026-008、OPS-2026-003、LLM-COMPAT-BASELINE-001。

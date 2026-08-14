@@ -1,6 +1,6 @@
 # 测试报告索引
 
-当前已有工程骨架、本地验证、微积分 eval fixture 作者验证、v1 独立复核待签门、v2 离线 AI 机器复核证明，以及第 4–5 步本地持久化/API/搜索/导入/PDF 查看渲染 prototype 验证（第 6 步锁定/撤销/提交门已由 TR-20260814-011 验证）；仍没有产品业务、人类 QA 签字或真实 Provider 测试：
+当前已有工程骨架、本地验证、微积分 eval fixture 作者验证、v1 独立复核待签门、v2 离线 AI 机器复核证明，以及第 4–6 步本地持久化/API/搜索/导入/PDF 查看渲染/锁定撤销 prototype 验证（`TR-20260814-005..013`）；第 7 步 canonical LLM contract、mock、DeepSeek adapter 与受控 live smoke 已实现并有开发验证（定向测试 + live 5/5），但 **职责隔离 QA 尚未执行，`WORK-2026-007/008` 的 TR 报告待封存**；仍没有产品业务、人类 QA 签字或真实 Provider 金标评测：
 
 | Report | Build | 范围 | 结论 | 关联 |
 |---|---|---|---|---|
@@ -22,6 +22,11 @@
 | [TR-20260814-011](TR-20260814-011_patch-gate-undo-redo-lock-guard.md) | `a6a471a` | 持久化 GraphPatch 提交门、跨会话 undo/redo、锁定维度存储保护、Web 锁定/撤销、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-019/020 |
 | [TR-20260814-012](TR-20260814-012_recovery-history-ui.md) | `2cfa883` | 冲突预览、备份/恢复崩溃恢复、版本历史面板、URL 契约、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-021 |
 | [TR-20260814-013](TR-20260814-013_diff-based-save.md) | `7106621` | 普通编辑 patch 化保存、GraphPatch delete 契约、跨会话撤销覆盖所有编辑、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-022 |
+
+> WORK-2026-007（canonical LLM contract + mock + TC-LLM-001..009）与 WORK-2026-008
+> （DeepSeek adapter + 受控 live smoke）已完成实现与开发验证（`b2e215b`/`d81c574`/
+> `a80f43d`：定向 56/56 + 21/21、live 5/5、全仓 335/335 + 5 skipped），但职责隔离
+> QA 尚未执行，TR 报告待封存后再补入本索引。
 
 正式执行时：
 

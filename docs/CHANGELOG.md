@@ -29,6 +29,10 @@
 - 新增 Markdown 富文本渲染：Markdown 笔记按标题/加粗/斜体/列表/代码块渲染（先
   转义 HTML，防注入）。
 - 新增知识树画布平移与缩放：滚轮缩放、拖动空白平移、节点拖动按缩放换算。
+- 新增真实 DeepSeek 接入（第 7 步，后端）：canonical LLM contract、OpenAI Chat
+  Completions 协议适配器与 DeepSeek vendor profile、显式 thinking/流式/工具调用、
+  错误映射与重试/熔断/预算，以及受控真实 smoke（文本/JSON/思考/工具/流式 5/5）。
+  DeepSeek deployment 仍保持关闭，尚未接入产品界面。
 
 ### Changed
 
@@ -47,5 +51,8 @@
   错误详情只含标识，不含笔记或来源正文。
 - API 仅监听 loopback，CORS 白名单默认仅 Vite 开发地址；不访问网络、不调用
   LLM、不读取 API Key。
+- LLM 真实调用仅在后端测试中受 `RUN_LIVE_LLM_TESTS=1` + `DEEPSEEK_API_KEY`
+  双重门控，密钥只经环境变量进入、绝不落盘或提交；除 mock 外所有 provider
+  保持 `enabled: false`。
 
 > 正式发布条目还应包含发布日期、升级/迁移说明、已知问题和版本比较链接。

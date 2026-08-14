@@ -101,3 +101,4 @@ fallback 后工具重复 -> 立即关闭该 policy fallback，按事故/高优�
 | Date | Change/Test | Result | Test Report | Reviewer |
 |---|---|---|---|---|
 | 2026-08-13 | 初始 DeepSeek 优先 Runbook 草案 | 未演练 | — | — |
+| 2026-08-14 | DeepSeek adapter + 受控 live smoke 部分演练（文本/JSON/thinking/tool/stream、错误映射、脱敏） | live 5/5、离线契约 21/21；金标 EVAL-LLM-001 与完整演练待后续 | 开发验证（`a80f43d`），QA TR 待封存 | — |
