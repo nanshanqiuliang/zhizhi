@@ -223,6 +223,7 @@ def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None
     current = _try_load_saved_graph(layout)
     if current is not None:
         _guard_locked_dimensions(current, graph)
+        _guard_revision_monotonic(current, graph)
     payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     try:
         with _connect(layout.db_path) as conn:
@@ -1276,10 +1277,33 @@ def _guard_locked_dimensions(current: JsonObject, incoming: Mapping[str, Any]) -
                 )
 
 
+def _guard_revision_monotonic(current: JsonObject, incoming: Mapping[str, Any]) -> None:
+    """Reject a whole-graph replacement that regresses the graph revision."""
+
+    current_revision = current.get("revision_no")
+    incoming_revision = incoming.get("revision_no")
+    if (
+        isinstance(current_revision, int)
+        and isinstance(incoming_revision, int)
+        and incoming_revision < current_revision
+    ):
+        _reject(
+            "revision_conflict",
+            rule="revision_regression",
+            expected_revision_no=current_revision,
+            actual_revision_no=incoming_revision,
+        )
+
+
 def _dimension_value(graph: Mapping[str, Any], concept_id: str, dimension: str) -> str:
     if dimension == "content":
         concept = _find_concept(graph, concept_id)
-        return _canonical_json({"label": concept.get("label"), "note": _note_annotation(concept)})
+        # Content lock protects the whole concept except its lock flags and
+        # revision counter (matching the domain content-lock semantics).
+        content = {
+            key: value for key, value in concept.items() if key not in ("locks", "revision_no")
+        }
+        return _canonical_json(content)
     if dimension == "relations":
         edges = [
             (str(e["source_concept_id"]), str(e["target_concept_id"]), str(e["edge_type"]))
@@ -1309,16 +1333,6 @@ def _find_concept(graph: Mapping[str, Any], concept_id: str) -> Mapping[str, Any
         if isinstance(item, dict) and str(item.get("id")) == concept_id:
             return item
     _reject("graph_invalid", rule="concept_missing", target_id=concept_id)
-
-
-def _note_annotation(concept: Mapping[str, Any]) -> str:
-    annotations = concept.get("annotations")
-    if not isinstance(annotations, list):
-        return ""
-    for annotation in annotations:
-        if isinstance(annotation, dict) and annotation.get("kind") == "note":
-            return str(annotation.get("value", ""))
-    return ""
 
 
 def _canonical_json(value: Any) -> str:

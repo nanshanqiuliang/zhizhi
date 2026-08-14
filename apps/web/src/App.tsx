@@ -416,6 +416,7 @@ export function App({ api }: { api?: PersistApi }) {
       setPresent(previous);
       restoreDrafts(previous, selectedId);
       setStatus("已撤销上一步修改");
+      scheduleAutoSave(previous);
       return;
     }
     if (!api) return;
@@ -443,6 +444,7 @@ export function App({ api }: { api?: PersistApi }) {
       setPresent(next);
       restoreDrafts(next, selectedId);
       setStatus("已重做上一步修改");
+      scheduleAutoSave(next);
       return;
     }
     if (!api) return;
@@ -472,6 +474,10 @@ export function App({ api }: { api?: PersistApi }) {
       setStatus("当前概念没有需要保存的修改");
       return;
     }
+    if ((selectedNode.locks ?? DEFAULT_LOCKS).content) {
+      setStatus("内容已锁定，无法修改");
+      return;
+    }
     commit(
       {
         ...present,
@@ -485,6 +491,10 @@ export function App({ api }: { api?: PersistApi }) {
   }
 
   function addChild() {
+    if ((selectedNode.locks ?? DEFAULT_LOCKS).relations) {
+      setStatus("关系已锁定，无法添加子概念");
+      return;
+    }
     const id = `new-concept-${nextNodeNumber.current++}`;
     const siblings = present.edges.filter((edge) => edge.from === selectedNode.id).length;
     const child: ConceptNode = {
@@ -507,6 +517,11 @@ export function App({ api }: { api?: PersistApi }) {
   }
 
   function deleteSelected() {
+    const locks = selectedNode.locks ?? DEFAULT_LOCKS;
+    if (locks.content || locks.relations || locks.position || locks.annotations) {
+      setStatus("该节点已锁定，无法删除");
+      return;
+    }
     if (present.edges.some((edge) => edge.from === selectedNode.id)) {
       setStatus("只能删除没有子节点的概念");
       return;
@@ -581,6 +596,7 @@ export function App({ api }: { api?: PersistApi }) {
 
   function resetDemo() {
     const sample = createSampleWorkspace();
+    sample.revisionNo = present.revisionNo;
     setPresent(sample);
     setPast([]);
     setFuture([]);
@@ -591,6 +607,10 @@ export function App({ api }: { api?: PersistApi }) {
 
   function startDrag(event: React.PointerEvent<HTMLButtonElement>, node: ConceptNode) {
     selectNode(node.id);
+    if (node.positionLocked || node.locks?.position) {
+      setStatus("位置已锁定，无法移动");
+      return;
+    }
     drag.current = {
       nodeId: node.id,
       pointerId: event.pointerId,

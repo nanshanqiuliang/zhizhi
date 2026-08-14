@@ -108,3 +108,38 @@ def test_unlocked_dimension_remains_editable(tmp_path: Path) -> None:
     save_course_graph(layout, changed)
 
     assert load_course_graph(layout)["concepts"][0]["label"] == "极限新名"
+
+
+# TC-LOCK-005 (P1-1 regression): content lock protects the whole concept
+def test_locked_content_rejects_evidence_change(tmp_path: Path) -> None:
+    layout = _setup(tmp_path)
+    locked = _set_lock(valid_graph(), CONCEPT_B_ID, "content", True)
+    save_course_graph(layout, locked)
+
+    changed = deepcopy(locked)
+    for concept in changed["concepts"]:
+        if concept["id"] == CONCEPT_B_ID:
+            concept["evidence_ids"] = ["00000000-0000-7000-8000-000000000099"]
+
+    with pytest.raises(WorkspaceError) as excinfo:
+        save_course_graph(layout, changed)
+    assert excinfo.value.code == "target_locked"
+    assert excinfo.value.details["dimension"] == "content"
+
+
+# TC-LOCK-006 (P1-2 regression): whole-graph save must not regress revision_no
+def test_revision_regression_rejected(tmp_path: Path) -> None:
+    layout = _setup(tmp_path)
+    save_course_graph(layout, valid_graph())
+
+    advanced = deepcopy(valid_graph())
+    advanced["revision_no"] = 5
+    save_course_graph(layout, advanced)
+
+    regressed = deepcopy(valid_graph())
+    regressed["revision_no"] = 3
+    with pytest.raises(WorkspaceError) as excinfo:
+        save_course_graph(layout, regressed)
+    assert excinfo.value.code == "revision_conflict"
+
+    assert load_course_graph(layout)["revision_no"] == 5

@@ -92,4 +92,40 @@ describe("lock and cross-session undo hookup", () => {
 
     await waitFor(() => expect(api.undoGraph).toHaveBeenCalledTimes(1));
   });
+
+  it("rejects editing a content-locked concept before saving", async () => {
+    const api = mockApi({
+      loadGraph: vi
+        .fn<() => Promise<WorkspaceSnapshot | null>>()
+        .mockResolvedValue({
+          nodes: [
+            {
+              id: "00000000-0000-7000-8000-000000000005",
+              title: "极限",
+              note: "note",
+              x: 0,
+              y: 0,
+              positionLocked: false,
+              tone: "branch",
+              locks: { content: true, relations: false, position: false, annotations: false },
+              revisionNo: 1,
+            },
+          ],
+          edges: [],
+          revisionNo: 1,
+        }),
+    });
+    render(<App api={api} />);
+
+    await waitFor(() => expect(nodeButton("极限")).toBeInTheDocument());
+    fireEvent.click(nodeButton("极限"));
+    fireEvent.change(screen.getByLabelText("概念标题"), { target: { value: "被覆盖" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存修改" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("内容已锁定，无法修改");
+    });
+    expect(nodeButton("极限")).toBeInTheDocument();
+    expect(api.saveGraph).not.toHaveBeenCalled();
+  });
 });

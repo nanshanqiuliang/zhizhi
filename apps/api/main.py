@@ -43,6 +43,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 JsonObject = dict[str, Any]
 _LOCAL_ACTOR = {"type": "user", "id": "local-user"}
+_MAX_JSON_BYTES = 10 * 1024 * 1024
 
 
 def _is_uuidv7(value: str) -> bool:
@@ -78,6 +79,7 @@ def _http_error(error: WorkspaceError) -> HTTPException:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code in {
         "patch_revision_conflict",
+        "revision_conflict",
         "target_locked",
         "permission_denied",
         "history_empty",
@@ -384,8 +386,13 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
 
 
 async def _read_json(request: Request) -> JsonObject:
+    body = await request.body()
+    if len(body) > _MAX_JSON_BYTES:
+        raise HTTPException(
+            status_code=422, detail={"code": "graph_invalid", "rule": "body_too_large"}
+        )
     try:
-        payload = await request.json()
+        payload = json.loads(body)
     except (json.JSONDecodeError, ValueError) as error:
         raise HTTPException(status_code=422, detail={"code": "graph_invalid"}) from error
     if not isinstance(payload, dict):

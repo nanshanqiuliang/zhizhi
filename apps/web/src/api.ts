@@ -231,7 +231,7 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
       note: noteAnnotation?.value != null ? String(noteAnnotation.value) : "",
       x: typeof item?.x === "number" ? item.x : 0,
       y: typeof item?.y === "number" ? item.y : 0,
-      positionLocked: locks.position,
+      positionLocked: locks.position || item?.pinned === true,
       tone,
       locks,
       revisionNo: typeof concept.revision_no === "number" ? concept.revision_no : 0,
