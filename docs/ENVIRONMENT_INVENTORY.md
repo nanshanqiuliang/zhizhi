@@ -7,7 +7,7 @@
 
 | Environment ID | 用途 | 状态 | Owner | OS/Region | 当前 Release/Build | Config Fingerprint | 数据分类 | 最近验证 | Runbook |
 |---|---|---|---|---|---|---|---|---|---|
-| local-dev | 本地仓库校验与 Web 预览 | verified_tooling_only | Codex（实现）/项目负责人待定 | Windows x64 / Asia-Shanghai | commit `bd66e8b` / no release | `c6c44958...65e7e` | 合成配置变异；无用户数据 | 2026-08-13 / TR-20260813-002 | 根 README/AGENTS |
+| local-dev | 本地仓库校验、Web 预览与持久化/PDF prototype 人工验证 | verified_prototype | Codex（实现）/项目负责人待定 | Windows x64 / Asia-Shanghai | commit `d56e7ef`+（第 4–5 步）/ no release | 见 `config/llm` fingerprint；无用户数据 | 合成/脱敏 fixture；无真实用户数据 | 2026-08-14 / TR-20260814-005..010 | 根 README/AGENTS + `docs/USER_MANUAL.md` |
 | ci | 声明式 GitHub Actions 门 | declared_not_executed | 待定 | ubuntu-latest（设计值） | — | — | 固定 fixture | 无远端 run | — |
 | test | 未来集成测试 | not_created | 待定 | 待定 | — | — | 合成/脱敏 | — | — |
 | staging | 未来发布候选 | not_created | 待定 | 待定 | — | — | 受控，禁止随意复制生产 | — | — |

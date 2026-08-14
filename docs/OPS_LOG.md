@@ -277,3 +277,13 @@
 - 验证：
 - 遗留风险/Owner/期限：
 ```
+
+## 2026-08-14 12:10 — Windows 下 `uv run pytest` 的 venv 重定位环境缺口
+
+- 关联 ID：WORK-2026-014..018。
+- 环境/版本/build/config：Windows x64 本地；`uv run pytest` 解析到 `E:\知识树\.venv`（旧副本）而 `uv run python -m pytest` 正确解析到 `E:\知识树 - 副本\.venv`，导致 `uv run pytest` 下 `ModuleNotFoundError: No module named 'fastapi'`。
+- 变更或症状：无代码缺陷；纯环境解析歧义。CI 已在干净 ubuntu 上改 `uv run python -m pytest`，本地门/README/AGENTS 同步。
+- 影响：本地必须用 `uv run python -m pytest`；`uv run pytest` 不可信。
+- 证据：`uv run python -m pytest` 224/224；`uv run pytest` 在 fastapi 上 ImportError。
+- 缓解/回滚：无；为环境事实记录，不视为代码问题。
+- 遗留风险/Owner/期限：若未来重装/迁移环境需复核 pytest 可执行文件指向；CI 与本地门统一命令后无行为分叉。
