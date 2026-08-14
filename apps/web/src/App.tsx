@@ -550,9 +550,11 @@ export function App({ api }: { api?: PersistApi }) {
       return;
     }
 
-    // Backend attached: apply through the protected patch gate so the lock is
-    // persisted, enforced, and recorded in the cross-session undo history.
+    // Backend attached: sync the current snapshot first (so a first-run lock
+    // initialises the workspace), then apply the lock through the protected
+    // patch gate so it is persisted, enforced, and recorded in history.
     try {
+      await api.saveGraph(present);
       await api.applyPatch(buildSetLockPatch(present, node, dimension, value));
       const refreshed = await api.loadGraph();
       if (refreshed) {
