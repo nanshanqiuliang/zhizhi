@@ -733,3 +733,21 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   DEVELOPMENT_LOG (3 entries) and OPS_LOG (delivery-check entry).
 - Manual acceptance is handed to the workspace owner via
   `docs/USER_MANUAL.md`; next engineering step is WORK-2026-019 (Step 6).
+
+## Delivery-check finding: main lags 64 commits; CI never executed
+
+- Verified during delivery check on 2026-08-14: `main` still sits at
+  `9e15cb4` (skeleton baseline from WORK-2026-006); the current branch
+  `feature/WORK-2026-018-pdfjs-render` leads `main` by 64 commits containing
+  WORK-2026-002/004/005/011..018. The feature branches form a linear
+  inheritance chain but were never merged to `main`.
+- The CI workflow triggers only on push to `main` or pull requests, so it has
+  never actually run for any delivered work (consistent with
+  ENVIRONMENT_INVENTORY `ci: declared_not_executed`).
+- This is a repository-governance gap owned by WORK-2026-003 (repository,
+  license, branch protection — not started), not a code defect. `main` must
+  NOT be treated as the authority for current state; use
+  `feature/WORK-2026-018-pdfjs-render` and checkpoint.md instead.
+- Recorded in OPS_LOG (2026-08-14 12:30) and ENVIRONMENT_INVENTORY (ci row).
+- Manual acceptance of delivered capabilities proceeds via
+  `docs/USER_MANUAL.md` regardless of branch state.

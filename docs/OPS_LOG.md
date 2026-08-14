@@ -298,3 +298,17 @@
 - 缓解/回滚：回退两个提交仅撤销文档/CI 命令修正；不影响实现与证据。
 - 验证：全量证据校验和核验（含截图/QA 报告/manifest）；早期 TR 校验此前误报为 mismatch 系校验脚本路径/格式问题，非内容漂移。
 - 遗留风险/Owner/期限：人工验收按 `docs/USER_MANUAL.md` 清单执行；第 5 步完成（100%），下一主项第 6 步 WORK-2026-019；真实 Provider/Web 与 owner 接受保持禁用。
+
+## 2026-08-14 12:30 — 交付检查发现：主分支滞后与 CI 未执行
+
+- 关联 ID：WORK-2026-003、WORK-2026-006。
+- 环境/版本/build/config：git main 停在 `9e15cb4`；HEAD（feature/WORK-2026-018）领先 main 64 个提交；CI workflow 仅触发 push main/PR。
+- 变更或症状：非缺陷、非代码问题——交付检查发现的仓库治理缺口：
+  1. main 停留在 WORK-2026-006 骨架基线，WORK-2026-002/004/005/011..018 的全部工作仅在 feature 分支，从未并入 main；
+  2. 分支为线性继承链（每个新 feature 从上一分支切出），但未定义"何时合并 main"的明确门；
+  3. 因所有工作都在 feature 分支，CI（仅 push main/PR 触发）从未实际运行，与 ENVIRONMENT_INVENTORY 的 `declared_not_executed` 一致；
+  4. WORK-2026-003（确定仓库、许可证与分支保护）未开始，合并策略归属其范围。
+- 影响：无运行影响；影响证据可追溯性与 CI 有效性声明。
+- 证据：`git log --oneline main..HEAD | wc -l` = 64；`git branch -a` 列出 12 个 feature 分支；CI 触发条件 `on: push branches [main] / pull_request`。
+- 缓解/回滚：无需回滚；不擅自合并 main（仓库治理属项目负责人决策，归 WORK-2026-003）。本地交付完整性不受影响（证据/日志/测试均在 feature 分支）。
+- 遗留风险/Owner/期限：项目负责人决定 main 合并策略与远端仓库/许可证（WORK-2026-003）；在此之前 main 不作为当前状态的权威指针，以 feature/WORK-2026-018 与 checkpoint 为准。
