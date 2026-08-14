@@ -716,3 +716,20 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   step-by-step manual acceptance checklist the workspace owner can follow.
 - The workspace owner is performing manual acceptance now; any discrepancy
   should be reported and handled as red→fix→re-review.
+
+## Delivery-check closure checkpoint — 2026-08-14 12:20 +08:00
+
+- Two delivery-check passes closed all identified DoD gaps: local-gate
+  commands synced (ruff covers packages/apps; mypy covers packages +
+  apps/api; pytest via `python -m pytest`), README/AGENTS current-status
+  updated, ERROR_CODE_CATALOG gained a verified-codes table (14 codes) and
+  DoD checklist (telemetry metric only open), RISK-2026-013/014 registered,
+  test-reports index now lists TR-004..010, ENVIRONMENT_INVENTORY local-dev
+  updated, CI pytest command unified, and the Windows `uv run pytest`
+  venv-repointing gap documented in OPS_LOG.
+- All 13 TR evidence checksums byte-match their manifests (no drift; earlier
+  mismatch reports were a check-script path/format issue).
+- Commits: `bf35b18` (round 1), `f56c99e` (round 2); logs updated in
+  DEVELOPMENT_LOG (3 entries) and OPS_LOG (delivery-check entry).
+- Manual acceptance is handed to the workspace owner via
+  `docs/USER_MANUAL.md`; next engineering step is WORK-2026-019 (Step 6).

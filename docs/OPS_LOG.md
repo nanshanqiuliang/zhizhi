@@ -287,3 +287,14 @@
 - 证据：`uv run python -m pytest` 224/224；`uv run pytest` 在 fastapi 上 ImportError。
 - 缓解/回滚：无；为环境事实记录，不视为代码问题。
 - 遗留风险/Owner/期限：若未来重装/迁移环境需复核 pytest 可执行文件指向；CI 与本地门统一命令后无行为分叉。
+
+## 2026-08-14 12:20 — 交付检查两轮与第 5 步完成状态
+
+- 关联 ID：WORK-2026-013..018、TR-20260814-005..010。
+- 环境/版本/build/config：commit `bf35b18` + `f56c99e`。
+- 变更或症状：交付检查关闭 DoD 缺口——本地门命令同步、README 能力状态、ERROR_CODE_CATALOG 已验证错误码表、RISK-2026-013/014、test-reports 索引补 TR-004..010、ENVIRONMENT_INVENTORY local-dev 更新、CI pytest 统一 `uv run python -m pytest`、OPS_LOG pytest 环境缺口登记；13 个 TR 证据 checksums 全量核验无漂移。
+- 影响：无部署或常驻服务变化；CI 命令与本地门一致后无行为分叉。
+- 证据：`bf35b18`/`f56c99e`；validator、Ruff、pytest 224/224、Web 20/20、diff-check 全绿；13 个 TR checksums 逐字节匹配。
+- 缓解/回滚：回退两个提交仅撤销文档/CI 命令修正；不影响实现与证据。
+- 验证：全量证据校验和核验（含截图/QA 报告/manifest）；早期 TR 校验此前误报为 mismatch 系校验脚本路径/格式问题，非内容漂移。
+- 遗留风险/Owner/期限：人工验收按 `docs/USER_MANUAL.md` 清单执行；第 5 步完成（100%），下一主项第 6 步 WORK-2026-019；真实 Provider/Web 与 owner 接受保持禁用。

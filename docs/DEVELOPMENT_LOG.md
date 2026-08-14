@@ -276,6 +276,31 @@
 - 回滚：回退 `ff02c3e` 即恢复无启动入口状态（临时脚本仍可用）；`356a75e` 仅文档。
 - 遗留风险与下一步：无新增风险；人工验收清单为端到端补充，自动化未覆盖部分（关闭重开、非默认端口、漂移场景）由用户在真实浏览器按手册执行。
 
+## 2026-08-14 — 收口 PDF.js 渲染验证并标记第 5 步完成
+
+- 关联 ID：WORK-2026-018、TR-20260814-010、REQ-2026-010。
+- 实际变化：生成 TR-20260814-010 报告与 evidence 包（QA attempt 001 FAIL 记录 + P1/P2 修复说明 + 浏览器验证结果），同步全部文档（DEVELOPMENT_LOG、OPS_LOG、ENGINEERING_PLAN、TRACEABILITY_MATRIX、路线图、checkpoint、work-items README、WORK-2026-018 状态），第 5 步标记 100%、MVP 约 70%。
+- 影响模块/接口/schema/migration/prompt：仅文档与证据；无代码/schema/migration/prompt 变化。
+- 验证与证据：`ecd03b4`；收口后 validator、Ruff、pytest 224/224、Web 20/20、浏览器自动检测（CDP 完整渲染/高亮/窄视口 aligned）全绿。
+- 回滚：回退 `ecd03b4` 仅撤销文档收口；不影响实现提交与证据。
+- 遗留风险与下一步：第 5 步完成；下一主项为第 6 步人工编辑安全感（WORK-2026-019），真实 Provider/Web 与 owner 接受保持禁用。
+
+## 2026-08-14 — 交付检查第一轮：同步本地门、错误码、风险与手册
+
+- 关联 ID：WORK-2026-013..018。
+- 实际变化：`bf35b18` 关闭 DoD 缺口——AGENTS.md/README 本地门命令更新（ruff 覆盖 packages/apps、mypy 含 packages+apps/api、pytest 用 `python -m pytest`）；README 当前状态更新为第 4–5 步能力与双终端启动；DEVELOPMENT_LOG 补启动入口/手册条目；ERROR_CODE_CATALOG 新增"已验证实现"表（14 个错误码）并勾选 DoD 清单（仅遥测 metric 留空）；RISK_REGISTER/TRACEABILITY_MATRIX 新增 RISK-2026-013/014；checkpoint 记录启动入口与人工验收交接。
+- 验证与证据：`bf35b18`；validator、Ruff、pytest 224/224、Web 20/20 全绿。
+- 回滚：回退 `bf35b18` 仅撤销文档修正；不影响实现与证据。
+- 遗留风险与下一步：交付检查持续进行（见下一条）。
+
+## 2026-08-14 — 交付检查第二轮：报告索引、环境清单与 CI 命令
+
+- 关联 ID：WORK-2026-013..018、TR-20260814-005..010。
+- 实际变化：`f56c99e`——test-reports/README.md 索引补 TR-004..010；ENVIRONMENT_INVENTORY.md local-dev 更新到第 4–5 步 prototype 状态；CI pytest 统一为 `uv run python -m pytest`（消除 Windows venv 重定位歧义）；OPS_LOG 登记该环境缺口；全量核验 13 个 TR 证据 checksums 逐字节匹配（无漂移）。
+- 验证与证据：`f56c99e`；validator、Ruff、pytest 224/224、Web 20/20 全绿。
+- 回滚：回退 `f56c99e` 仅撤销文档/CI 命令修正；不影响实现与证据。
+- 遗留风险与下一步：人工验收按 `docs/USER_MANUAL.md` 清单执行；第 6 步待建。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
