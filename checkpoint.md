@@ -751,3 +751,34 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Recorded in OPS_LOG (2026-08-14 12:30) and ENVIRONMENT_INVENTORY (ci row).
 - Manual acceptance of delivered capabilities proceeds via
   `docs/USER_MANUAL.md` regardless of branch state.
+
+## Step 6 startup checkpoint — 2026-08-14 16:50 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- Ready work item: `docs/work-items/WORK-2026-019_patch-gate-undo-redo.md`
+  (Ready boundary `4f5fbd3`, red baseline `db3cb26`).
+- Scope: persistent protected GraphPatch commit gate + cross-session LIFO
+  undo/redo + idempotency + atomicity. `apply_graph_patch`/`undo_graph`/
+  `redo_graph` rebuild history from the persisted initial graph
+  (`meta.course_graph_initial`) plus the record log, apply the change through
+  `GraphHistory.apply_patch` (confirmation gate, four-dimension locks, revision
+  conflict, duplicate change_id), and commit graph/record/initial/applied-count
+  (`meta.course_graph_applied`) in one transaction. `save_course_graph` now uses
+  whole-graph-replacement semantics (overwrites initial, clears history).
+- API: `POST .../graph/patches|undo|redo`, `GET .../history`; server pins the
+  trusted actor to `{"type":"user","id":"local-user"}`. New stable errors:
+  `patch_invalid`(422), `patch_revision_conflict`/`target_locked`/
+  `permission_denied`/`history_empty`/`history_conflict`/`record_tampered`/
+  `record_invalid`(409).
+- Verification: targeted gate 13/13 (apply→replay, cross-session undo/redo with
+  monotonic revision 2→3→4, locked-dimension rejection, unconfirmed/stale-base
+  rejection, duplicate change_id, tampered record). Full gates at `49e78eb`:
+  repository validator, Ruff, mypy (scripts 9 + strict packages/api 11), pytest
+  237/237, locked pnpm install/peers/check (Web 20/20)/build all pass.
+- Natural-language Step 6 progress: backend commit gate + undo/redo verified in
+  isolation (approximately 30% of Step 6); front-end patch save + lock/undo UI
+  remain. Overall personal MVP approximately 70%.
+- Exact next action: send the frozen implementation SHA to role-separated QA,
+  add regression tests for any finding, then preserve evidence and move to the
+  front-end patch-save / lock UI work item (WORK-2026-020). Keep real
+  Provider/Web, user data, and owner acceptance disabled.

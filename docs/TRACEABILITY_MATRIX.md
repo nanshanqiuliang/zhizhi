@@ -28,6 +28,7 @@
 | REQ-2026-006/010 / NFR-2026-002 / ADR-0001 | 本地资料可安全导入并注册为资源 | WORK-2026-016 | schema v2 resource/resource_version；受控存储 + 类型/大小/路径守卫 + 去重 | `50b3245` 红灯；`10e104f` 实现；`eee15d0` P2 修复 | TC-IMPORT-001..005 / TR-20260814-008：import 15/15、全仓 208/208、Web 15/15、QA PASS、e2e smoke PASS；PDF 解析/查看器/Anchor 跳转待第 5 步后续 | `docs/USER_MANUAL.md` | 导入 Runbook 待建 | prototype_verified |
 | REQ-2026-010 / NFR-2026-002 / ADR-0001 | PDF 可查看原文页并从节点跳回锚点位置 | WORK-2026-017 | schema v3 resource_segment/anchor；pypdf 页文本；页文本/锚点端点；漂移不误跳 | `53eb2cd` 红灯；`8c3c620` 实现；`267fb7e` P2 修复 | TC-VIEW-001..005 / TR-20260814-009：viewer 10/10、全仓 218/218、Web 18/18、QA PASS、e2e smoke PASS（金标 50 锚点）；PDF.js 渲染/bbox 高亮待后续 | `docs/USER_MANUAL.md` | viewer Runbook 待建 | prototype_verified |
 | REQ-2026-010 / NFR-2026-002 / ADR-0001 | PDF 可视化渲染与锚点区域高亮 | WORK-2026-018 | pdfjs canvas + public worker；bbox 高亮层；file/anchors 端点 | `275d7c6` 红灯；`2601215` 实现；`d56e7ef` P1/P2 修复 | TC-RENDER-001..004 + 浏览器 e2e / TR-20260814-010：224/224、Web 20/20、窄视口 bbox aligned、QA FAIL→修复验证；文本层联动/多页滚动待后续 | `docs/USER_MANUAL.md` | render Runbook 待建 | prototype_verified |
+| NFR-2026-001/003 / REQ-2026-006/008 / ADR-0005 | 锁定项不被覆盖、失败/重启不重复写入、跨会话撤销 | WORK-2026-019 | 持久化 initial graph + applied 栈指针；GraphPatch 确认门 + 四维锁 + 单事务原子 | `4f5fbd3` Ready；`db3cb26` 红灯；`e0a5ed9` 实现；`49e78eb` 格式 | TC-GATE-001..006：apply→重放、跨会话 undo/redo、锁定维度拒绝、重复 change_id、篡改 record_tampered；全仓 237/237、Web 20/20；职责隔离 QA 待执行 | `docs/USER_MANUAL.md`（待更新） | DB/history Runbook 待建 | implemented |
 
 ## 完整性规则
 

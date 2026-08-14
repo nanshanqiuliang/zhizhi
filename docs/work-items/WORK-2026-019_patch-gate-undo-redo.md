@@ -1,7 +1,7 @@
 # WORK-2026-019：受保护的持久化 GraphPatch 提交门与跨会话撤销/重做
 
 ```yaml
-status: ready
+status: implemented
 type: feature
 owner: Codex (persistence + api role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -9,7 +9,7 @@ related_ids: [REQ-2026-006, REQ-2026-008, NFR-2026-001, NFR-2026-003, ADR-0005, 
 target_stage: "阶段 1 / 自然语言第 6 步"
 risk: high
 created_at: 2026-08-14T16:20:00+08:00
-updated_at: 2026-08-14T16:20:00+08:00
+updated_at: 2026-08-14T16:50:00+08:00
 ```
 
 ## 问题与结果
@@ -67,9 +67,9 @@ updated_at: 2026-08-14T16:20:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-019-patch-gate`；Ready 边界提交后先提交失败测试（预期 ImportError/失败），再实现最小 infrastructure + API，最后修复。
+- Commit/PR：分支 `feature/WORK-2026-019-patch-gate`；Ready `4f5fbd3`，红灯 `db3cb26`（apply_graph_patch ImportError），实现 `e0a5ed9`，格式修复 `49e78eb`。
 - Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 schema v3。
-- Test Run：目标 integration/security 红灯 → 绿灯；全仓门（repository validator、Ruff、scripts + strict package mypy、`python -m pytest`、locked pnpm install/peers/check/build）。
+- Test Run：定向 integration/security 13/13（apply→重放、跨会话 undo/redo、锁定维度拒绝、未确认/过期 base revision、重复 change_id、篡改 record_tampered）；全仓门 `49e78eb`（repository validator、Ruff、scripts + strict package mypy、`python -m pytest` 237/237、locked pnpm install/peers/check/build）；职责隔离 QA 待执行。
 - Release：无托管发布；本地 API 可演示受保护提交与撤销。
 - 观察结果：持久化提交门 + 跨会话撤销/重做 prototype 已验证；前端 patch 化保存与锁定/撤销 UI 属后续。
-- 未完成项的新 ID：前端 patch 化保存 + 锁定/撤销 UI、PUT 退役或降级为仅初始化、任意历史点跳转、三方合并。
+- 未完成项的新 ID：前端 patch 化保存 + 锁定/撤销 UI（WORK-2026-020）、PUT 退役或降级为仅初始化、任意历史点跳转、三方合并。

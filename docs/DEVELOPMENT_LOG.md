@@ -301,6 +301,17 @@
 - 回滚：回退 `f56c99e` 仅撤销文档/CI 命令修正；不影响实现与证据。
 - 遗留风险与下一步：人工验收按 `docs/USER_MANUAL.md` 清单执行；第 6 步待建。
 
+## 2026-08-14 — 实现持久化 GraphPatch 提交门与跨会话撤销/重做
+
+- 关联 ID：WORK-2026-019、REQ-2026-006/008、NFR-2026-001/003、ADR-0005、WORK-2026-005/011/013/014。
+- 实际变化：`packages/infrastructure` 新增 `apply_graph_patch`/`undo_graph`/`redo_graph`——从持久化初始图（`meta.course_graph_initial`）+ 记录日志重建历史，经 `GraphHistory.apply_patch`（确认门 + 四维锁 + revision 冲突 + 重复 change_id）后把图/记录/初始图/栈指针（`meta.course_graph_applied`）单事务原子提交；`save_course_graph` 改为整图替换语义（覆盖 initial、清空历史）；`apps/api` 新增 `POST .../graph/patches|undo|redo` 与 `GET .../history`，服务端固定 trusted actor 为 local-user。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api；无新 canonical contract/ADR/migration/prompt；复用 schema v3 的 `meta`/`history_records` 表。
+- 兼容性：旧库（无 initial、history 空）向后兼容，首次 patch 固化 initial；undo/redo 后 revision 保持单调（保留运行时 revision）；幂等拒绝跨会话重复 change_id。
+- 验证与证据：Ready `4f5fbd3`；红灯 `db3cb26`（apply_graph_patch ImportError）；实现 `e0a5ed9` + 格式 `49e78eb`；定向 13/13、全仓 237/237、Web 20/20、validator/Ruff/mypy/锁依赖/构建全绿；职责隔离 QA 待执行。
+- 性能/安全/运维影响：单事务原子防部分写入；record 仅含变化实体 before/after 与语义 hash，不落 reason/secret/来源全文；无网络/Provider/真实用户数据或费用。
+- 回滚：回退 `e0a5ed9` 即回到整图 PUT-only；不改 GraphPatch preview 与纯领域 history；红灯保留。
+- 遗留风险与下一步：前端仍整图 PUT 保存（后端已加整图替换语义）；跨会话撤销/锁定前端 UI 待 WORK-2026-020；职责隔离 QA 签字后生成 TR 证据。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
