@@ -96,3 +96,30 @@ def test_restore_rejects_checksum_mismatch(client: TestClient, tmp_path: Path) -
     response = client.post(f"/api/workspaces/{WORKSPACE_ID}/restore", json={"filename": filename})
     assert response.status_code == 409
     assert response.json()["code"] == "backup_checksum_mismatch"
+
+
+def test_restore_recovers_after_database_lost(client: TestClient, tmp_path: Path) -> None:
+    graph = valid_graph()
+    _put_graph(client, graph)
+    backed = client.post(f"/api/workspaces/{WORKSPACE_ID}/backup")
+    assert backed.status_code == 200
+    filename = Path(backed.json()["backup_path"]).name
+
+    # Simulate a lost database (crash recovery): delete the db file.
+    db_path = tmp_path / WORKSPACE_ID / "knowledge-tree.db"
+    db_path.unlink()
+
+    # The backup list must still be reachable without a live db.
+    listed = client.get(f"/api/workspaces/{WORKSPACE_ID}/backups")
+    assert listed.status_code == 200
+    assert listed.json()["backups"] == [filename]
+
+    # Restoring must recreate the db from the backup.
+    restored = client.post(
+        f"/api/workspaces/{WORKSPACE_ID}/restore", json={"filename": filename}
+    )
+    assert restored.status_code == 200
+
+    loaded = client.get(f"/api/workspaces/{WORKSPACE_ID}/graph")
+    assert loaded.status_code == 200
+    assert loaded.json()["revision_no"] == graph["revision_no"]
