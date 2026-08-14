@@ -8,14 +8,12 @@ tests/e2e/test_deepseek_live_smoke.py behind RUN_LIVE_LLM_TESTS.
 
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import pytest
-
 from knowledge_tree_infrastructure.llm.canonical import (
     Budget,
     CanonicalMessage,
@@ -67,7 +65,11 @@ def make_request(**overrides: Any) -> GenerationRequest:
 
 def test_build_chat_request_serializes_messages_and_tools() -> None:
     request = make_request(
-        tools=(ToolDefinition(name="search_notes", description="search", parameters={"type": "object"}),)
+        tools=(
+            ToolDefinition(
+                name="search_notes", description="search", parameters={"type": "object"}
+            ),
+        )
     )
 
     payload = build_chat_request(
@@ -199,7 +201,9 @@ def test_parse_chat_response_maps_tool_calls() -> None:
     )
 
     assert result.finish_reason == "tool_calls"
-    assert result.tool_calls == (CanonicalToolCall(id="call-1", name="search_notes", arguments={"q": "极限"}),)
+    assert result.tool_calls == (
+        CanonicalToolCall(id="call-1", name="search_notes", arguments={"q": "极限"}),
+    )
 
 
 def test_parse_chat_response_maps_finish_reason_length() -> None:
@@ -207,7 +211,10 @@ def test_parse_chat_response_maps_finish_reason_length() -> None:
         {
             "id": "chatcmpl-125",
             "choices": [
-                {"message": {"role": "assistant", "content": '{"concepts": ['}, "finish_reason": "length"}
+                {
+                    "message": {"role": "assistant", "content": '{"concepts": ['},
+                    "finish_reason": "length",
+                }
             ],
             "usage": {"prompt_tokens": 10, "completion_tokens": 128},
             "model": "deepseek-v4-flash",
@@ -229,8 +236,12 @@ def test_parse_chat_response_maps_finish_reason_length() -> None:
 
 
 def test_sse_stream_parses_deltas_reasoning_and_done() -> None:
+    reasoning = (
+        'data: {"choices":[{"delta":{"role":"assistant",'
+        '"reasoning_content":"想"},"finish_reason":null}]}'
+    )
     lines = [
-        'data: {"choices":[{"delta":{"role":"assistant","reasoning_content":"想"},"finish_reason":null}]}',
+        reasoning,
         "",
         'data: {"choices":[{"delta":{"content":"极"},"finish_reason":null}]}',
         ": keep-alive",
@@ -302,7 +313,7 @@ class _FakeHttp:
             raise response
         return response
 
-    def post_stream(self, path: str, payload: dict[str, Any]) -> list[str]:
+    def post_stream_lines(self, path: str, payload: dict[str, Any]) -> list[str]:
         self.requests.append((path, payload))
         response = self._responses.pop(0)
         if isinstance(response, HttpTransportError):
@@ -313,7 +324,9 @@ class _FakeHttp:
 def _ok_response() -> dict[str, Any]:
     return {
         "id": "chatcmpl-200",
-        "choices": [{"message": {"role": "assistant", "content": "极限是……"}, "finish_reason": "stop"}],
+        "choices": [
+            {"message": {"role": "assistant", "content": "极限是……"}, "finish_reason": "stop"}
+        ],
         "usage": {"prompt_tokens": 11, "completion_tokens": 6},
         "model": "deepseek-v4-flash",
     }
@@ -337,9 +350,7 @@ def test_adapter_generate_end_to_end() -> None:
 
 
 def test_adapter_retries_then_succeeds_on_429() -> None:
-    fake = _FakeHttp(
-        [HttpTransportError(status=429, body="{}"), _ok_response()]
-    )
+    fake = _FakeHttp([HttpTransportError(status=429, body="{}"), _ok_response()])
     adapter = DeepSeekLlmAdapter(
         api_key="test-key",
         http=fake,
@@ -361,7 +372,9 @@ def test_adapter_does_not_retry_on_401() -> None:
     adapter = DeepSeekLlmAdapter(
         api_key="test-key",
         http=fake,
-        config=DeepSeekConfig(model_id="deepseek-v4-flash", max_network_attempts=3, retry_backoff_ms=(0, 0)),
+        config=DeepSeekConfig(
+            model_id="deepseek-v4-flash", max_network_attempts=3, retry_backoff_ms=(0, 0)
+        ),
     )
 
     with pytest.raises(LLMProviderError) as raised:

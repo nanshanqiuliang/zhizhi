@@ -1,9 +1,9 @@
 """LLM port implementations for the Knowledge Tree infrastructure.
 
 Contains the canonical DTOs, stable errors, capability validation,
-resilience helpers, deployment router and the deterministic mock adapter
-(WORK-2026-007). Real protocol adapters and vendor profiles are future work
-and must remain disabled until their documented gates pass.
+resilience helpers, deployment router, the deterministic mock adapter and the
+DeepSeek OpenAI Chat Completions adapter (WORK-2026-007/008). Real provider
+deployments stay `enabled: false` until their documented gates pass.
 """
 
 from .canonical import (
@@ -26,9 +26,11 @@ from .canonical import (
 )
 from .capabilities import capability_fingerprint, check_required_capabilities
 from .errors import LLMProviderError
+from .http_client import HttpJsonClient, HttpTransportError
 from .mock import LlmStreamEvent, MockContinuationStore, MockLlmAdapter, MockScript
 from .resilience import AttemptBudget, CircuitBreaker, backoff_sequence
 from .router import resolve_deployment, select_deployment
+from .vendors.deepseek import DeepSeekConfig, DeepSeekLlmAdapter, map_deepseek_http_error
 
 __all__ = [
     "AttemptBudget",
@@ -38,8 +40,12 @@ __all__ = [
     "CanonicalUsage",
     "CircuitBreaker",
     "ContentPart",
+    "DeepSeekConfig",
+    "DeepSeekLlmAdapter",
     "GenerationRequest",
     "GenerationResult",
+    "HttpJsonClient",
+    "HttpTransportError",
     "LLMProviderError",
     "LlmStreamEvent",
     "MockContinuationStore",
@@ -50,6 +56,7 @@ __all__ = [
     "backoff_sequence",
     "capability_fingerprint",
     "check_required_capabilities",
+    "map_deepseek_http_error",
     "message_from_dict",
     "message_to_dict",
     "request_from_dict",
