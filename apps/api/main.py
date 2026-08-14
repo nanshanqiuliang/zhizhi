@@ -27,6 +27,7 @@ from knowledge_tree_infrastructure.workspace import (
     get_resource_mime,
     import_resource,
     list_anchors,
+    list_backups,
     list_resources,
     load_course_graph,
     load_history_records,
@@ -35,6 +36,7 @@ from knowledge_tree_infrastructure.workspace import (
     redo_graph,
     register_anchor,
     resolve_workspace,
+    restore_backup_by_name,
     save_course_graph,
     search_course_graph,
     undo_graph,
@@ -75,6 +77,10 @@ def _http_error(error: WorkspaceError) -> HTTPException:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "file_not_found":
         return HTTPException(status_code=404, detail={"code": error.code, **error.details})
+    if error.code in {"backup_invalid"}:
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code == "backup_checksum_mismatch":
+        return HTTPException(status_code=409, detail={"code": error.code, **error.details})
     if error.code == "patch_invalid":
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code in {
@@ -223,6 +229,34 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
             load_course_graph(layout)
             backup_path = backup_workspace(layout)
             return {"status": "backed_up", "backup_path": str(backup_path)}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/backups")
+    def get_backups(workspace_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            return {"backups": list_backups(layout)}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/restore")
+    async def post_restore(workspace_id: str, request: Request) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        filename = payload.get("filename")
+        if not isinstance(filename, str) or not filename:
+            raise HTTPException(
+                status_code=422, detail={"code": "backup_invalid", "rule": "filename_missing"}
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            restore_backup_by_name(layout, filename)
+            return {"status": "restored", "filename": filename}
         except WorkspaceError as error:
             raise _http_error(error) from error
 

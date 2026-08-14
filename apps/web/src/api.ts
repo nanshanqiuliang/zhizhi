@@ -80,6 +80,9 @@ export interface PersistApi {
   }>;
   undoGraph(): Promise<{ status: string; revision_no: number }>;
   redoGraph(): Promise<{ status: string; revision_no: number }>;
+  backupGraph(): Promise<{ status: string; backup_path: string }>;
+  listBackups(): Promise<string[]>;
+  restoreBackup(filename: string): Promise<{ status: string }>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -254,7 +257,8 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       const response = await fetch(endpoint);
       if (response.status === 404) return null;
       if (!response.ok) {
-        throw new Error(`load failed: ${response.status}`);
+        const body = await readError(response);
+        throw new Error(body.code ?? `load failed: ${response.status}`);
       }
       return graphToSnapshot((await response.json()) as CanonicalGraph);
     },
@@ -304,6 +308,34 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(body.code ?? `redo failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; revision_no: number };
+    },
+    async backupGraph(): Promise<{ status: string; backup_path: string }> {
+      const response = await fetch(`${endpoint}/backup`, { method: "POST" });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `backup failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; backup_path: string };
+    },
+    async listBackups(): Promise<string[]> {
+      const response = await fetch(`${endpoint}/backups`);
+      if (!response.ok) {
+        throw new Error(`list backups failed: ${response.status}`);
+      }
+      const body = (await response.json()) as { backups: string[] };
+      return body.backups;
+    },
+    async restoreBackup(filename: string): Promise<{ status: string }> {
+      const response = await fetch(`${endpoint}/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `restore failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string };
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/search?q=${encodeURIComponent(query)}`;

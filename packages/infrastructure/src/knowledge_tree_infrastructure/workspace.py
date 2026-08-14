@@ -556,6 +556,32 @@ def restore_backup(layout: WorkspaceLayout, backup_path: Path) -> None:
         raise WorkspaceError("restore_failed", details={"rule": "backup_not_readable"}) from error
 
 
+def list_backups(layout: WorkspaceLayout) -> list[str]:
+    """List backup filenames in newest-first order (checksum sidecars excluded)."""
+
+    if not layout.backups_dir.is_dir():
+        return []
+    return sorted(
+        (path.name for path in layout.backups_dir.glob("*.sqlite3") if path.is_file()),
+        reverse=True,
+    )
+
+
+def restore_backup_by_name(layout: WorkspaceLayout, filename: str) -> None:
+    """Restore a workspace backup by its filename, guarded to the backups dir."""
+
+    if not filename or Path(filename).name != filename or "/" in filename or "\\" in filename:
+        _reject("backup_invalid", rule="backup_name_invalid")
+    backup_path = (layout.backups_dir / filename).resolve()
+    try:
+        backup_path.relative_to(layout.backups_dir.resolve())
+    except ValueError:
+        _reject("backup_invalid", rule="backup_outside_workspace")
+    if not backup_path.is_file():
+        _reject("backup_invalid", rule="backup_missing")
+    restore_backup(layout, backup_path)
+
+
 def export_course_graph(layout: WorkspaceLayout, out_path: Path) -> None:
     """Export the validated CourseGraph as human-readable JSON."""
 

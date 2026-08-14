@@ -37,6 +37,22 @@ const DEFAULT_LOCKS: ConceptLocks = {
   annotations: false,
 };
 
+function saveErrorMessage(code: string): string {
+  switch (code) {
+    case "target_locked":
+      return "保存被拒：该内容已锁定，请先解锁";
+    case "revision_conflict":
+    case "patch_revision_conflict":
+      return "保存被拒：版本冲突，请刷新后重试";
+    case "workspace_corrupt":
+      return "本地数据损坏，请从备份恢复";
+    case "workspace_missing":
+      return "工作区不存在，请重新创建";
+    default:
+      return "保存未完成，请重试";
+  }
+}
+
 function createSampleWorkspace(): WorkspaceSnapshot {
   return {
     nodes: [
@@ -204,6 +220,7 @@ export function App({ api }: { api?: PersistApi }) {
   const [searchStatus, setSearchStatus] = useState<"idle" | "searching" | "done" | "failed">("idle");
   const [resources, setResources] = useState<ResourceInfo[]>([]);
   const [importStatus, setImportStatus] = useState<"idle" | "importing" | "failed">("idle");
+  const [backups, setBackups] = useState<string[]>([]);
   const [viewerResource, setViewerResource] = useState<ResourceInfo | null>(null);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerText, setViewerText] = useState("");
@@ -247,10 +264,15 @@ export function App({ api }: { api?: PersistApi }) {
         }
         setConnection("connected");
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) return;
         setConnection("offline");
-        setStatus("本地服务未连接，当前显示示例知识树");
+        const code = (error as Error).message;
+        setStatus(
+          code === "workspace_corrupt"
+            ? "本地数据损坏，请从备份恢复"
+            : "本地服务未连接，当前显示示例知识树",
+        );
       });
     api
       .listResources()
@@ -282,7 +304,10 @@ export function App({ api }: { api?: PersistApi }) {
       api
         .saveGraph(snapshot)
         .then(() => setSaveState("saved"))
-        .catch(() => setSaveState("failed"));
+        .catch((error) => {
+          setSaveState("failed");
+          setStatus(saveErrorMessage((error as Error).message));
+        });
     }, 600);
   }
 
@@ -326,6 +351,36 @@ export function App({ api }: { api?: PersistApi }) {
       setStatus("导入失败，请检查文件类型与大小");
     } finally {
       event.target.value = "";
+    }
+  }
+
+  async function handleBackup() {
+    if (!api) return;
+    try {
+      await api.backupGraph();
+      const list = await api.listBackups();
+      setBackups(list);
+      setStatus("已备份到本地");
+    } catch (error) {
+      setStatus(`备份失败（${(error as Error).message}）`);
+    }
+  }
+
+  async function handleRestore(filename: string) {
+    if (!api) return;
+    try {
+      await api.restoreBackup(filename);
+      const refreshed = await api.loadGraph();
+      if (refreshed) {
+        setPresent(refreshed);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(refreshed, selectedId);
+        setConnection("connected");
+      }
+      setStatus("已从备份恢复");
+    } catch (error) {
+      setStatus(`恢复失败（${(error as Error).message}）`);
     }
   }
 
@@ -777,6 +832,22 @@ export function App({ api }: { api?: PersistApi }) {
           <div className="session-notice">
             <span aria-hidden="true">◷</span>
             <p><strong>会话内演示</strong>所有修改仅保留在本次会话，刷新页面后会恢复示例。</p>
+            {api && (
+              <div className="backup-actions" aria-label="本地备份与恢复">
+                <button type="button" onClick={() => void handleBackup()}>备份数据</button>
+                {backups.length > 0 && (
+                  <ul className="backup-list">
+                    {backups.map((filename) => (
+                      <li key={filename}>
+                        <button type="button" onClick={() => void handleRestore(filename)}>
+                          恢复 {filename.replace(/^backup-|\.sqlite3$/g, "")}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         </nav>
 

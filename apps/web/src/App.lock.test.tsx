@@ -30,6 +30,9 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),
+    backupGraph: vi.fn(async () => ({ status: "backed_up", backup_path: "b.sqlite3" })),
+    listBackups: vi.fn(async () => []),
+    restoreBackup: vi.fn(async () => ({ status: "restored" })),
     ...overrides,
   };
 }
@@ -127,5 +130,36 @@ describe("lock and cross-session undo hookup", () => {
     });
     expect(nodeButton("极限")).toBeInTheDocument();
     expect(api.saveGraph).not.toHaveBeenCalled();
+  });
+
+  it("shows a specific message when saving hits a lock", async () => {
+    const api = mockApi({
+      saveGraph: vi.fn(async () => {
+        throw new Error("target_locked");
+      }),
+    });
+    render(<App api={api} />);
+
+    await waitFor(() => expect(nodeButton("极限")).toBeInTheDocument());
+    fireEvent.click(nodeButton("极限"));
+    fireEvent.change(screen.getByLabelText("概念标题"), { target: { value: "函数极限" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存修改" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("保存被拒：该内容已锁定");
+    });
+  });
+
+  it("backs up from the sidebar", async () => {
+    const api = mockApi({
+      backupGraph: vi.fn(async () => ({ status: "backed_up", backup_path: "b.sqlite3" })),
+      listBackups: vi.fn(async () => ["backup-20260814T120000Z.sqlite3"]),
+    });
+    render(<App api={api} />);
+
+    const backupButton = screen.getByRole("button", { name: "备份数据" });
+    fireEvent.click(backupButton);
+
+    await waitFor(() => expect(api.backupGraph).toHaveBeenCalledTimes(1));
   });
 });
