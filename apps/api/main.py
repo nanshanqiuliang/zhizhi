@@ -21,10 +21,13 @@ from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     backup_workspace,
     create_workspace,
+    get_page_text,
     import_resource,
+    list_anchors,
     list_resources,
     load_course_graph,
     migrate,
+    parse_pdf_resource,
     resolve_workspace,
     save_course_graph,
     search_course_graph,
@@ -58,6 +61,8 @@ def _http_error(error: WorkspaceError) -> HTTPException:
     if error.code == "search_invalid_query":
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code in {"import_type_rejected", "import_too_large", "import_failed"}:
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code in {"parse_failed", "parse_pending", "page_out_of_range", "source_changed"}:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "workspace_corrupt" and error.details.get("rule") == "course_graph_absent":
         # A workspace without a saved graph is equivalent to "not found".
@@ -204,6 +209,51 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
                         "created_at": info.created_at,
                     }
                     for info in resources
+                ]
+            }
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/resources/{resource_id}/parse")
+    def post_parse(workspace_id: str, resource_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            page_count = parse_pdf_resource(layout, resource_id)
+            return {"status": "parsed", "resource_id": resource_id, "page_count": page_count}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/resources/{resource_id}/pages/{page}")
+    def get_page(workspace_id: str, resource_id: str, page: int) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            segment = get_page_text(layout, resource_id, page)
+            return {
+                "resource_version_id": segment.resource_version_id,
+                "page": segment.page,
+                "text": segment.text,
+                "text_hash": segment.text_hash,
+            }
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/resources/{resource_id}/anchors")
+    def get_anchors(workspace_id: str, resource_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            anchors = list_anchors(layout, resource_id)
+            return {
+                "anchors": [
+                    {
+                        "id": anchor.id,
+                        "resource_id": anchor.resource_id,
+                        "page": anchor.page,
+                        "payload": anchor.payload,
+                    }
+                    for anchor in anchors
                 ]
             }
         except WorkspaceError as error:

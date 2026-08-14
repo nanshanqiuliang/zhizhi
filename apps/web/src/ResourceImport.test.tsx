@@ -19,6 +19,14 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
       created_at: "2026-08-14T00:00:00Z",
     })),
     listResources: vi.fn(async () => []),
+    parsePdf: vi.fn(async () => ({ page_count: 1 })),
+    getPageText: vi.fn(async () => ({
+      resource_version_id: "v",
+      page: 1,
+      text: "text",
+      text_hash: "sha256:x",
+    })),
+    listAnchors: vi.fn(async () => []),
     ...overrides,
   };
   return api;

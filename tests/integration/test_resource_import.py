@@ -47,7 +47,7 @@ def test_migrate_creates_resource_tables(tmp_path: Path) -> None:
             row[0]
             for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
         }
-    assert version == 2
+    assert version == 3
     assert "resource" in tables
     assert "resource_version" in tables
 

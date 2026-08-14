@@ -39,12 +39,28 @@ export type ResourceInfo = {
   created_at: string;
 };
 
+export type PageText = {
+  resource_version_id: string;
+  page: number;
+  text: string;
+  text_hash: string;
+};
+
+export type AnchorRef = {
+  id: string;
+  page: number;
+  label: string;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
   searchGraph(query: string): Promise<SearchResultItem[]>;
   importResource(file: File): Promise<ResourceInfo>;
   listResources(): Promise<ResourceInfo[]>;
+  parsePdf(resourceId: string): Promise<{ page_count: number }>;
+  getPageText(resourceId: string, page: number): Promise<PageText>;
+  listAnchors(resourceId: string): Promise<AnchorRef[]>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -239,6 +255,41 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       }
       const body = (await response.json()) as { resources: ResourceInfo[] };
       return body.resources;
+    },
+    async parsePdf(resourceId: string): Promise<{ page_count: number }> {
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/parse`,
+        { method: "POST" },
+      );
+      if (!response.ok) {
+        throw new Error(`parse failed: ${response.status}`);
+      }
+      return (await response.json()) as { page_count: number };
+    },
+    async getPageText(resourceId: string, page: number): Promise<PageText> {
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/pages/${page}`,
+      );
+      if (!response.ok) {
+        throw new Error(`page failed: ${response.status}`);
+      }
+      return (await response.json()) as PageText;
+    },
+    async listAnchors(resourceId: string): Promise<AnchorRef[]> {
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/anchors`,
+      );
+      if (!response.ok) {
+        throw new Error(`anchors failed: ${response.status}`);
+      }
+      const body = (await response.json()) as {
+        anchors: Array<{ id: string; page: number; payload: { topic_zh?: string } }>;
+      };
+      return body.anchors.map((anchor) => ({
+        id: anchor.id,
+        page: anchor.page,
+        label: anchor.payload.topic_zh ?? `第 ${anchor.page} 页`,
+      }));
     },
   };
 }

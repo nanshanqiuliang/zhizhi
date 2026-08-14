@@ -7,15 +7,12 @@ expected to fail with ImportError.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sqlite3
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-
-from apps.api.main import create_app
 from knowledge_tree_infrastructure.workspace import (
     PageSegment,
     create_workspace,
@@ -27,6 +24,7 @@ from knowledge_tree_infrastructure.workspace import (
     register_anchor,
 )
 
+from apps.api.main import create_app
 from tests.contract.test_graph_contracts import WORKSPACE_ID
 
 ALLOWED_ORIGIN = "http://localhost:5173"
@@ -37,9 +35,7 @@ GOLD_PDF = (
     / "source"
     / "mit-ocw-res-18-001-chapter-02-derivatives.pdf"
 )
-GOLD_JSON = (
-    Path(__file__).resolve().parents[2] / "evals" / "calculus-v1" / "gold.json"
-)
+GOLD_JSON = Path(__file__).resolve().parents[2] / "evals" / "calculus-v1" / "gold.json"
 
 
 @pytest.fixture(scope="module")

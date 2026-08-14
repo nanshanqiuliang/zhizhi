@@ -28,7 +28,7 @@ from knowledge_tree_domain import (
 )
 
 JsonObject = dict[str, Any]
-SUPPORTED_SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSION = 3
 _GRAPH_KEY = "course_graph"
 _MAX_QUERY_LENGTH = 100
 _SNIPPET_LENGTH = 60
@@ -57,6 +57,26 @@ class ResourceInfo:
     byte_size: int
     content_hash: str
     created_at: str
+
+
+@dataclass(frozen=True, slots=True)
+class PageSegment:
+    """A single parsed page of text for a resource version."""
+
+    resource_version_id: str
+    page: int
+    text: str
+    text_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class AnchorRef:
+    """A registered anchor binding a resource page to a payload."""
+
+    id: str
+    resource_id: str
+    page: int
+    payload: dict[str, Any]
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +173,26 @@ def migrate(db_path: Path) -> None:
                 "storage_key TEXT NOT NULL,"
                 "created_at TEXT NOT NULL,"
                 "UNIQUE(resource_id, content_hash))"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS resource_segment ("
+                "id TEXT PRIMARY KEY,"
+                "resource_version_id TEXT NOT NULL,"
+                "page INTEGER NOT NULL,"
+                "text TEXT NOT NULL,"
+                "text_hash TEXT NOT NULL,"
+                "content_hash TEXT NOT NULL,"
+                "created_at TEXT NOT NULL,"
+                "UNIQUE(resource_version_id, page))"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS anchor ("
+                "id TEXT PRIMARY KEY,"
+                "resource_id TEXT NOT NULL,"
+                "page INTEGER NOT NULL,"
+                "payload TEXT NOT NULL,"
+                "created_at TEXT NOT NULL,"
+                "UNIQUE(resource_id, page))"
             )
             conn.execute(f"PRAGMA user_version = {SUPPORTED_SCHEMA_VERSION}")
     except sqlite3.DatabaseError as error:
@@ -594,6 +634,170 @@ def _resource_info(conn: sqlite3.Connection, resource_id: str, version_no: int) 
         content_hash=str(row[4]),
         created_at=str(row[5]),
     )
+
+
+def parse_pdf_resource(layout: WorkspaceLayout, resource_id: str) -> int:
+    """Extract page text from an imported PDF into resource_segment rows."""
+
+    from pypdf import PdfReader
+
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT v.id, v.content_hash, v.storage_key FROM resource_version v "
+                "WHERE v.resource_id=? AND v.id = "
+                "(SELECT current_version_id FROM resource WHERE id=?)",
+                (resource_id, resource_id),
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "resource_not_readable"}
+        ) from error
+    if row is None:
+        _reject("parse_failed", rule="resource_missing")
+    version_id, content_hash, storage_key = str(row[0]), str(row[1]), str(row[2])
+    pdf_path = layout.root / storage_key
+    try:
+        reader = PdfReader(pdf_path, strict=True)
+        segments: list[tuple[str, int, str, str, str]] = []
+        for page_index, page in enumerate(reader.pages, start=1):
+            text = page.extract_text() or ""
+            text_hash = f"sha256:{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
+            segments.append((_uuid7(), page_index, text, text_hash, content_hash))
+    except Exception as error:  # pypdf raises various errors on malformed PDFs
+        raise WorkspaceError("parse_failed", details={"rule": "pdf_not_parseable"}) from error
+    created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    try:
+        with _connect(layout.db_path) as conn:
+            conn.execute("DELETE FROM resource_segment WHERE resource_version_id=?", (version_id,))
+            conn.executemany(
+                "INSERT INTO resource_segment("
+                "id, resource_version_id, page, text, text_hash, content_hash, created_at) "
+                "VALUES(?, ?, ?, ?, ?, ?, ?)",
+                [
+                    (segment_id, version_id, page, text, text_hash, parsed_hash, created_at)
+                    for segment_id, page, text, text_hash, parsed_hash in segments
+                ],
+            )
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError("parse_failed", details={"rule": "database_not_writable"}) from error
+    return len(segments)
+
+
+def get_page_text(layout: WorkspaceLayout, resource_id: str, page: int) -> PageSegment:
+    """Return parsed text for a page, rejecting drift or out-of-range pages."""
+
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT v.id FROM resource_version v "
+                "WHERE v.resource_id=? AND v.id = "
+                "(SELECT current_version_id FROM resource WHERE id=?)",
+                (resource_id, resource_id),
+            ).fetchone()
+            if row is None:
+                _reject("workspace_missing", rule="resource_missing")
+            version_id = str(row[0])
+            max_page = conn.execute(
+                "SELECT MAX(page) FROM resource_segment WHERE resource_version_id=?",
+                (version_id,),
+            ).fetchone()[0]
+            if max_page is None:
+                _reject("parse_pending", rule="resource_not_parsed")
+            segment_row = conn.execute(
+                "SELECT page, text, text_hash, content_hash FROM resource_segment "
+                "WHERE resource_version_id=? AND page=?",
+                (version_id, page),
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "resource_not_readable"}
+        ) from error
+    if segment_row is None:
+        _reject("page_out_of_range", rule="page_not_in_range")
+    segment = PageSegment(
+        resource_version_id=version_id,
+        page=int(segment_row[0]),
+        text=str(segment_row[1]),
+        text_hash=str(segment_row[2]),
+    )
+    _check_drift(layout, version_id, str(segment_row[3]))
+    return segment
+
+
+def _check_drift(layout: WorkspaceLayout, version_id: str, parsed_hash: str) -> None:
+    # Compare the hash recorded at parse time against the resource_version's
+    # current hash; a change means the source content drifted and any anchor
+    # located on the old content must not be trusted.
+    try:
+        with _connect(layout.db_path) as conn:
+            row = conn.execute(
+                "SELECT content_hash FROM resource_version WHERE id=?",
+                (version_id,),
+            ).fetchone()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "resource_not_readable"}
+        ) from error
+    if row is None or str(row[0]) != parsed_hash:
+        _reject("source_changed", rule="content_hash_mismatch")
+
+
+def register_anchor(
+    layout: WorkspaceLayout,
+    *,
+    resource_id: str,
+    page: int,
+    payload: Mapping[str, Any],
+) -> AnchorRef:
+    """Register a page anchor for a resource (idempotent per resource+page)."""
+
+    anchor_id = _uuid7()
+    created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    try:
+        with _connect(layout.db_path) as conn:
+            conn.execute(
+                "INSERT INTO anchor(id, resource_id, page, payload, created_at) "
+                "VALUES(?, ?, ?, ?, ?) "
+                "ON CONFLICT(resource_id, page) DO UPDATE SET payload=excluded.payload",
+                (
+                    anchor_id,
+                    resource_id,
+                    page,
+                    json.dumps(dict(payload), ensure_ascii=False),
+                    created_at,
+                ),
+            )
+            return AnchorRef(
+                id=anchor_id, resource_id=resource_id, page=page, payload=dict(payload)
+            )
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError("import_failed", details={"rule": "database_not_writable"}) from error
+
+
+def list_anchors(layout: WorkspaceLayout, resource_id: str) -> list[AnchorRef]:
+    """List registered anchors for a resource ordered by page."""
+
+    try:
+        with _connect(layout.db_path) as conn:
+            rows = conn.execute(
+                "SELECT id, resource_id, page, payload FROM anchor "
+                "WHERE resource_id=? ORDER BY page",
+                (resource_id,),
+            ).fetchall()
+            return [
+                AnchorRef(
+                    id=str(row[0]),
+                    resource_id=str(row[1]),
+                    page=int(row[2]),
+                    payload=json.loads(str(row[3])),
+                )
+                for row in rows
+            ]
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "anchors_not_readable"}
+        ) from error
 
 
 def _safe_display_name(name: str) -> str:

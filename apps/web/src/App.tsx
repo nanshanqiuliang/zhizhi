@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
+  AnchorRef,
   ConceptNode,
   PersistApi,
   ResourceInfo,
@@ -193,6 +194,11 @@ export function App({ api }: { api?: PersistApi }) {
   const [searchStatus, setSearchStatus] = useState<"idle" | "searching" | "done" | "failed">("idle");
   const [resources, setResources] = useState<ResourceInfo[]>([]);
   const [importStatus, setImportStatus] = useState<"idle" | "importing" | "failed">("idle");
+  const [viewerResource, setViewerResource] = useState<ResourceInfo | null>(null);
+  const [viewerPage, setViewerPage] = useState(1);
+  const [viewerText, setViewerText] = useState("");
+  const [viewerStatus, setViewerStatus] = useState<"idle" | "loading" | "failed" | "drift">("idle");
+  const [anchors, setAnchors] = useState<AnchorRef[]>([]);
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -308,6 +314,54 @@ export function App({ api }: { api?: PersistApi }) {
       setStatus("导入失败，请检查文件类型与大小");
     } finally {
       event.target.value = "";
+    }
+  }
+
+  async function openViewer(resource: ResourceInfo) {
+    if (!api) return;
+    setViewerResource(resource);
+    setViewerPage(1);
+    setViewerText("");
+    setViewerStatus("loading");
+    try {
+      const [page, anchorList] = await Promise.all([
+        api.getPageText(resource.id, 1),
+        api.listAnchors(resource.id),
+      ]);
+      setViewerText(page.text);
+      setAnchors(anchorList);
+      setViewerStatus("idle");
+    } catch {
+      setViewerStatus("failed");
+    }
+  }
+
+  async function changeViewerPage(page: number) {
+    if (!api || !viewerResource) return;
+    if (page < 1) return;
+    setViewerPage(page);
+    setViewerStatus("loading");
+    try {
+      const next = await api.getPageText(viewerResource.id, page);
+      setViewerText(next.text);
+      setViewerStatus("idle");
+    } catch {
+      setViewerStatus("drift");
+      setViewerText("");
+    }
+  }
+
+  async function jumpToAnchor(anchor: AnchorRef) {
+    if (!api || !viewerResource) return;
+    setViewerPage(anchor.page);
+    setViewerStatus("loading");
+    try {
+      const page = await api.getPageText(viewerResource.id, anchor.page);
+      setViewerText(page.text);
+      setViewerStatus("idle");
+    } catch {
+      setViewerStatus("drift");
+      setViewerText("");
     }
   }
 
@@ -588,10 +642,19 @@ export function App({ api }: { api?: PersistApi }) {
               {resources.map((resource) => (
                 <li key={resource.id}>
                   <span className="resource-icon" aria-hidden="true">📄</span>
-                  <span>
+                  <span className="resource-meta">
                     <strong>{resource.display_name}</strong>
                     <small>{resource.mime} · {(resource.byte_size / 1024).toFixed(1)} KB</small>
                   </span>
+                  {resource.mime === "application/pdf" && (
+                    <button
+                      type="button"
+                      className="resource-open"
+                      onClick={() => openViewer(resource)}
+                    >
+                      打开
+                    </button>
+                  )}
                 </li>
               ))}
               {resources.length === 0 && importStatus !== "importing" && (
@@ -708,6 +771,46 @@ export function App({ api }: { api?: PersistApi }) {
           </div>
         </section>
       </div>
+
+      {viewerResource && (
+        <section className="pdf-viewer" aria-label="资料查看器">
+          <header className="viewer-header">
+            <div>
+              <p className="overline">资料查看器</p>
+              <strong>{viewerResource.display_name}</strong>
+            </div>
+            <div className="viewer-controls">
+              <button type="button" onClick={() => changeViewerPage(viewerPage - 1)} disabled={viewerPage <= 1}>← 上一页</button>
+              <span>第 {viewerPage} 页</span>
+              <button type="button" onClick={() => changeViewerPage(viewerPage + 1)}>下一页 →</button>
+              <button type="button" className="viewer-close" onClick={() => setViewerResource(null)}>关闭</button>
+            </div>
+          </header>
+          {viewerStatus === "drift" && (
+            <p className="viewer-warning">资料已变化，无法定位：请重新导入或查看最新版本。</p>
+          )}
+          {viewerStatus === "failed" && (
+            <p className="viewer-warning">无法读取该资料，请确认文件已解析。</p>
+          )}
+          <div className="viewer-body" aria-live="polite">
+            {viewerStatus === "loading" ? "加载中…" : <pre>{viewerText}</pre>}
+          </div>
+          {anchors.length > 0 && (
+            <nav className="anchor-list" aria-label="锚点目录">
+              <p className="overline">锚点目录</p>
+              <ul>
+                {anchors.map((anchor) => (
+                  <li key={anchor.id}>
+                    <button type="button" onClick={() => jumpToAnchor(anchor)}>
+                      第 {anchor.page} 页 · {anchor.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
+        </section>
+      )}
 
       <footer className="statusbar">
         <p role="status" aria-live="polite"><i aria-hidden="true" />{status}</p>

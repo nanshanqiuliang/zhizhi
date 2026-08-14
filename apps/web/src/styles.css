@@ -1051,3 +1051,124 @@ a:focus-visible {
   color: #9aa69e;
   font-size: 0.78rem;
 }
+
+/* --- WORK-2026-017: PDF page-text viewer --- */
+
+.resource-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.resource-open {
+  padding: 4px 9px;
+  border: 1px solid #9db3a5;
+  border-radius: 7px;
+  background: #f4f7f2;
+  color: #3c5a4a;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.resource-open:hover {
+  background: #ecf2ec;
+}
+
+.pdf-viewer {
+  margin: 18px 28px 6px;
+  border: 1px solid #d7ded5;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgb(56 72 61 / 8%);
+  overflow: hidden;
+}
+
+.viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e5eae3;
+  background: #f4f7f2;
+}
+
+.viewer-header strong {
+  font-size: 0.95rem;
+}
+
+.viewer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewer-controls button,
+.viewer-close {
+  padding: 5px 11px;
+  border: 1px solid #cfd8d0;
+  border-radius: 7px;
+  background: #fff;
+  color: #2b3b31;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.viewer-controls button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.viewer-body {
+  max-height: 420px;
+  overflow: auto;
+  padding: 16px 20px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #2b3b31;
+}
+
+.viewer-body pre {
+  margin: 0;
+  font-family: "Noto Serif SC", Georgia, serif;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.viewer-warning {
+  margin: 0;
+  padding: 10px 18px;
+  background: #fdf3ec;
+  color: #a05a3a;
+  font-size: 0.84rem;
+}
+
+.anchor-list {
+  padding: 10px 18px 14px;
+  border-top: 1px solid #eef1ec;
+}
+
+.anchor-list ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.anchor-list li + li {
+  margin-top: 4px;
+}
+
+.anchor-list button {
+  width: 100%;
+  text-align: left;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #3c5a4a;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.anchor-list button:hover {
+  background: #f0f4ef;
+}
