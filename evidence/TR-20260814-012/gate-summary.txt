@@ -1,0 +1,24 @@
+TR-20260814-012 / WORK-2026-021
+reviewed commit: 2cfa88372cd9244753c0b5e50216ce70d22d98b8
+qa attempt-001 commit: b962978d1de2e5635b6b7ec30ce457c36c6f6fb6
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 11 source files)
+pytest: PASS (249/249; backup_api 6/6)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (27/27, incl api URL contract)
+web production build: PASS
+QA attempt 001 (b962978): FAIL 1 P0 + 1 P1 + 5 P2
+  P0: front-end backup/restore/history URLs hit /graph/* -> fixed (workspaceBase)
+  P1: restore skipped checksum when sidecar missing -> fixed (backup_checksum_missing)
+  P2-2: recovery unreachable when db lost -> fixed (_recovery_layout + db-lost test)
+  P2-3: handleRestore not refreshing history -> fixed
+  P2-4: missing checksum/URL contract tests -> fixed
+  P2-5: contradictory session notice -> fixed (split by api presence)
+  P2-1: post_restore sync IO -> boundary (single-user local)
+  nit: same-second backup overwrite -> fixed (millisecond stamp)
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test dirs only

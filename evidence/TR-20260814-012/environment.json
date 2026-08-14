@@ -1,0 +1,12 @@
+{
+  "os": "Windows x64 (Asia/Shanghai)",
+  "python": "3.12.6",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "git": "2.53.0.windows.2",
+  "branch": "feature/WORK-2026-019-patch-gate",
+  "reviewed_commit": "2cfa88372cd9244753c0b5e50216ce70d22d98b8",
+  "database": "sqlite3 stdlib (WAL), local test dirs only",
+  "network_used": false,
+  "live_provider": "none"
+}
