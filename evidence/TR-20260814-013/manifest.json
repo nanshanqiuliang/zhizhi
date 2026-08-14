@@ -1,0 +1,33 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-013",
+  "created_at": "2026-08-14T20:15:00+08:00",
+  "reviewed_commit": "71066219935528da4e5e3ebbbadfd624b3e661e5",
+  "qa_attempt001_commit": "ab50aa280558dd4bd08738c0b83da88c84bfadee",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": "superseding",
+    "attempt001": {
+      "path": "ai-diff-save-qa-attempt-001.md",
+      "reviewed_commit": "ab50aa280558dd4bd08738c0b83da88c84bfadee",
+      "decision": "fail",
+      "findings": "3 P1 (relations-lock cascade, duplicate update_concept, missing new layout) + 2 P2"
+    },
+    "post_review_fix": {
+      "commit": "71066219935528da4e5e3ebbbadfd624b3e661e5",
+      "note": "P1-1/1-2/1-3 fixed with regressions; P2-1/P2-2 recorded as boundaries; superseding review PASS"
+    }
+  },
+  "files": [
+    "ai-diff-save-qa-attempt-001.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false
+}

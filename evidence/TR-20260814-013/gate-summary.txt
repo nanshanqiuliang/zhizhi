@@ -1,0 +1,22 @@
+TR-20260814-013 / WORK-2026-022
+reviewed commit: 71066219935528da4e5e3ebbbadfd624b3e661e5
+qa attempt-001 commit: ab50aa280558dd4bd08738c0b83da88c84bfadee
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 11 source files)
+pytest: PASS (256/256; diff_save_undo 4/4, graph_patch delete 3/3)
+pnpm frozen install and peer check: PASS
+contracts-ts generate/check: PASS (drift resolved)
+web check/test: PASS (27/27)
+web production build: PASS
+QA attempt 001 (ab50aa2): FAIL 3 P1 + 2 P2
+  P1-1: delete_concept cascade skipped surviving endpoint relations lock -> fixed
+  P1-2: duplicate update_concept (label + review fields) -> merged
+  P1-3: new concept layout_item dropped -> emit set_layout_item
+  P2-1: same-id edge field change falls through to whole-graph replace -> boundary
+  P2-2: lock downgrade == user unlock -> design boundary
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test dirs only
