@@ -81,7 +81,7 @@ describe("knowledge tree persistence hookup", () => {
     render(<App api={api} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/本地服务未连接/)).toBeInTheDocument();
+      expect(screen.getAllByText(/本地服务未连接/).length).toBeGreaterThan(0);
     });
     expect(screen.getAllByRole("button", { name: /概念：/ })).toHaveLength(8);
   });

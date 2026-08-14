@@ -1,24 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type ConceptNode = {
-  id: string;
-  title: string;
-  note: string;
-  x: number;
-  y: number;
-  positionLocked: boolean;
-  tone: "root" | "branch" | "leaf";
-};
-
-type ConceptEdge = {
-  from: string;
-  to: string;
-};
-
-type WorkspaceSnapshot = {
-  nodes: ConceptNode[];
-  edges: ConceptEdge[];
-};
+import type { ConceptNode, PersistApi, WorkspaceSnapshot } from "./api";
 
 type DragState = {
   nodeId: string;
@@ -190,7 +172,7 @@ function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | 
   );
 }
 
-export function App() {
+export function App({ api }: { api?: PersistApi }) {
   const [present, setPresent] = useState<WorkspaceSnapshot>(() => createSampleWorkspace());
   const [past, setPast] = useState<WorkspaceSnapshot[]>([]);
   const [future, setFuture] = useState<WorkspaceSnapshot[]>([]);
@@ -198,9 +180,12 @@ export function App() {
   const [titleDraft, setTitleDraft] = useState("连续性与可导性");
   const [noteDraft, setNoteDraft] = useState("从函数、极限出发，理解连续与可导之间的关系。");
   const [status, setStatus] = useState("已载入示例知识树，可以开始编辑");
+  const [connection, setConnection] = useState<"idle" | "connected" | "offline">("idle");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selectedNode = present.nodes.find((node) => node.id === selectedId) ?? present.nodes[0];
   const nodeById = useMemo(
@@ -214,11 +199,62 @@ export function App() {
     viewport.scrollLeft = Math.max(0, selectedNode.x + 75 - viewport.clientWidth / 2);
   }, [selectedId, selectedNode.x]);
 
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    api
+      .loadGraph()
+      .then((saved) => {
+        if (cancelled) return;
+        if (saved) {
+          setPresent(saved);
+          const preferred = saved.nodes[0] ?? present.nodes[0];
+          setSelectedId(preferred.id);
+          setTitleDraft(preferred.title);
+          setNoteDraft(preferred.note);
+          setStatus("已从本地恢复保存的知识树");
+        } else {
+          setStatus("本地暂无保存内容，当前显示示例知识树");
+        }
+        setConnection("connected");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setConnection("offline");
+        setStatus("本地服务未连接，当前显示示例知识树");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // api is a stable prop for the lifetime of the app; present is intentionally
+    // captured for the initial fallback only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  function scheduleAutoSave(snapshot: WorkspaceSnapshot) {
+    if (!api) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaveState("saving");
+    saveTimer.current = setTimeout(() => {
+      api
+        .saveGraph(snapshot)
+        .then(() => setSaveState("saved"))
+        .catch(() => setSaveState("failed"));
+    }, 600);
+  }
+
   function commit(next: WorkspaceSnapshot, message: string) {
     setPast([...past, present]);
     setPresent(next);
     setFuture([]);
     setStatus(message);
+    scheduleAutoSave(next);
   }
 
   function selectNode(nodeId: string) {
@@ -381,6 +417,12 @@ export function App() {
     setPast([...past, active.before]);
     setFuture([]);
     setStatus("已移动概念节点");
+    scheduleAutoSave({
+      ...present,
+      nodes: present.nodes.map((node) =>
+        node.id === active.nodeId ? { ...node, x: active.currentX, y: active.currentY } : node,
+      ),
+    });
   }
 
   return (
@@ -544,7 +586,19 @@ export function App() {
 
       <footer className="statusbar">
         <p role="status" aria-live="polite"><i aria-hidden="true" />{status}</p>
-        <span>本地演示 · 未连接数据库</span>
+        <span className="persistence-state">
+          {connection === "offline"
+            ? "本地服务未连接"
+            : saveState === "saving"
+              ? "保存中…"
+              : saveState === "failed"
+                ? "保存失败"
+                : saveState === "saved"
+                  ? "已保存到本地"
+                  : connection === "connected"
+                    ? "已连接本地数据库"
+                    : "本地演示 · 未连接数据库"}
+        </span>
       </footer>
     </main>
   );

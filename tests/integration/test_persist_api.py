@@ -13,14 +13,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from apps.api.main import create_app
-from knowledge_tree_infrastructure.workspace import (
-    WorkspaceError,
-    create_workspace,
-    load_course_graph,
-    migrate,
-    save_course_graph,
-)
-
 from tests.contract.test_graph_contracts import WORKSPACE_ID, valid_graph
 
 ALLOWED_ORIGIN = "http://localhost:5173"

@@ -29,11 +29,11 @@ jobs:
       - name: Validate repository, graph/LLM contracts, and calculus review packet
         run: uv run python -m scripts.validate_repository
       - name: Format check
-        run: uv run ruff format --check packages scripts tests
+        run: uv run ruff format --check packages scripts tests apps
       - name: Lint
         run: uv run ruff check .
       - name: Type check
-        run: uv run mypy scripts && uv run mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src
+        run: uv run mypy scripts && uv run mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
       - name: Test
         run: uv run pytest
 
