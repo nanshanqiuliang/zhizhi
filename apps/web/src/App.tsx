@@ -403,14 +403,25 @@ export function App({ api }: { api?: PersistApi }) {
     setViewerPage(1);
     setViewerText("");
     setActiveAnchor(null);
+    setAnchors([]);
     setViewerStatus("loading");
+    if (resource.mime === "application/pdf") {
+      try {
+        const [page, anchorList] = await Promise.all([
+          api.getPageText(resource.id, 1),
+          api.listAnchors(resource.id),
+        ]);
+        setViewerText(page.text);
+        setAnchors(anchorList);
+        setViewerStatus("idle");
+      } catch {
+        setViewerStatus("failed");
+      }
+      return;
+    }
+    // Markdown/TXT: read the raw file text (no paging/rendering/anchors).
     try {
-      const [page, anchorList] = await Promise.all([
-        api.getPageText(resource.id, 1),
-        api.listAnchors(resource.id),
-      ]);
-      setViewerText(page.text);
-      setAnchors(anchorList);
+      setViewerText(await api.getResourceText(resource.id));
       setViewerStatus("idle");
     } catch {
       setViewerStatus("failed");
@@ -829,7 +840,7 @@ export function App({ api }: { api?: PersistApi }) {
                     <strong>{resource.display_name}</strong>
                     <small>{resource.mime} · {(resource.byte_size / 1024).toFixed(1)} KB</small>
                   </span>
-                  {resource.mime === "application/pdf" && (
+                  {(resource.mime === "application/pdf" || resource.mime.startsWith("text/")) && (
                     <button
                       type="button"
                       className="resource-open"
@@ -1002,23 +1013,27 @@ export function App({ api }: { api?: PersistApi }) {
               <strong>{viewerResource.display_name}</strong>
             </div>
             <div className="viewer-controls">
-              <button type="button" onClick={() => changeViewerPage(viewerPage - 1)} disabled={viewerPage <= 1}>← 上一页</button>
-              <span>第 {viewerPage} 页</span>
-              <button type="button" onClick={() => changeViewerPage(viewerPage + 1)}>下一页 →</button>
-              <button
-                type="button"
-                className={viewerMode === "text" ? "viewer-mode active" : "viewer-mode"}
-                onClick={() => setViewerMode("text")}
-              >
-                文本
-              </button>
-              <button
-                type="button"
-                className={viewerMode === "render" ? "viewer-mode active" : "viewer-mode"}
-                onClick={() => setViewerMode("render")}
-              >
-                渲染
-              </button>
+              {viewerResource.mime === "application/pdf" && (
+                <>
+                  <button type="button" onClick={() => changeViewerPage(viewerPage - 1)} disabled={viewerPage <= 1}>← 上一页</button>
+                  <span>第 {viewerPage} 页</span>
+                  <button type="button" onClick={() => changeViewerPage(viewerPage + 1)}>下一页 →</button>
+                  <button
+                    type="button"
+                    className={viewerMode === "text" ? "viewer-mode active" : "viewer-mode"}
+                    onClick={() => setViewerMode("text")}
+                  >
+                    文本
+                  </button>
+                  <button
+                    type="button"
+                    className={viewerMode === "render" ? "viewer-mode active" : "viewer-mode"}
+                    onClick={() => setViewerMode("render")}
+                  >
+                    渲染
+                  </button>
+                </>
+              )}
               <button type="button" className="viewer-close" onClick={() => setViewerResource(null)}>关闭</button>
             </div>
           </header>

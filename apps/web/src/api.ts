@@ -79,6 +79,7 @@ export interface PersistApi {
   getPageText(resourceId: string, page: number): Promise<PageText>;
   listAnchors(resourceId: string): Promise<AnchorRef[]>;
   getFileUrl(resourceId: string): string;
+  getResourceText(resourceId: string): Promise<string>;
   applyPatch(patch: Record<string, unknown>): Promise<{
     status: string;
     change_id: string;
@@ -435,6 +436,15 @@ export function httpPersistApi(baseUrl: string): PersistApi {
     },
     getFileUrl(resourceId: string): string {
       return `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/file`;
+    },
+    async getResourceText(resourceId: string): Promise<string> {
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/file`,
+      );
+      if (!response.ok) {
+        throw new Error(`resource text failed: ${response.status}`);
+      }
+      return await response.text();
     },
   };
 }

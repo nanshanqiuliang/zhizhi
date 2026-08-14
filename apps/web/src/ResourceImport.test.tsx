@@ -28,6 +28,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
     })),
     listAnchors: vi.fn(async () => []),
     getFileUrl: vi.fn(() => "http://127.0.0.1:8000/file.pdf"),
+    getResourceText: vi.fn(async () => "text content"),
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "00000000-0000-7000-8100-000000000099", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),
@@ -91,6 +92,34 @@ describe("resource import", () => {
 
     await waitFor(() => {
       expect(screen.getAllByText(/导入失败/).length).toBeGreaterThan(0);
+    });
+  });
+
+  it("opens a markdown resource in the text viewer", async () => {
+    const api = mockApi({
+      listResources: vi.fn(
+        async (): Promise<ResourceInfo[]> => [
+          {
+            id: "00000000-0000-7000-8100-000000000001",
+            display_name: "导数讲义.md",
+            mime: "text/markdown",
+            byte_size: 120,
+            content_hash: "sha256:abc",
+            created_at: "2026-08-14T00:00:00Z",
+          },
+        ],
+      ),
+      getResourceText: vi.fn(async () => "# 极限\n这是笔记内容"),
+    });
+    render(<App api={api} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("导数讲义.md")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "打开" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/这是笔记内容/)).toBeInTheDocument();
     });
   });
 });
