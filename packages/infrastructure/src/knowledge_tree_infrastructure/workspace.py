@@ -525,7 +525,9 @@ def _convert_domain_error(error: ValueError) -> WorkspaceError:
 def backup_workspace(layout: WorkspaceLayout) -> Path:
     """Create a consistent online backup plus a checksum sidecar file."""
 
-    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    # Millisecond-precision stamp so two backups in the same second cannot
+    # overwrite each other.
+    stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime()) + f"{int(time.time() * 1000) % 1000:03d}Z"
     backup_path = layout.backups_dir / f"backup-{stamp}.sqlite3"
     try:
         with _connect(layout.db_path) as source, _connect(backup_path) as target:
