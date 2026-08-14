@@ -852,7 +852,10 @@ def get_resource_file_path(layout: WorkspaceLayout, resource_id: str) -> Path:
     storage_key = str(row[0])
     if not _storage_key_within(layout, storage_key):
         _reject("file_not_found", rule="storage_key_unsafe")
-    return layout.root / storage_key
+    file_path = layout.root / storage_key
+    if not file_path.is_file():
+        _reject("file_not_found", rule="file_absent")
+    return file_path
 
 
 def get_resource_mime(layout: WorkspaceLayout, resource_id: str) -> str:

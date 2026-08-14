@@ -371,6 +371,7 @@ export function App({ api }: { api?: PersistApi }) {
     } catch {
       setViewerStatus("drift");
       setViewerText("");
+      setActiveAnchor(null);
     }
   }
 

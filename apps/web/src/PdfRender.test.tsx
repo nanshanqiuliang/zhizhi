@@ -16,9 +16,17 @@ vi.mock("./PdfRenderer", () => ({
     page: number;
     activeAnchor: AnchorRef | null;
   }) => (
-    <div aria-label="PDF 渲染视图">
+    <div aria-label="PDF 渲染视图" data-page={page}>
       <canvas aria-label="PDF 页面画布" data-page={page} />
-      {activeAnchor?.bboxNorm && <div aria-label="锚点高亮区域" />}
+      {activeAnchor?.bboxNorm && (
+        <div
+          aria-label="锚点高亮区域"
+          data-left={Math.round(activeAnchor.bboxNorm[0] * 100)}
+          data-top={Math.round(activeAnchor.bboxNorm[1] * 100)}
+          data-width={Math.round((activeAnchor.bboxNorm[2] - activeAnchor.bboxNorm[0]) * 100)}
+          data-height={Math.round((activeAnchor.bboxNorm[3] - activeAnchor.bboxNorm[1]) * 100)}
+        />
+      )}
     </div>
   ),
 }));
@@ -109,5 +117,10 @@ describe("pdf.js visual render and bbox highlight", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("锚点高亮区域")).toBeInTheDocument();
     });
+    const highlight = screen.getByLabelText("锚点高亮区域");
+    expect(highlight).toHaveAttribute("data-left", "10");
+    expect(highlight).toHaveAttribute("data-top", "20");
+    expect(highlight).toHaveAttribute("data-width", "50");
+    expect(highlight).toHaveAttribute("data-height", "15");
   });
 });

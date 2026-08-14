@@ -67,3 +67,18 @@ def test_file_endpoint_non_pdf_resource_rejected(tmp_path: Path) -> None:
     # endpoint itself requires an application/pdf resource. This test just
     # confirms the guard exists at the infrastructure layer.
     assert info.content_hash.startswith("sha256:")
+
+
+def test_file_endpoint_missing_file_on_disk_404(tmp_path: Path) -> None:
+    workspace = create_workspace(tmp_path / "data" / WORKSPACE_ID)
+    migrate(workspace.db_path)
+    info = import_resource(workspace, display_name="ghost.pdf", content=b"%PDF-1.7 ghost")
+    # Remove the stored file but keep the DB row to simulate disk loss.
+    for child in (workspace.root / "resources").rglob("*"):
+        if child.is_file():
+            child.unlink()
+    app = create_app(data_root=tmp_path / "data", allowed_origins=[ALLOWED_ORIGIN])
+    client = TestClient(app)
+    response = client.get(f"/api/workspaces/{WORKSPACE_ID}/resources/{info.id}/file")
+    assert response.status_code == 404
+    assert response.json()["code"] == "file_not_found"

@@ -52,12 +52,12 @@ export function PdfRenderer({ fileUrl, page, activeAnchor }: PdfRendererProps) {
     <div className="pdf-render" aria-label="PDF 渲染视图">
       <div
         className="pdf-page"
-        style={pageSize ? { width: pageSize.width, height: pageSize.height } : undefined}
+        style={pageSize ? { width: pageSize.width } : undefined}
       >
         <canvas
           ref={canvasRef}
           aria-label="PDF 页面画布"
-          style={pageSize ? { width: pageSize.width, height: pageSize.height } : undefined}
+          style={pageSize ? { width: pageSize.width } : undefined}
         />
         {status === "loading" && (
           <div className="pdf-overlay" aria-label="PDF 渲染中">正在渲染 PDF…</div>
