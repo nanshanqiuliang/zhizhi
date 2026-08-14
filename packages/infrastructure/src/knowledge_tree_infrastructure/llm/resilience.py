@@ -7,8 +7,57 @@ helper is deterministic given its inputs so tests never flake.
 from __future__ import annotations
 
 import random
+from dataclasses import dataclass
 
 from .errors import LLMProviderError
+
+
+@dataclass(frozen=True, slots=True)
+class Pricing:
+    """Per-token price snapshot in USD per million tokens.
+
+    Prices are a deploy-time configuration snapshot, never hard-coded in
+    business code; recalibrate when the provider updates its price list.
+    """
+
+    input_usd_per_mtok: float
+    output_usd_per_mtok: float
+
+
+def estimate_cost_usd(input_tokens: int, output_tokens: int, pricing: Pricing) -> float:
+    """Estimate USD spend from token usage and a per-token price snapshot."""
+
+    return (
+        input_tokens / 1_000_000 * pricing.input_usd_per_mtok
+        + output_tokens / 1_000_000 * pricing.output_usd_per_mtok
+    )
+
+
+class CostBudget:
+    """Accumulates estimated spend and fails closed past `max_cost_usd`."""
+
+    def __init__(self, *, max_cost_usd: float, pricing: Pricing) -> None:
+        if max_cost_usd <= 0:
+            raise ValueError("max_cost_usd must be positive")
+        self._max_cost_usd = max_cost_usd
+        self._pricing = pricing
+        self._spent_usd = 0.0
+
+    @property
+    def spent_usd(self) -> float:
+        return self._spent_usd
+
+    def record_usage(self, input_tokens: int, output_tokens: int) -> None:
+        self._spent_usd += estimate_cost_usd(input_tokens, output_tokens, self._pricing)
+        if self._spent_usd > self._max_cost_usd:
+            raise LLMProviderError(
+                "budget_exceeded",
+                details={
+                    "rule": "cost_budget_exhausted",
+                    "max_cost_usd": self._max_cost_usd,
+                    "spent_usd": round(self._spent_usd, 8),
+                },
+            )
 
 
 def backoff_sequence(*, max_attempts: int, base_ms: int, cap_ms: int) -> tuple[int, ...]:

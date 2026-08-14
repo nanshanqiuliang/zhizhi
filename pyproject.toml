@@ -48,3 +48,4 @@ python_version = "3.12"
 strict = true
 warn_unreachable = true
 files = ["scripts"]
+mypy_path = ["packages/contracts-py/src", "packages/domain/src", "packages/infrastructure/src"]

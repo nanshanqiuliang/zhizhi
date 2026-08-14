@@ -30,6 +30,8 @@ from knowledge_tree_infrastructure.llm.protocols.openai_chat import (
     parse_chat_response,
     sse_stream_events,
 )
+from knowledge_tree_infrastructure.llm.resilience import CostBudget, Pricing, estimate_cost_usd
+from knowledge_tree_infrastructure.llm.runner import ModelRunner
 from knowledge_tree_infrastructure.llm.vendors.deepseek import (
     DeepSeekConfig,
     DeepSeekLlmAdapter,
@@ -386,3 +388,97 @@ def test_adapter_does_not_retry_on_401() -> None:
 def test_fixtures_do_not_contain_secret_patterns() -> None:
     source = Path(__file__).read_text(encoding="utf-8")
     assert re.search(r"sk-[A-Za-z0-9]{16,}", source) is None
+
+
+# ---------------------------------------------------------------------------
+# Monetary budget (max_cost_usd)
+# ---------------------------------------------------------------------------
+
+
+def test_estimate_cost_usd_computes_expected() -> None:
+    pricing = Pricing(input_usd_per_mtok=0.28, output_usd_per_mtok=1.14)
+
+    assert estimate_cost_usd(1_000_000, 1_000_000, pricing) == pytest.approx(1.42)
+    assert estimate_cost_usd(0, 0, pricing) == 0.0
+
+
+def test_cost_budget_raises_when_exceeded() -> None:
+    budget = CostBudget(
+        max_cost_usd=0.01, pricing=Pricing(input_usd_per_mtok=0.28, output_usd_per_mtok=1.14)
+    )
+
+    budget.record_usage(1000, 0)  # ~0.00028, under budget
+    with pytest.raises(LLMProviderError) as raised:
+        budget.record_usage(0, 10000)  # ~0.0114, exceeds 0.01
+    assert raised.value.code == "budget_exceeded"
+
+
+def test_adapter_enforces_cost_budget() -> None:
+    fake = _FakeHttp([_ok_response()])
+    adapter = DeepSeekLlmAdapter(
+        api_key="test-key",
+        http=fake,
+        config=DeepSeekConfig(
+            model_id="deepseek-v4-flash",
+            pricing=Pricing(input_usd_per_mtok=0.28, output_usd_per_mtok=1.14),
+        ),
+    )
+    request = make_request(
+        budget=Budget(max_attempts=2, max_output_tokens=4096, max_cost_usd=0.000001)
+    )
+
+    with pytest.raises(LLMProviderError) as raised:
+        adapter.generate(request, thinking="disabled")
+    assert raised.value.code == "budget_exceeded"
+
+
+# ---------------------------------------------------------------------------
+# ModelRunner fallback
+# ---------------------------------------------------------------------------
+
+
+def _adapter(responses: list[Any]) -> DeepSeekLlmAdapter:
+    return DeepSeekLlmAdapter(
+        api_key="test-key",
+        http=_FakeHttp(responses),
+        config=DeepSeekConfig(model_id="deepseek-v4-flash", max_network_attempts=1),
+    )
+
+
+def test_runner_falls_back_on_rate_limited() -> None:
+    primary = _adapter([HttpTransportError(status=429, body="{}")])
+    secondary = _adapter([_ok_response()])
+    runner = ModelRunner(
+        adapters=[primary, secondary],
+        allowed_fallback_codes=["provider_rate_limited", "provider_unavailable"],
+    )
+
+    result = runner.generate(make_request(), thinking="disabled")
+
+    assert result.text == "极限是……"
+
+
+def test_runner_does_not_fall_back_on_auth_failed() -> None:
+    primary = _adapter([HttpTransportError(status=401, body="{}")])
+    secondary = _adapter([_ok_response()])
+    runner = ModelRunner(
+        adapters=[primary, secondary],
+        allowed_fallback_codes=["provider_rate_limited"],
+    )
+
+    with pytest.raises(LLMProviderError) as raised:
+        runner.generate(make_request(), thinking="disabled")
+    assert raised.value.code == "provider_auth_failed"
+
+
+def test_runner_raises_when_all_adapters_fail() -> None:
+    primary = _adapter([HttpTransportError(status=429, body="{}")])
+    secondary = _adapter([HttpTransportError(status=503, body="{}")])
+    runner = ModelRunner(
+        adapters=[primary, secondary],
+        allowed_fallback_codes=["provider_rate_limited", "provider_unavailable"],
+    )
+
+    with pytest.raises(LLMProviderError) as raised:
+        runner.generate(make_request(), thinking="disabled")
+    assert raised.value.code == "provider_unavailable"

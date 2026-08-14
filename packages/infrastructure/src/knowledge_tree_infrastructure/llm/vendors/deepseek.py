@@ -20,7 +20,7 @@ from ..errors import LLMProviderError
 from ..http_client import HttpJsonClient, HttpTransportError
 from ..mock import LlmStreamEvent
 from ..protocols.openai_chat import build_chat_request, parse_chat_response, sse_stream_events
-from ..resilience import CircuitBreaker
+from ..resilience import CircuitBreaker, CostBudget, Pricing
 
 JsonObject = dict[str, Any]
 
@@ -73,6 +73,7 @@ class DeepSeekConfig:
     read_timeout_s: float = 120.0
     max_network_attempts: int = 3
     retry_backoff_ms: tuple[int, ...] = (500, 1000, 2000)
+    pricing: Pricing | None = None
 
 
 def _extract_reasoning_content(payload: Mapping[str, Any]) -> str | None:
@@ -153,6 +154,11 @@ class DeepSeekLlmAdapter:
 
         if max_tokens is None:
             max_tokens = request.budget.max_output_tokens
+        cost_budget = (
+            CostBudget(max_cost_usd=request.budget.max_cost_usd, pricing=self._config.pricing)
+            if self._config.pricing is not None and request.budget.max_cost_usd is not None
+            else None
+        )
         max_attempts = self._config.max_network_attempts
         backoffs = self._config.retry_backoff_ms
         last_error: LLMProviderError | None = None
@@ -161,7 +167,10 @@ class DeepSeekLlmAdapter:
             if not self._breaker.allow_request():
                 raise LLMProviderError("provider_unavailable", details={"rule": "circuit_open"})
             try:
-                return self._attempt(request, thinking=thinking, max_tokens=max_tokens)
+                result = self._attempt(request, thinking=thinking, max_tokens=max_tokens)
+                if cost_budget is not None:
+                    cost_budget.record_usage(result.usage.input_tokens, result.usage.output_tokens)
+                return result
             except HttpTransportError as http_error:
                 error = map_deepseek_http_error(http_error)
                 if error.code in _IMMEDIATE_OPEN_CODES:

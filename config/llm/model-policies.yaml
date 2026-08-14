@@ -27,7 +27,7 @@ task_profiles:
       max_input_tokens: 50000
       max_output_tokens: 4096
       max_latency_ms: 180000
-      max_cost_usd: null
+      max_cost_usd: 0.05
     fallback:
       allowed_errors:
         - provider_rate_limited
@@ -55,7 +55,7 @@ task_profiles:
       max_input_tokens: 100000
       max_output_tokens: 8192
       max_latency_ms: 600000
-      max_cost_usd: null
+      max_cost_usd: 0.2
     fallback:
       allowed_errors: []
       require_fresh_model_run: true
@@ -78,7 +78,7 @@ task_profiles:
       max_input_tokens: 16000
       max_output_tokens: 2048
       max_latency_ms: 120000
-      max_cost_usd: null
+      max_cost_usd: 0.02
     fallback:
       allowed_errors:
         - provider_rate_limited
@@ -106,7 +106,7 @@ task_profiles:
       max_input_tokens: 100000
       max_output_tokens: 8192
       max_latency_ms: 600000
-      max_cost_usd: null
+      max_cost_usd: 0.2
     fallback:
       allowed_errors:
         - provider_rate_limited
@@ -135,7 +135,7 @@ task_profiles:
       max_input_tokens: 120000
       max_output_tokens: 8192
       max_latency_ms: 600000
-      max_cost_usd: null
+      max_cost_usd: 0.2
     fallback:
       allowed_errors: []
       require_fresh_model_run: true

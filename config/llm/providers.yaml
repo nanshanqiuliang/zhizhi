@@ -112,6 +112,9 @@ providers:
         limits:
           max_context_tokens: 1000000
           max_output_tokens: 384000
+        pricing:
+          input_usd_per_mtok: 0.28
+          output_usd_per_mtok: 1.14
         defaults:
           thinking: disabled
           max_tokens: 4096
@@ -123,6 +126,9 @@ providers:
         limits:
           max_context_tokens: 1000000
           max_output_tokens: 384000
+        pricing:
+          input_usd_per_mtok: 0.28
+          output_usd_per_mtok: 1.14
         defaults:
           thinking: enabled
           reasoning_effort: high

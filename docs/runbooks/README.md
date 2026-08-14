@@ -9,7 +9,7 @@
 | RB-DB-001 | SQLite integrity、WAL 和空间异常 | 阶段 1 | planned | — | — |
 | RB-DB-002 | 备份创建与恢复验证 | 阶段 1 | planned | — | — |
 | RB-MIG-001 | Migration 失败与恢复 | 阶段 1 | planned | — | — |
-| [RB-PROV-001](RB-PROV-001.md) | LLM Provider/DeepSeek 超时、限流、协议和配置故障 | 阶段 0/2 | draft（adapter + live smoke 部分演练） | 2026-08-14 部分（live smoke 5/5） | 待封存 |
+| [RB-PROV-001](RB-PROV-001.md) | LLM Provider/DeepSeek 超时、限流、协议和配置故障 | 阶段 0/2 | drilled（adapter + live smoke + 金标基线） | 2026-08-14（见 [演练报告](RB-PROV-001-drill-20260814.md)） | 待 QA 批准 |
 | RB-ANCH-001 | 锚点漂移与误跳 | 阶段 1 | planned | — | — |
 | RB-REL-001 | 候选版本发布、暂停和回滚 | 阶段 1/3 | planned | — | — |
 | RB-UPD-001 | 桌面更新失败 | 阶段 3 | planned | — | — |

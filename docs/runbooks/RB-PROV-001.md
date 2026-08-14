@@ -1,11 +1,11 @@
 # RB-PROV-001：LLM Provider / DeepSeek 故障定位、降级与恢复
 
 ```yaml
-status: draft
+status: drilled
 owner_role: AI后端+运维
 risk: high
-last_tested_at: null
-test_report: null
+last_tested_at: 2026-08-14
+test_report: RB-PROV-001-drill-20260814.md
 review_due_at: 2026-09-13
 related: [WORK-2026-007, WORK-2026-008, NFR-2026-006, NFR-2026-007]
 ```
@@ -101,4 +101,4 @@ fallback 后工具重复 -> 立即关闭该 policy fallback，按事故/高优�
 | Date | Change/Test | Result | Test Report | Reviewer |
 |---|---|---|---|---|
 | 2026-08-13 | 初始 DeepSeek 优先 Runbook 草案 | 未演练 | — | — |
-| 2026-08-14 | DeepSeek adapter + 受控 live smoke 部分演练（文本/JSON/thinking/tool/stream、错误映射、脱敏） | live 5/5、离线契约 21/21；金标 EVAL-LLM-001 与完整演练待后续 | 开发验证（`a80f43d`），QA TR 待封存 | — |
+| 2026-08-14 | 定位步骤 + 错误处置 + 恢复核对（离线 fixture + live smoke 5/5 + 金标 EVAL-LLM-001 基线） | 通过（开发侧演练；金标阈值与 QA 批准待后续） | `RB-PROV-001-drill-20260814.md` | — |

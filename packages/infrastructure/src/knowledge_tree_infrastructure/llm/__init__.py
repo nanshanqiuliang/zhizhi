@@ -28,8 +28,16 @@ from .capabilities import capability_fingerprint, check_required_capabilities
 from .errors import LLMProviderError
 from .http_client import HttpJsonClient, HttpTransportError
 from .mock import LlmStreamEvent, MockContinuationStore, MockLlmAdapter, MockScript
-from .resilience import AttemptBudget, CircuitBreaker, backoff_sequence
+from .resilience import (
+    AttemptBudget,
+    CircuitBreaker,
+    CostBudget,
+    Pricing,
+    backoff_sequence,
+    estimate_cost_usd,
+)
 from .router import resolve_deployment, select_deployment
+from .runner import ModelRunner
 from .vendors.deepseek import DeepSeekConfig, DeepSeekLlmAdapter, map_deepseek_http_error
 
 __all__ = [
@@ -40,6 +48,7 @@ __all__ = [
     "CanonicalUsage",
     "CircuitBreaker",
     "ContentPart",
+    "CostBudget",
     "DeepSeekConfig",
     "DeepSeekLlmAdapter",
     "GenerationRequest",
@@ -51,11 +60,14 @@ __all__ = [
     "MockContinuationStore",
     "MockLlmAdapter",
     "MockScript",
+    "ModelRunner",
+    "Pricing",
     "ToolDefinition",
     "TraceContext",
     "backoff_sequence",
     "capability_fingerprint",
     "check_required_capabilities",
+    "estimate_cost_usd",
     "map_deepseek_http_error",
     "message_from_dict",
     "message_to_dict",
