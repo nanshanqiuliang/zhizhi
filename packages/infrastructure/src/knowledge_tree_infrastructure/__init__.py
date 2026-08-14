@@ -1,12 +1,15 @@
 """Concrete local adapters for the Knowledge Tree graph domain."""
 
 from .workspace import (
+    ResourceInfo,
     SearchResult,
     WorkspaceError,
     WorkspaceLayout,
     backup_workspace,
     create_workspace,
     export_course_graph,
+    import_resource,
+    list_resources,
     load_course_graph,
     load_history_records,
     migrate,
@@ -21,12 +24,15 @@ from .workspace import (
 )
 
 __all__ = [
+    "ResourceInfo",
     "SearchResult",
     "WorkspaceError",
     "WorkspaceLayout",
     "backup_workspace",
     "create_workspace",
     "export_course_graph",
+    "import_resource",
+    "list_resources",
     "load_course_graph",
     "load_history_records",
     "migrate",

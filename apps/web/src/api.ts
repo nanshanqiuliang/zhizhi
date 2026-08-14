@@ -30,10 +30,21 @@ export type SearchResultItem = {
   snippet: string;
 };
 
+export type ResourceInfo = {
+  id: string;
+  display_name: string;
+  mime: string;
+  byte_size: number;
+  content_hash: string;
+  created_at: string;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
   searchGraph(query: string): Promise<SearchResultItem[]>;
+  importResource(file: File): Promise<ResourceInfo>;
+  listResources(): Promise<ResourceInfo[]>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -206,6 +217,28 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       }
       const body = (await response.json()) as { results: SearchResultItem[] };
       return body.results;
+    },
+    async importResource(file: File): Promise<ResourceInfo> {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources`,
+        { method: "POST", body: form },
+      );
+      if (!response.ok) {
+        throw new Error(`import failed: ${response.status}`);
+      }
+      return (await response.json()) as ResourceInfo;
+    },
+    async listResources(): Promise<ResourceInfo[]> {
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources`,
+      );
+      if (!response.ok) {
+        throw new Error(`list failed: ${response.status}`);
+      }
+      const body = (await response.json()) as { resources: ResourceInfo[] };
+      return body.resources;
     },
   };
 }

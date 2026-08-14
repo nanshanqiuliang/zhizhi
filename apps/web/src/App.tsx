@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { ConceptNode, PersistApi, SearchResultItem, WorkspaceSnapshot } from "./api";
+import type {
+  ConceptNode,
+  PersistApi,
+  ResourceInfo,
+  SearchResultItem,
+  WorkspaceSnapshot,
+} from "./api";
 
 type DragState = {
   nodeId: string;
@@ -185,6 +191,8 @@ export function App({ api }: { api?: PersistApi }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const [searchStatus, setSearchStatus] = useState<"idle" | "searching" | "done" | "failed">("idle");
+  const [resources, setResources] = useState<ResourceInfo[]>([]);
+  const [importStatus, setImportStatus] = useState<"idle" | "importing" | "failed">("idle");
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -225,6 +233,14 @@ export function App({ api }: { api?: PersistApi }) {
         if (cancelled) return;
         setConnection("offline");
         setStatus("本地服务未连接，当前显示示例知识树");
+      });
+    api
+      .listResources()
+      .then((items) => {
+        if (!cancelled) setResources(items);
+      })
+      .catch(() => {
+        if (!cancelled) setResources([]);
       });
     return () => {
       cancelled = true;
@@ -275,6 +291,23 @@ export function App({ api }: { api?: PersistApi }) {
     const viewport = canvasViewport.current;
     if (viewport) {
       viewport.scrollLeft = Math.max(0, node.x + 75 - viewport.clientWidth / 2);
+    }
+  }
+
+  async function handleImport(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !api) return;
+    setImportStatus("importing");
+    try {
+      const info = await api.importResource(file);
+      setResources((current) => [...current.filter((item) => item.id !== info.id), info]);
+      setImportStatus("idle");
+      setStatus(`已导入“${info.display_name}”`);
+    } catch {
+      setImportStatus("failed");
+      setStatus("导入失败，请检查文件类型与大小");
+    } finally {
+      event.target.value = "";
     }
   }
 
@@ -508,7 +541,7 @@ export function App({ api }: { api?: PersistApi }) {
 
       <aside className="compact-boundary" aria-label="演示能力边界">
         <span aria-hidden="true">演示</span>
-        <p>示例数据 · 仅本次会话 · AI 未连接 · 无资料导入 · 未连接数据库</p>
+        <p>示例数据 · 仅本次会话 · AI 未连接 · 来源跳转未接入 · 未连接数据库</p>
       </aside>
 
       <div id="workspace" className="workspace">
@@ -537,6 +570,34 @@ export function App({ api }: { api?: PersistApi }) {
                 <span><strong>{note.title}</strong><small>{note.detail}</small></span>
               </button>
             ))}
+          </div>
+          <div className="resource-section" aria-label="资料导入">
+            <p className="overline">本地资料</p>
+            <label className="import-control" htmlFor="resource-upload">
+              导入资料（MD / TXT / PDF）
+              <input
+                id="resource-upload"
+                type="file"
+                accept=".md,.txt,.pdf,text/markdown,text/plain,application/pdf"
+                onChange={handleImport}
+              />
+            </label>
+            {importStatus === "failed" && <p className="import-note">导入失败，请检查文件类型与大小</p>}
+            {importStatus === "importing" && <p className="import-note">导入中…</p>}
+            <ul className="resource-list">
+              {resources.map((resource) => (
+                <li key={resource.id}>
+                  <span className="resource-icon" aria-hidden="true">📄</span>
+                  <span>
+                    <strong>{resource.display_name}</strong>
+                    <small>{resource.mime} · {(resource.byte_size / 1024).toFixed(1)} KB</small>
+                  </span>
+                </li>
+              ))}
+              {resources.length === 0 && importStatus !== "importing" && (
+                <li className="resource-empty">还没有导入资料</li>
+              )}
+            </ul>
           </div>
           <div className="session-notice">
             <span aria-hidden="true">◷</span>

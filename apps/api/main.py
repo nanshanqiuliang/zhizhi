@@ -21,6 +21,8 @@ from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     backup_workspace,
     create_workspace,
+    import_resource,
+    list_resources,
     load_course_graph,
     migrate,
     resolve_workspace,
@@ -54,6 +56,8 @@ def _http_error(error: WorkspaceError) -> HTTPException:
     if error.code == "graph_invalid":
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "search_invalid_query":
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code in {"import_type_rejected", "import_too_large", "import_failed"}:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "workspace_corrupt" and error.details.get("rule") == "course_graph_absent":
         # A workspace without a saved graph is equivalent to "not found".
@@ -146,6 +150,61 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
                 "results": [
                     {"id": result.id, "label": result.label, "snippet": result.snippet}
                     for result in results
+                ]
+            }
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/resources")
+    async def post_resource(workspace_id: str, request: Request) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = create_workspace(workspace_root)
+            migrate(layout.db_path)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        try:
+            form = await request.form()
+            upload = form.get("file")
+            if upload is None or not hasattr(upload, "filename") or not hasattr(upload, "read"):
+                raise HTTPException(
+                    status_code=422, detail={"code": "import_type_rejected", "rule": "file_missing"}
+                )
+            content = await upload.read()
+            info = import_resource(
+                layout,
+                display_name=str(upload.filename or "upload"),
+                content=content,
+                mime=None,
+            )
+            return {
+                "id": info.id,
+                "display_name": info.display_name,
+                "mime": info.mime,
+                "byte_size": info.byte_size,
+                "content_hash": info.content_hash,
+                "created_at": info.created_at,
+            }
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/resources")
+    def get_resources(workspace_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            resources = list_resources(layout)
+            return {
+                "resources": [
+                    {
+                        "id": info.id,
+                        "display_name": info.display_name,
+                        "mime": info.mime,
+                        "byte_size": info.byte_size,
+                        "content_hash": info.content_hash,
+                        "created_at": info.created_at,
+                    }
+                    for info in resources
                 ]
             }
         except WorkspaceError as error:

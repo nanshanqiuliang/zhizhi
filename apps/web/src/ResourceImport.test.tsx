@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { PersistApi, ResourceInfo, WorkspaceSnapshot } from "./api";
+import type { PersistApi, ResourceInfo } from "./api";
 import { App } from "./App";
 
 function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
@@ -51,7 +51,7 @@ describe("resource import", () => {
     const api = mockApi();
     render(<App api={api} />);
 
-    const input = screen.getByLabelText("导入资料文件");
+    const input = screen.getByLabelText("导入资料（MD / TXT / PDF）");
     const file = new File(["# 极限"], "notes.md", { type: "text/markdown" });
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -69,12 +69,12 @@ describe("resource import", () => {
     });
     render(<App api={api} />);
 
-    const input = screen.getByLabelText("导入资料文件");
+    const input = screen.getByLabelText("导入资料（MD / TXT / PDF）");
     const file = new File(["x"], "evil.exe", { type: "application/octet-stream" });
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(screen.getByText(/导入失败/)).toBeInTheDocument();
+      expect(screen.getAllByText(/导入失败/).length).toBeGreaterThan(0);
     });
   });
 });

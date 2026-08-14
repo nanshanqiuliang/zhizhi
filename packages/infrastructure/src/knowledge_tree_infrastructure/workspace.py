@@ -28,11 +28,14 @@ from knowledge_tree_domain import (
 )
 
 JsonObject = dict[str, Any]
-SUPPORTED_SCHEMA_VERSION = 1
+SUPPORTED_SCHEMA_VERSION = 2
 _GRAPH_KEY = "course_graph"
 _MAX_QUERY_LENGTH = 100
 _SNIPPET_LENGTH = 60
 _SEARCH_TABLE = "concept_search"
+_MAX_IMPORT_BYTES = 25 * 1024 * 1024
+_ALLOWED_MIME_BY_MAGIC: tuple[tuple[str, str], ...] = (("application/pdf", "%PDF-"),)
+_TEXT_EXTENSIONS = {".md": "text/markdown", ".txt": "text/plain"}
 
 
 class WorkspaceError(ValueError):
@@ -42,6 +45,18 @@ class WorkspaceError(ValueError):
         self.code = code
         self.details = dict(details)
         super().__init__(f"{code}: workspace rejected")
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceInfo:
+    """Metadata for an imported resource; never carries file content."""
+
+    id: str
+    display_name: str
+    mime: str
+    byte_size: int
+    content_hash: str
+    created_at: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,7 +110,7 @@ def resolve_workspace(root: Path) -> WorkspaceLayout:
 
 
 def migrate(db_path: Path) -> None:
-    """Migrate an empty database to schema v1; reject unknown/future versions."""
+    """Migrate a database to schema v2; reject unknown/future versions."""
 
     db_path = Path(db_path)
     try:
@@ -119,6 +134,25 @@ def migrate(db_path: Path) -> None:
                 "seq INTEGER PRIMARY KEY AUTOINCREMENT,"
                 "change_id TEXT NOT NULL,"
                 "payload TEXT NOT NULL)"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS resource ("
+                "id TEXT PRIMARY KEY,"
+                "display_name TEXT NOT NULL,"
+                "current_version_id TEXT,"
+                "created_at TEXT NOT NULL)"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS resource_version ("
+                "id TEXT PRIMARY KEY,"
+                "resource_id TEXT NOT NULL,"
+                "version_no INTEGER NOT NULL,"
+                "content_hash TEXT NOT NULL,"
+                "mime TEXT NOT NULL,"
+                "byte_size INTEGER NOT NULL,"
+                "storage_key TEXT NOT NULL,"
+                "created_at TEXT NOT NULL,"
+                "UNIQUE(resource_id, content_hash))"
             )
             conn.execute(f"PRAGMA user_version = {SUPPORTED_SCHEMA_VERSION}")
     except sqlite3.DatabaseError as error:
@@ -435,6 +469,157 @@ def _remove_wal_sidecars(db_path: Path) -> None:
     for suffix in ("-wal", "-shm", "-journal"):
         sidecar = Path(f"{db_path}{suffix}")
         sidecar.unlink(missing_ok=True)
+
+
+def import_resource(
+    layout: WorkspaceLayout,
+    *,
+    display_name: str,
+    content: bytes,
+    mime: str | None,
+) -> ResourceInfo:
+    """Import a whitelisted file into the workspace and register it.
+
+    Content is stored under a generated UUIDv7 filename inside
+    `resources/`; the client-supplied name is metadata only. Identical
+    content (same SHA-256) is idempotent and returns the existing resource.
+    """
+
+    display_name = _safe_display_name(display_name)
+    if len(content) > _MAX_IMPORT_BYTES:
+        _reject("import_too_large", rule="size_limit_exceeded")
+    detected = _detect_mime(display_name, content)
+    if detected is None:
+        _reject("import_type_rejected", rule="mime_not_in_whitelist")
+    content_hash = f"sha256:{hashlib.sha256(content).hexdigest()}"
+    storage_key = f"resources/{_uuid7()}/{_uuid7()}"
+    created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    try:
+        with _connect(layout.db_path) as conn:
+            existing = conn.execute(
+                "SELECT resource_id, version_no, content_hash, mime, byte_size, created_at "
+                "FROM resource_version WHERE content_hash=?",
+                (content_hash,),
+            ).fetchone()
+            if existing is not None:
+                resource_id, version_no, *_ = existing
+                return _resource_info(conn, str(resource_id), int(version_no))
+            resource_id = _uuid7()
+            version_id = _uuid7()
+            conn.execute(
+                "INSERT INTO resource(id, display_name, current_version_id, created_at) "
+                "VALUES(?, ?, ?, ?)",
+                (resource_id, display_name, version_id, created_at),
+            )
+            conn.execute(
+                "INSERT INTO resource_version("
+                "id, resource_id, version_no, content_hash, mime, byte_size, "
+                "storage_key, created_at) VALUES(?, ?, 1, ?, ?, ?, ?, ?)",
+                (
+                    version_id,
+                    resource_id,
+                    content_hash,
+                    detected,
+                    len(content),
+                    storage_key,
+                    created_at,
+                ),
+            )
+            conn.execute(
+                "UPDATE resource SET current_version_id=? WHERE id=?",
+                (version_id, resource_id),
+            )
+        storage_path = layout.root / storage_key
+        storage_path.parent.mkdir(parents=True, exist_ok=True)
+        storage_path.write_bytes(content)
+        return ResourceInfo(
+            id=resource_id,
+            display_name=display_name,
+            mime=detected,
+            byte_size=len(content),
+            content_hash=content_hash,
+            created_at=created_at,
+        )
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError("import_failed", details={"rule": "database_not_writable"}) from error
+
+
+def list_resources(layout: WorkspaceLayout) -> list[ResourceInfo]:
+    """List imported resource metadata without any file content."""
+
+    try:
+        with _connect(layout.db_path) as conn:
+            rows = conn.execute(
+                "SELECT r.id, r.display_name, v.mime, v.byte_size, v.content_hash, "
+                "r.created_at FROM resource r "
+                "JOIN resource_version v ON v.resource_id = r.id "
+                "AND v.id = r.current_version_id ORDER BY r.created_at"
+            ).fetchall()
+            return [
+                ResourceInfo(
+                    id=str(row[0]),
+                    display_name=str(row[1]),
+                    mime=str(row[2]),
+                    byte_size=int(row[3]),
+                    content_hash=str(row[4]),
+                    created_at=str(row[5]),
+                )
+                for row in rows
+            ]
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "resources_not_readable"}
+        ) from error
+
+
+def _resource_info(conn: sqlite3.Connection, resource_id: str, version_no: int) -> ResourceInfo:
+    row = conn.execute(
+        "SELECT r.id, r.display_name, v.mime, v.byte_size, v.content_hash, r.created_at "
+        "FROM resource r JOIN resource_version v ON v.resource_id = r.id "
+        "WHERE r.id=? AND v.version_no=?",
+        (resource_id, version_no),
+    ).fetchone()
+    if row is None:
+        _reject("import_failed", rule="resource_missing")
+    return ResourceInfo(
+        id=str(row[0]),
+        display_name=str(row[1]),
+        mime=str(row[2]),
+        byte_size=int(row[3]),
+        content_hash=str(row[4]),
+        created_at=str(row[5]),
+    )
+
+
+def _safe_display_name(name: str) -> str:
+    base = Path(name).name
+    if not base or base in {".", ".."} or "/" in name or "\\" in name:
+        _reject("import_type_rejected", rule="invalid_name")
+    return base
+
+
+def _detect_mime(display_name: str, content: bytes) -> str | None:
+    suffix = Path(display_name).suffix.lower()
+    if content.startswith(b"%PDF-"):
+        return "application/pdf"
+    if suffix in _TEXT_EXTENSIONS:
+        try:
+            content.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+        return _TEXT_EXTENSIONS[suffix]
+    return None
+
+
+def _uuid7() -> str:
+    """Generate a UUIDv7 string (48-bit ms timestamp + version/variant bits)."""
+
+    import uuid as _uuid
+
+    now = int(time.time() * 1000)
+    # Build a v7-compatible UUID: timestamp in top 48 bits.
+    value = (now << 80) | (0x70 << 72) | (0x80 << 64) | _uuid.uuid4().int & ((1 << 64) - 1)
+    return str(_uuid.UUID(int=value))
 
 
 def _digest(payload: Mapping[str, Any]) -> str:

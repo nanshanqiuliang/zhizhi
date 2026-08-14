@@ -11,8 +11,6 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-
-from apps.api.main import create_app
 from knowledge_tree_infrastructure.workspace import (
     ResourceInfo,
     create_workspace,
@@ -21,11 +19,12 @@ from knowledge_tree_infrastructure.workspace import (
     migrate,
 )
 
+from apps.api.main import create_app
 from tests.contract.test_graph_contracts import WORKSPACE_ID
 
 ALLOWED_ORIGIN = "http://localhost:5173"
-MD_CONTENT = b"# 极限\n\n趋近与连续性的定义。\n"
-TXT_CONTENT = b"导数\n瞬时变化率。\n"
+MD_CONTENT = "# 极限\n\n趋近与连续性的定义。\n".encode()
+TXT_CONTENT = "导数\n瞬时变化率。\n".encode()
 PDF_HEADER = b"%PDF-1.7\n% fake but header-valid\n"
 
 
@@ -46,9 +45,7 @@ def test_migrate_creates_resource_tables(tmp_path: Path) -> None:
         version = conn.execute("PRAGMA user_version").fetchone()[0]
         tables = {
             row[0]
-            for row in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            ).fetchall()
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
         }
     assert version == 2
     assert "resource" in tables
@@ -69,9 +66,7 @@ def test_migrate_rejects_unknown_version(tmp_path: Path) -> None:
 
 # TC-IMPORT-002: import MD/TXT/PDF
 def test_import_markdown(layout) -> None:
-    info = import_resource(
-        layout, display_name="notes.md", content=MD_CONTENT, mime=None
-    )
+    info = import_resource(layout, display_name="notes.md", content=MD_CONTENT, mime=None)
     assert isinstance(info, ResourceInfo)
     assert info.display_name == "notes.md"
     assert info.mime == "text/markdown"
@@ -129,9 +124,7 @@ def test_import_rejects_too_large(layout) -> None:
 
 def test_import_rejects_traversal_name(layout) -> None:
     with pytest.raises(Exception) as excinfo:
-        import_resource(
-            layout, display_name="../../evil.md", content=MD_CONTENT, mime=None
-        )
+        import_resource(layout, display_name="../../evil.md", content=MD_CONTENT, mime=None)
     assert "import_type_rejected" in str(excinfo.value) or "invalid_name" in str(excinfo.value)
 
 

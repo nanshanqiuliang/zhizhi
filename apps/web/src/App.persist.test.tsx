@@ -17,6 +17,15 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi & { saved: Wor
       saved.push(graph);
     }),
     searchGraph: vi.fn(async () => []),
+    importResource: vi.fn(async () => ({
+      id: "00000000-0000-7000-8100-000000000001",
+      display_name: "notes.md",
+      mime: "text/markdown",
+      byte_size: 12,
+      content_hash: "sha256:abc",
+      created_at: "2026-08-14T00:00:00Z",
+    })),
+    listResources: vi.fn(async () => []),
     ...overrides,
   };
   return Object.assign(api, { saved });
