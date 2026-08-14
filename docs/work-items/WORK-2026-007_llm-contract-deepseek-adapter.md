@@ -1,7 +1,7 @@
 # WORK-2026-007：冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约（第 7 步离线第 1 期）
 
 ```yaml
-status: in_progress
+status: implemented
 type: feature
 owner: Codex (llm-contract + infra role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -9,7 +9,7 @@ related_ids: [LLM-COMPAT-BASELINE-001, REQ-2026-006, NFR-2026-001, WORK-2026-005
 target_stage: "阶段 1 / 自然语言第 7 步（安全接入第一个真实 AI）"
 risk: high
 created_at: 2026-08-14T22:30:00+08:00
-updated_at: 2026-08-14T22:30:00+08:00
+updated_at: 2026-08-14T22:40:00+08:00
 ```
 
 ## 问题与结果
@@ -80,9 +80,9 @@ updated_at: 2026-08-14T22:30:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-007-llm-contract`；Ready（本文档）→ 红灯（llm_v1/mock adapter ImportError）→ 实现 → 绿。
-- Contract/ADR/migration/prompt：新增 `docs/contracts/llm.v1.schema.json`（canonical，版本 v1）；无 ADR/migration/prompt 变更。
-- Test Run：契约/安全定向测试全部通过；全仓门全绿；职责隔离 QA 待执行（按总纲流程）。
-- Release：无托管发布；无真实 Provider 启用。
-- 观察结果：第 7 步离线契约层冻结；`TC-LLM-001..009` mock 必须部分执行。
+- Commit/PR：分支 `feature/WORK-2026-007-llm-contract`；Ready（本文档）→ 红灯 `b5747ec`（2 collection errors）→ 实现 `b2e215b` → 文档收口 `ed8d87f`。
+- Contract/ADR/migration/prompt：新增 `docs/contracts/llm.v1.schema.json`（canonical，版本 v1）与生成 artifact；无 ADR/migration/prompt 变更。
+- Test Run：TC-LLM-001..009 mock 部分 56/56；全仓 pytest 314/314；repository validator、Ruff、scripts + strict package mypy、contracts-ts drift/tsc、Web 32/32、pnpm build 全绿；职责隔离 QA 待执行（按总纲流程）。
+- Release：无托管发布；无真实 Provider 启用（除 `mock` 外全部 `enabled: false`）。
+- 观察结果：第 7 步离线契约层冻结；`TC-LLM-001..009` mock 必须部分执行完毕。
 - 未完成项的新 ID：openai_chat_completions 协议适配器 + DeepSeek vendor profile + streaming/thinking/tool wire 实现（实施顺序 3–5）；retry/circuit/budget 与受控 fallback 接入真实 adapter（实施顺序 6）；DeepSeek live smoke 与微积分金标（实施顺序 7，WORK-2026-008，需 owner API Key/预算）；TS enum 生成与 Web 接入（第 8 步）。
