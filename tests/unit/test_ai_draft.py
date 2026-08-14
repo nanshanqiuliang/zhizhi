@@ -6,8 +6,9 @@ so they are expected to fail at collection until the module is implemented.
 
 from __future__ import annotations
 
-import pytest
+from typing import Any
 
+import pytest
 from knowledge_tree_domain.ai_draft import (
     AiDraft,
     DraftChunk,
@@ -35,7 +36,9 @@ def _chunk(text: str, *, chunk_id: str, anchor_id: str | None = None) -> DraftCh
     )
 
 
-def _concept(label: str, *, confidence: float = 0.8, evidence: tuple[str, ...] = ()) -> DraftConcept:
+def _concept(
+    label: str, *, confidence: float = 0.8, evidence: tuple[str, ...] = ()
+) -> DraftConcept:
     return DraftConcept(
         label=label,
         aliases=(),
@@ -70,10 +73,24 @@ def test_chunk_text_splits_on_paragraph_boundaries_without_splitting_paragraphs(
         assert all(paragraph in text for paragraph in chunk.text.split("\n") if paragraph)
 
 
+def _counter_factory() -> Any:
+    state = {"n": 0}
+
+    def factory() -> str:
+        state["n"] += 1
+        return f"00000000-0000-7000-8000-{state['n']:012d}"
+
+    return factory
+
+
 def test_chunk_text_is_deterministic() -> None:
     text = "第一段。\n\n第二段。\n\n第三段。\n\n第四段。"
-    first = chunk_text(text, resource_id=RESOURCE_ID, chunk_size=16, overlap=4)
-    second = chunk_text(text, resource_id=RESOURCE_ID, chunk_size=16, overlap=4)
+    first = chunk_text(
+        text, resource_id=RESOURCE_ID, chunk_size=16, overlap=4, chunk_id_factory=_counter_factory()
+    )
+    second = chunk_text(
+        text, resource_id=RESOURCE_ID, chunk_size=16, overlap=4, chunk_id_factory=_counter_factory()
+    )
     assert first == second
 
 
@@ -173,7 +190,9 @@ def test_assign_draft_layout_layers_prerequisites_topologically() -> None:
         DraftRelation("B", "C", "prerequisite_of", 0.8, ()),
         DraftRelation("A", "D", "prerequisite_of", 0.8, ()),
     )
-    layout = assign_draft_layout(concepts, relations, view_id="00000000-0000-7000-8000-000000000004")
+    layout = assign_draft_layout(
+        concepts, relations, view_id="00000000-0000-7000-8000-000000000004"
+    )
     by_label = {item[0]: item[1:] for item in layout}
     assert len(layout) == 4
     # A precedes B precedes C along the prerequisite chain (y strictly increasing).
