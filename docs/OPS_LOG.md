@@ -184,6 +184,19 @@
 - 验证：目录/重启存活/migration/备份导出删除/故障注入（截断、垃圾字节、非法图、重复 replay、digest 篡改、checksum 篡改、purge）全部失败关闭。
 - 遗留风险/Owner/期限：浏览器自动保存/API/UI 接入、FTS5 搜索、导入、加密、多进程、云端与真实 Provider 保持关闭，由后续工作项承接。
 
+## 2026-08-14 08:05 — 本地持久化 API sidecar 验证
+
+- 关联 ID：WORK-2026-014、TR-20260814-006。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；fastapi 0.141.1/uvicorn 0.52.3；commit `e0a4c72`。
+- 操作者：Codex（实现与 e2e smoke）；职责隔离 `graph_qa_fresh`（只读机器证明，非真人签字/owner 接受）。
+- 变更或症状：新增本地 FastAPI sidecar（loopback/CORS/health/graph GET-PUT/backup）与 Web 自动保存接入；无部署或常驻服务变化。
+- 时间线：`31ce814` Ready → `4fe918b` 红灯（API 1 ImportError + Web 4 失败）→ `6c0c33c` 实现 → QA-001 PASS（3 P2）→ `e0a4c72` P2-1 修复 → QA-002 PASS。
+- 影响：无部署、端口常驻、网络出站、Provider、真实用户数据、秘密或费用；API 仅测试期临时监听 127.0.0.1:8123，已关闭。
+- 证据：`evidence/TR-20260814-006/` 与 `docs/test-reports/TR-20260814-006_local-persist-api.md`；API 8/8、全仓 183/183、Web 10/10、完整本地门 PASS、e2e smoke PASS。
+- 缓解/回滚：回退 `e0a4c72` 回到纯内存 Demo；不得把 prototype 冒充浏览器已保存。
+- 验证：CORS/路径遍历/非法图 422/往返/备份校验和/缺失 backup 404/Web 加载/自动保存/降级全部失败关闭。
+- 遗留风险/Owner/期限：Tauri 打包、认证/token（ADR-0011/SPK-009）、FTS5、导入、加密、多进程、云端与真实 Provider 保持关闭；P2-2/P2-3 前端已知边界记录在 QA 报告。
+
 ---
 
 ## 新条目模板

@@ -465,3 +465,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: commit this Ready boundary, then add failing API
   integration tests and Web component tests (mock fetch) before any sidecar or
   frontend implementation.
+
+## Step 4B closure checkpoint — 2026-08-14 08:05 +08:00
+
+- Active branch: `feature/WORK-2026-014-local-persist-api`.
+- Frozen implementation: `e0a4c7212aa8be2aae1b2319968b3f75159bfba1`
+  (initial `6c0c33c` + P2-1 fix); red baseline:
+  `4fe918bffde539c10ea69529df45ba854bbe1bb9`; Ready boundary:
+  `31ce81486a643304e2d1acd0ef3442a20d3f9440`.
+- Role-separated QA attempt 001 reviewed `6c0c33c` and returned PASS (0 P0/P1,
+  3 non-blocking P2). P2-1 (backup silently created an empty workspace) was
+  closed by `e0a4c72` with a new regression test; attempt 002 reviewed the fix
+  and returned PASS with no new findings. P2-2 (mount-load race) and P2-3
+  (600ms debounce not flushed on unload) are recorded prototype boundaries.
+- Both QA runs were static-tracing (read-only subagents cannot execute tests);
+  this session live-ran the full gates (pytest 183/183 incl. API 8/8, Web
+  10/10, ruff, strict mypy incl. apps/api, repository validator, frozen
+  installs/peers/check/build) and a real uvicorn e2e smoke (PUT→GET round
+  trip, invalid 422, backup checksum, CORS forbidden-origin rejection).
+- Evidence/report: `evidence/TR-20260814-006/` and
+  `docs/test-reports/TR-20260814-006_local-persist-api.md`.
+- Natural-language Step 4 progress: persistence kernel + browser/API auto-save
+  loop done (approximately 85% of Step 4); overall personal MVP approximately
+  50%. Remaining Step 4 items (FTS5 search, file import) are separate work
+  items. No Tauri packaging, auth/token, encryption, multi-process, or cloud.
+- Exact next action on the next "继续推进": decide whether to continue Step 4
+  (FTS5 search or file import) or enter Step 5 (import material and jump to
+  sources), each as a separate Ready work item starting from failing tests.
+- Current blocker: none for offline Step 4/5 preparation. Real Provider/Web and
+  owner acceptance remain separately gated and disabled.

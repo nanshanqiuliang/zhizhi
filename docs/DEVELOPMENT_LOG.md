@@ -210,6 +210,17 @@
 - 回滚：回退 `8e34a40` 可禁用持久化 prototype；红灯测试保留，不得以删除测试替代不变量。
 - 遗留风险与下一步：浏览器自动保存/API/UI 接入、FTS5 搜索、导入、加密、多进程、云端与真实 Provider 仍关闭；下一工作项从失败 persistence API 红灯进入第 4 步 UI/API 接入。
 
+## 2026-08-14 — 实现本地持久化 API sidecar 与 Web 自动保存
+
+- 关联 ID：WORK-2026-014、ADR-0005、ADR-0011、REQ-2026-006、REQ-2026-008、TR-20260814-006。
+- 实际变化：新增 `apps/api` FastAPI composition root（loopback、CORS 精确白名单、`/api/health`、CourseGraph GET/PUT、backup，扁平化错误响应，路径遍历拒绝）；Web 端新增 `api.ts`（PersistApi、uuidv7、snapshot↔canonical 转换、http client）并接入 App（挂载加载、600ms debounce 自动保存、连接/保存状态显示、API 不可达降级）；`packages/infrastructure` 补充 `__init__.py`；CI 覆盖 apps。
+- 影响模块/接口/schema/migration/prompt：新增 `apps/api` 与 Web API client；复用 graph v1 契约与 workspace adapter；无新 canonical contract/migration/prompt。
+- 兼容性：新增 fastapi/uvicorn/httpx2 依赖（已锁定）；`uv run pytest` 因旧 venv 重定位改用 `uv run python -m pytest`；API 只绑定 127.0.0.1。
+- 验证与证据：红灯 `4fe918b`（API 1 个 ImportError + Web 4 个新测试失败）；实现 `6c0c33c` 后 API 7/7、全仓 182/182、Web 10/10；QA attempt 001 PASS（0 P0/P1，3 P2）；P2-1 修复 `e0a4c72` 后 API 8/8、全仓 183/183，QA attempt 002 PASS；真实 uvicorn e2e smoke 全通过。
+- 性能/安全/运维影响：loopback 单用户；CORS 白名单；错误 details 不含正文；无网络出站、Provider、secret、真实用户数据或费用。
+- 回滚：回退 `e0a4c72` 可回到纯内存 Demo；红灯测试保留，不得以删除测试替代不变量。
+- 遗留风险与下一步：Tauri 打包、认证/token（ADR-0011/SPK-009）、FTS5 搜索、导入、加密、多进程、云端与真实 Provider 仍关闭；P2-2（加载竞态）与 P2-3（关闭前 debounce 不 flush）为原型已知边界，记录于 QA 报告。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

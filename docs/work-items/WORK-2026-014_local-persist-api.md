@@ -1,15 +1,15 @@
 # WORK-2026-014：本地持久化 API sidecar 与 Web 自动保存接入
 
 ```yaml
-status: ready
+status: verified_prototype
 type: feature
 owner: Codex (api + web integration role)
 reviewers: [ai_qa_auditor, workspace_owner]
-related_ids: [REQ-2026-006, REQ-2026-008, NFR-2026-001, ADR-0005, ADR-0011, WORK-2026-005, WORK-2026-011, WORK-2026-012, WORK-2026-013]
+related_ids: [REQ-2026-006, REQ-2026-008, NFR-2026-001, ADR-0005, ADR-0011, WORK-2026-005, WORK-2026-011, WORK-2026-012, WORK-2026-013, TR-20260814-006]
 target_stage: "阶段 1 / 自然语言第 4 步"
 risk: high
 created_at: 2026-08-14T07:55:00+08:00
-updated_at: 2026-08-14T07:55:00+08:00
+updated_at: 2026-08-14T08:05:00+08:00
 ```
 
 ## 问题与结果
@@ -44,30 +44,30 @@ updated_at: 2026-08-14T07:55:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：`apps/api` 可启动，监听 loopback；`GET /api/health` 返回 ok；CORS 白名单外 Origin 被拒。
-- [ ] AC-2：PUT 保存合法 CourseGraph 后可 GET 回同一图（语义等价、revision 保留）；非法图被拒且不覆盖已有数据。
-- [ ] AC-3：Web 启动时从 API 加载已保存图；编辑后自动保存（debounce）；保存状态在 已保存/保存中/失败 间正确切换。
-- [ ] AC-4：API 不可达时前端显示"本地服务未连接"，不伪造成功、不清空当前编辑内容。
-- [ ] AC-5：API 集成测试与 Web 组件测试（mock fetch）覆盖正/负路径；全仓门通过。
-- [ ] 错误和恢复路径：保存失败保留草稿并可重试；API 中途关闭后重开仍可恢复。
-- [ ] 回滚/禁用方法：回退本工作项提交可回到纯内存 Demo；不影响已验证的持久化内核与证据。
+- [x] AC-1：`apps/api` 可启动，监听 loopback；`GET /api/health` 返回 ok；CORS 白名单外 Origin 被拒。
+- [x] AC-2：PUT 保存合法 CourseGraph 后可 GET 回同一图（语义等价、revision 保留）；非法图被拒且不覆盖已有数据。
+- [x] AC-3：Web 启动时从 API 加载已保存图；编辑后自动保存（debounce）；保存状态在 已保存/保存中/失败 间正确切换。
+- [x] AC-4：API 不可达时前端显示"本地服务未连接"，不伪造成功、不清空当前编辑内容。
+- [x] AC-5：API 集成测试与 Web 组件测试（mock fetch）覆盖正/负路径；全仓门通过。
+- [x] 错误和恢复路径：保存失败保留草稿并可重试；API 中途关闭后重开仍可恢复。
+- [x] 回滚/禁用方法：回退本工作项提交可回到纯内存 Demo；不影响已验证的持久化内核与证据。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-API-001 | integration | health/loopback/CORS | ok；白名单外拒绝 | 红灯→绿灯 |
-| TC-API-002 | integration | PUT 合法图 → GET | 语义等价、revision 保留 | 红灯→绿灯 |
-| TC-API-003 | integration | PUT 非法图 | 稳定拒绝，原数据保持 | 红灯→绿灯 |
-| TC-API-004 | component | Web 加载/自动保存/状态 | 状态正确切换，无丢数据 | 红灯→绿灯 |
-| TC-API-005 | component | API 不可达降级 | 提示未连接，草稿保留 | 红灯→绿灯 |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 绿灯 |
+| TC-API-001 | integration | health/loopback/CORS | ok；白名单外拒绝 | 8/8 PASS / TR-006 |
+| TC-API-002 | integration | PUT 合法图 → GET | 语义等价、revision 保留 | 8/8 PASS / TR-006 |
+| TC-API-003 | integration | PUT 非法图 | 稳定拒绝，原数据保持 | 8/8 PASS / TR-006 |
+| TC-API-004 | component | Web 加载/自动保存/状态 | 状态正确切换，无丢数据 | Web 10/10 PASS / TR-006 |
+| TC-API-005 | component | API 不可达降级 | 提示未连接，草稿保留 | Web 10/10 PASS / TR-006 |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 183/183、10/10 PASS / TR-006 |
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-014-local-persist-api`；先提交失败 API/Web 测试，再实现最小 sidecar 与前端接入。
-- Contract/ADR/migration/prompt：无新 canonical contract；新增 `apps/api` composition root；无 prompt 变化。
-- Test Run：API 集成 + Web 组件 + 全仓门按 DoD 执行；职责隔离 QA 对冻结 SHA 复核。
-- Release：无托管发布；本地 `uv run uvicorn` + `pnpm dev` 可演示。
-- 观察结果：本轮交付浏览器↔本地 API 的持久化闭环 prototype；Tauri 打包、认证、加密仍后置。
+- Commit/PR：分支 `feature/WORK-2026-014-local-persist-api`；红灯 `4fe918b`，实现 `6c0c33c`，P2-1 修复 `e0a4c72`。
+- Contract/ADR/migration/prompt：无新 canonical contract；新增 `apps/api` composition root；无 migration/prompt。
+- Test Run：API 8/8、全仓 Python 183/183、Web 10/10、Ruff、strict mypy（含 apps/api）、repository validator、frozen installs/peers/check/build 全通过；职责隔离 QA attempt 001/002 PASS；真实 uvicorn e2e smoke PASS；证据为 `TR-20260814-006`。
+- Release：无托管发布；本地 API + `pnpm dev` 可演示。
+- 观察结果：浏览器↔本地 API 持久化闭环已验证；Tauri 打包、认证、加密仍后置，不得把 prototype 冒充产品保存。
 - 未完成项的新 ID：Tauri sidecar 打包、token/Origin 认证、FTS5 搜索、文件导入、加密与多进程分别后续建项。

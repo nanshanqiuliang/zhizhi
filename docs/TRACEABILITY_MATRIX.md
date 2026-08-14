@@ -21,6 +21,7 @@
 | REQ-2026-008 / ADR-0005 | 修改可追溯并最终可撤销 | WORK-2026-005/011 | GraphPatch v1 prototype；ADR-0005 proposed | `4fc8e60` | TR-20260814-002/003：安全 preview、minimal delta、replay、LIFO undo/redo、篡改/权限、全仓 154/154、QA PASS；持久化/UI 待建 | — | DB/history Runbook 待建 | prototype_verified |
 | REQ-2026-001/006/008 | 无 AI 也能人工查看、编辑知识树并撤销 | WORK-2026-012 | session-only React/SVG Demo；不改 canonical contract | `4caa76a` 原红灯；`5aab0e3` 实现；`c8c6bf9` QA P1 红灯；`fff1ce6` 修复 | TC-WEB-001..006 / TR-20260814-004：Web 6/6、全仓 154/154、desktop/mobile browser、QA attempt 002 PASS | — | `USER_MANUAL.md`；无运行 Runbook（无部署/持久状态） | verified_demo |
 | REQ-2026-006/008 / ADR-0005 | 修改可追溯、可撤销且重启后内容仍在 | WORK-2026-013 | stdlib `sqlite3` workspace adapter；复用 graph v1 契约与 GraphHistory 语义 | `1420b68` 红灯；`8e34a40` 实现 | TC-PERS-001..006 / TR-20260814-005：目标 21/21、全仓 175/175、Web 6/6、QA PASS + live 变异 8/8；浏览器自动保存/API/UI 待接入 | — | 本地持久化 Runbook 待建 | prototype_verified |
+| REQ-2026-006/008 / ADR-0011 | 浏览器↔本地 API 保存/加载闭环、自动保存与保存状态 | WORK-2026-014 | FastAPI loopback sidecar；Web PersistApi client + snapshot↔canonical 转换 | `4fe918b` 红灯；`6c0c33c` 实现；`e0a4c72` P2-1 修复 | TC-API-001..006 / TR-20260814-006：API 8/8、全仓 183/183、Web 10/10、QA-001/002 PASS、e2e smoke PASS；Tauri 打包/认证/token/FTS5 待后续 | — | sidecar Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

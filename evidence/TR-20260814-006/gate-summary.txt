@@ -1,0 +1,20 @@
+TR-20260814-006 / WORK-2026-014
+reviewed commit: e0a4c7212aa8be2aae1b2319968b3f75159bfba1
+attempt-001 commit: 6c0c33c409a3fdb400fd9a2730b42dff7024960a
+red baseline: 4fe918bffde539c10ea69529df45ba854bbe1bb9
+ready commit: 31ce81486a643304e2d1acd0ef3442a20d3f9440
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 9 source files)
+pytest: PASS (183/183; API target 8/8)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (10/10)
+web production build: PASS
+live e2e smoke (uvicorn 127.0.0.1:8123): PUT 200 -> GET 200 equal; invalid graph 422; backup 200 + sha256; CORS forbidden origin no allow-origin header
+QA attempt 001 (6c0c33c): PASS (0 P0/P1, 3 P2)
+QA attempt 002 (e0a4c72 P2-1 fix): PASS (P2-1 closed, no new findings)
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test directories only
