@@ -44,6 +44,30 @@ HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..013`。
 | `record_tampered` | API/History | 409 | no | 从备份恢复 | TC-GATE-004 | verified |
 | `record_invalid` | API/History | 409 | no | 从备份恢复 | TC-GATE-004 | verified |
 
+## 已验证实现（LLM port，WORK-2026-007，第 7 步离线契约层）
+
+以下 15 个稳定错误码由 canonical `LlmErrorCode` enum（`docs/contracts/llm.v1.schema.json`）定义，
+`knowledge_tree_infrastructure/llm/errors.py` 强制 code 属于该 enum；details 不含正文/prompt/密钥。
+证据为 `b2e215b` 与 TC-LLM-006/007 的 mock 契约测试（注入失败映射 10 码 + 退避/预算/熔断）。
+
+| Code | Layer/Owner | Retryable | 用户动作 | Test | 状态 |
+|---|---|---:|---|---|---|
+| `provider_invalid_request` | LLM port | no | 修正请求/配置 | TC-LLM-006/001 | verified |
+| `provider_continuation_lost` | LLM port | no | 从安全 checkpoint 重启模型阶段 | TC-LLM-005 | verified |
+| `provider_auth_failed` | LLM port | no | 检查密钥/权限（立即熔断） | TC-LLM-006/007 | verified |
+| `provider_balance_exhausted` | LLM port | no | 充值或改 deployment（立即熔断） | TC-LLM-006/007 | verified |
+| `provider_rate_limited` | LLM port | yes | 稍后重试（尊重响应头） | TC-LLM-006/007 | verified |
+| `provider_unavailable` | LLM port | yes | 稍后重试 | TC-LLM-006/007 | verified |
+| `provider_connection_failed` | LLM port | yes | 检查网络 | TC-LLM-006/007 | verified |
+| `provider_timeout` | LLM port | depends | 按阶段与幂等性处理 | TC-LLM-006/007 | verified |
+| `provider_schema_failed` | LLM port | no（最多一次修复） | 重试或回退模型 | TC-LLM-002/006 | verified |
+| `provider_protocol_mismatch` | LLM port | no | 隔离 deployment 并反馈 | TC-LLM-004/006 | verified |
+| `provider_capability_missing` | Router/Policy | no | 改用支持该能力的已批准模型 | TC-LLM-009 | verified |
+| `provider_stream_incomplete` | LLM port | no | 从阶段 checkpoint 重跑 | TC-LLM-003 | verified |
+| `budget_exceeded` | Budget | no | 调整预算/截止时间 | TC-LLM-007 | verified |
+| `model_run_cancelled` | LLM port | no | 客户端取消后的正常状态 | TC-LLM-003 | verified |
+| `provider_unknown_error` | LLM port | no | 受控诊断后重试 | 待测试 | declared |
+
 ## 计划目录
 
 | Code | Layer/Owner | Retryable | 用户动作 | Event/Metric | Runbook | Test | 状态 |

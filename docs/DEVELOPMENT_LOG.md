@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-14 — 冻结 canonical LLM contract 与 mock adapter（WORK-2026-007，第 7 步离线第 1 期）
+
+- 关联 ID：WORK-2026-007、LLM-COMPAT-BASELINE-001、REQ-2026-006、NFR-2026-001、TC-LLM-001..009、WORK-2026-006。
+- 实际变化：新增 `docs/contracts/llm.v1.schema.json` 作为 canonical LLM contract 唯一手写来源（ProviderId/ProtocolId/MessageRole/ContentPartKind/FinishReason/CapabilityName/LlmErrorCode 15 码/ContentPart/CanonicalMessage/ToolDefinition/CanonicalToolCall/CanonicalUsage/Budget/TraceContext/GenerationRequest/GenerationResult/CapabilitySet）；`packages/contracts-ts/scripts/generate.mjs` 扩展为同时生成 `_generated_llm_v1_schema.py` 并在 `--check` 检测漂移（TS 侧待第 8 步 Web 消费时生成）；contracts-py 新增 `llm_v1.py`（schema-backed 校验器，冷启动无 repo I/O）；`knowledge_tree_infrastructure/llm/` 新增 canonical（frozen DTO 无厂商 SDK 类型）/errors（稳定错误码）/capabilities（能力校验 + sha256 fingerprint）/resilience（确定性退避 + AttemptBudget + CircuitBreaker）/router（deployment 解析，纯 dict 输入）/mock（确定性 MockLlmAdapter：文本/JSON/流式/tool/thinking/失败注入）。
+- 影响模块/接口/schema/migration/prompt：新增 LLM canonical contract v1 与生成 artifact、infrastructure llm 子包；扩展 repository 门（`load_llm_contract_schema` + REQUIRED_PATHS）；无 migration/prompt；graph v1 contract 不变；config/llm YAML 语义不变。
+- 兼容性：enum 全部从 schema 派生（无第二份手写 enum）；`["string","null"]` + format 陷阱以 `anyOf` 规避；运行时 DTO 往返经 canonical 校验。
+- 验证与证据：红灯 `b5747ec`（2 collection errors）；实现 `b2e215b`；契约/安全定向 56/56（TC-LLM-001..009 mock 必须部分）；全仓 pytest 314/314；repository validator、Ruff、scripts + strict package mypy、contracts-ts drift/tsc、Web 32/32、pnpm build 全绿。
+- 性能/安全/运维影响：无网络、无密钥解析、无真实费用；错误 details 与 fixture 脱敏（无正文/密钥/reasoning）；401/402 不重试、auth/balance 立即熔断、退避 500→1000→2000ms full jitter 确定性。
+- 回滚：回退 `b2e215b` 即回到无 LLM port 状态；不影响 graph contract、持久化、导入、查看器与第 6 步全部已验证能力；红灯保留。
+- 遗留风险与下一步：协议适配器（openai_chat_completions）与 DeepSeek vendor profile 的 HTTP 实现（实施顺序 3–6）未开始；DeepSeek live smoke 与金标（实施顺序 7）待 owner 提供受控 API Key 与预算（WORK-2026-008）；TS enum 与 Web 接入属第 8 步；mock 不是真实 DeepSeek 支持。
+
 ## 2026-08-13 — 建立流程基线
 
 - 状态：已形成文档，未开始实现。

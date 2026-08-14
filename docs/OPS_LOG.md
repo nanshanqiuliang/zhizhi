@@ -4,13 +4,21 @@
 
 ## 当前运行状态
 
-- 产品代码：仅最小 Web 工程状态页与开发工具骨架；无业务能力。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层与 mock adapter 已冻结（第 7 步离线第 1 期）。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
-- 备份与恢复：未实现、未演练。
+- 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-14 — 冻结 LLM port 契约层与 mock adapter（WORK-2026-007，第 7 步离线第 1 期）
+
+- 关联：WORK-2026-007、OPS-2026-003、LLM-COMPAT-BASELINE-001。
+- 已完成：canonical LLM contract v1（`docs/contracts/llm.v1.schema.json`）与生成 artifact；`knowledge_tree_infrastructure/llm/`（canonical DTO/errors/capabilities/resilience/router/mock）；TC-LLM-001..009 mock 契约测试 56/56；全仓 314/314、validator/Ruff/mypy/Web 32/32/build 全绿。
+- 未完成：OpenAI Chat Completions 协议适配器与 DeepSeek vendor profile（实施顺序 3–6）；DeepSeek live smoke、金标评测、RB-PROV-001 演练（顺序 7–8，WORK-2026-008）。
+- 当前缓解：除 `mock` 外所有 provider `enabled: false`；无网络、无密钥解析、无费用；错误 details 与 fixture 脱敏。
+- 下一门：实现协议适配器与 vendor profile（离线 fixture 契约测试），再按 owner 决策（受控 API Key/预算）进入 live smoke 门。
 
 ## 2026-08-13 — 建立运维规划
 
@@ -26,7 +34,7 @@
 |---|---|---|---|---|---|---|
 | OPS-2026-001 | 高 | 尚无运行、备份、恢复和诊断能力 | 不进入真实运营 | 待定 | 阶段 1 | open |
 | OPS-2026-002 | 高 | 尚无构建签名、SBOM 和来源证明 | 不分发安装包 | 待定 | 阶段 1/3 | open |
-| OPS-2026-003 | 高 | DeepSeek 仅有配置/契约，尚无 API Key、live smoke、金标或运行遥测 | `enabled: false`，只使用 mock/fixture | 待定 | 阶段 0/2 | open |
+| OPS-2026-003 | 高 | DeepSeek 仅有配置/契约，尚无 API Key、live smoke、金标或运行遥测 | `enabled: false`，只使用 mock/fixture；契约层与 mock 已验证（`b2e215b`） | 待定 | 阶段 0/2 | open |
 
 ## 2026-08-13 — DeepSeek 运维边界建立
 

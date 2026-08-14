@@ -48,9 +48,7 @@ def test_canonical_llm_schema_is_in_default_repository_gate() -> None:
 
     schema = load_llm_contract_schema(root)
 
-    assert schema["$defs"]["GenerationRequest"]["properties"]["schema_version"] == {
-        "const": 1
-    }
+    assert schema["$defs"]["GenerationRequest"]["properties"]["schema_version"] == {"const": 1}
 
 
 def test_llm_schema_without_generation_request_fails_gate(tmp_path: Path) -> None:

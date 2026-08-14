@@ -982,3 +982,34 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Verification: Web 32/32 (wheel zoom test still passes), pytest 256/256,
   ruff/mypy/validator/build all pass.
 - Step 6 remains 100%, MVP ~75%.
+
+## WORK-2026-007 offline checkpoint — 2026-08-14 22:40 +08:00
+
+- Active branch: `feature/WORK-2026-007-llm-contract`.
+- Roadmap Step 7 (安全接入第一个真实 AI) has begun with its offline layer:
+  WORK-2026-007 froze the canonical LLM contract and implemented the mock
+  provider plus failure fixtures per LLM-COMPAT-BASELINE-001 order 1-2.
+- Committed chain: Ready `docs/work-items/WORK-2026-007_llm-contract-deepseek-adapter.md`;
+  red baseline `b5747ec` (2 collection errors: llm_v1/mock adapter missing);
+  implementation `b2e215b`.
+- New contract source: `docs/contracts/llm.v1.schema.json` (ProviderId,
+  ProtocolId, MessageRole, ContentPartKind, FinishReason, CapabilityName,
+  LlmErrorCode 15 codes, GenerationRequest/Result, Budget, TraceContext,
+  CapabilitySet). `generate.mjs` now emits `_generated_llm_v1_schema.py` and
+  `--check` detects drift; TS enums deferred to Step 8.
+- New runtime: `knowledge_tree_infrastructure/llm/` — frozen canonical DTOs
+  (no vendor SDK), stable errors, capability checks + sha256 fingerprint,
+  deterministic backoff/AttemptBudget/CircuitBreaker, deployment router, and
+  the offline MockLlmAdapter (text/JSON/stream/tool/thinking + injectable
+  failures).
+- Contract tests: TC-LLM-001..009 mock parts 56/56; full pytest 314/314;
+  repository validator, Ruff, scripts + strict package mypy, contracts-ts
+  drift/tsc, Web 32/32 and production build all pass.
+- Roadmap Step 7 is approximately 25% (offline contract layer verified);
+  personal MVP roughly 76%. Real protocol adapters (order 3-6) and DeepSeek
+  live smoke/eval (order 7, WORK-2026-008) remain; live requires the owner to
+  provide a controlled API key and budget. All non-mock providers stay
+  `enabled: false`.
+- Exact next action: implement the openai_chat_completions protocol adapter
+  and DeepSeek vendor profile from offline fixtures (no network), then ask the
+  owner about a controlled API key/budget before any live smoke.
