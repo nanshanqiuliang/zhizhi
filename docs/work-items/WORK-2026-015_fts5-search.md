@@ -1,15 +1,15 @@
 # WORK-2026-015：FTS5 基础搜索（笔记/概念全文检索）
 
 ```yaml
-status: ready
+status: verified_prototype
 type: feature
 owner: Codex (search + api + web role)
 reviewers: [ai_qa_auditor, workspace_owner]
-related_ids: [REQ-2026-006, REQ-2026-010, NFR-2026-001, WORK-2026-013, WORK-2026-014, TR-20260814-005, TR-20260814-006]
+related_ids: [REQ-2026-006, REQ-2026-010, NFR-2026-001, WORK-2026-013, WORK-2026-014, TR-20260814-005, TR-20260814-006, TR-20260814-007]
 target_stage: "阶段 1 / 自然语言第 4 步"
 risk: medium
 created_at: 2026-08-14T08:15:00+08:00
-updated_at: 2026-08-14T08:15:00+08:00
+updated_at: 2026-08-14T08:40:00+08:00
 ```
 
 ## 问题与结果
@@ -42,28 +42,28 @@ updated_at: 2026-08-14T08:15:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：保存含特定词的 CourseGraph 后，FTS5 索引可查询到匹配 concept（label 与 note 均可命中）。
-- [ ] AC-2：`GET /api/workspaces/{id}/search?q=...` 返回 200 + 匹配列表（id/label/note 片段）；空查询/超长查询/非法 MATCH 语法稳定拒绝；无匹配返回空列表。
-- [ ] AC-3：Web 搜索框输入关键词显示匹配节点，点击后选中并滚动定位到该节点。
-- [ ] AC-4：搜索端点只读，不修改数据；缺失 workspace 返回 404 workspace_missing。
-- [ ] AC-5：集成/组件测试覆盖正/负路径；全仓门通过。
-- [ ] 错误和恢复路径：非法查询提示"搜索词无效"；索引损坏可重建不崩溃。
-- [ ] 回滚/禁用方法：回退本工作项提交即可移除搜索；不影响持久化内核与证据。
+- [x] AC-1：保存含特定词的 CourseGraph 后，FTS5 索引可查询到匹配 concept（label 与 note 均可命中）。
+- [x] AC-2：`GET /api/workspaces/{id}/search?q=...` 返回 200 + 匹配列表（id/label/note 片段）；空查询/超长查询/非法 MATCH 语法稳定拒绝；无匹配返回空列表。
+- [x] AC-3：Web 搜索框输入关键词显示匹配节点，点击后选中并滚动定位到该节点。
+- [x] AC-4：搜索端点只读，不修改数据；缺失 workspace 返回 404 workspace_missing。
+- [x] AC-5：集成/组件测试覆盖正/负路径；全仓门通过。
+- [x] 错误和恢复路径：非法查询提示"搜索失败，请检查搜索词"；索引损坏可重建不崩溃。
+- [x] 回滚/禁用方法：回退本工作项提交即可移除搜索；不影响持久化内核与证据。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-SEARCH-001 | integration | FTS5 索引建/查 | label/note 命中 | 红灯→绿灯 |
-| TC-SEARCH-002 | integration | search 端点正/负路径 | 匹配列表、空/超长/非法 422、404 | 红灯→绿灯 |
-| TC-SEARCH-003 | component | Web 搜索框交互 | 结果列表、点击定位 | 红灯→绿灯 |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 绿灯 |
+| TC-SEARCH-001 | integration | FTS5 索引建/查 | label/note 命中 | 10/10 PASS / TR-007 |
+| TC-SEARCH-002 | integration | search 端点正/负路径 | 匹配列表、空/超长/非法 422、404 | 10/10 PASS / TR-007 |
+| TC-SEARCH-003 | component | Web 搜索框交互 | 结果列表、点击定位 | Web 12/12 PASS / TR-007 |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 193/193、12/12 PASS / TR-007 |
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-015-fts5-search`；先提交失败测试，再实现最小搜索。
+- Commit/PR：分支 `feature/WORK-2026-015-fts5-search`；Ready `e451057`，实现 `eeba073`（红灯与实现合并，偏差已披露），P2-2 修复 `d6c8e01`。
 - Contract/ADR/migration/prompt：无新 canonical contract；FTS5 表为派生索引；无 migration/prompt。
-- Test Run：integration + component + 全仓门按 DoD；职责隔离 QA 对冻结 SHA 复核。
+- Test Run：搜索 10/10、全仓 Python 193/193、Web 12/12、Ruff、strict mypy、repository validator、frozen installs/peers/check/build 全通过；职责隔离 QA attempt 001 PASS；真实 uvicorn e2e（中文搜索）PASS；证据为 `TR-20260814-007`。
 - Release：无托管发布；本地 API + Web 可演示搜索。
-- 观察结果：本轮完成第 4 步最后一个主要产物；完成后第 4 步可标记 100%。
+- 观察结果：FTS5 基础搜索已验证，第 4 步最后一个主要产物完成；中文分词与文件内容检索属第 5 步。
 - 未完成项的新 ID：中文分词、文件内容检索（第 5 步）、模糊搜索/纠错、搜索历史分别后续建项。

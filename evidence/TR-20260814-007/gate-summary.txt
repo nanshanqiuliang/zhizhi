@@ -1,0 +1,18 @@
+TR-20260814-007 / WORK-2026-015
+reviewed commit: d6c8e015f3e3ad77a2649a838e03b7b5db9c8789
+qa attempt-001 commit: eeba07368b0f2d1f47ebfd893ef2675aca194656
+ready commit: e451057b17eedeec5180d1ac5a41490021ea6236
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 9 source files)
+pytest: PASS (193/193; search target 10/10)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (12/12)
+web production build: PASS
+live e2e smoke (uvicorn 127.0.0.1:8124): CJK label/note substring hits; empty query 422 search_invalid_query
+QA attempt 001 (eeba073): PASS (0 P0/P1, 3 P2); P2-2 fixed by d6c8e01
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 FTS5 stdlib, local test directories only

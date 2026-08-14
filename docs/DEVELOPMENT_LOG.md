@@ -221,6 +221,17 @@
 - 回滚：回退 `e0a4c72` 可回到纯内存 Demo；红灯测试保留，不得以删除测试替代不变量。
 - 遗留风险与下一步：Tauri 打包、认证/token（ADR-0011/SPK-009）、FTS5 搜索、导入、加密、多进程、云端与真实 Provider 仍关闭；P2-2（加载竞态）与 P2-3（关闭前 debounce 不 flush）为原型已知边界，记录于 QA 报告。
 
+## 2026-08-14 — 实现 FTS5 基础搜索（笔记/概念全文检索）
+
+- 关联 ID：WORK-2026-015、REQ-2026-006、REQ-2026-010、TR-20260814-007。
+- 实际变化：workspace adapter 新增 FTS5 派生索引（`concept_search` 虚拟表，save 事务内原子重建）、`search_course_graph`（MATCH 主查 + 中文子串回退、query 长度/语法守卫、snippet 截断）、`SearchResult`；`apps/api` 新增 `GET /api/workspaces/{id}/search?q=...`（422 search_invalid_query/404）；Web 新增搜索框、结果下拉、点击定位、失败提示。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；FTS5 表为派生索引，无新 canonical contract/migration/prompt。
+- 兼容性：sqlite3 3.45.3 内置 FTS5；unicode61 对中文整串分词的限制由子串回退覆盖（明确记录为中文分词边界）。
+- 验证与证据：Ready `e451057`；实现 `eeba073` 后搜索 10/10、全仓 193/193、Web 12/12；QA attempt 001 PASS（0 P0/P1，3 P2）；P2-2 修复 `d6c8e01`；真实 uvicorn e2e 中文搜索通过。流程偏差已披露：红灯测试与实现合并提交，红灯真实性经父提交 worktree/QA 双重复核。
+- 性能/安全/运维影响：只读搜索端点；查询守卫与 snippet 截断；错误不含正文；无网络出站、Provider、secret、真实用户数据或费用。
+- 回滚：回退 `d6c8e01` 可移除搜索；红灯测试保留，不得以删除测试替代不变量。
+- 遗留风险与下一步：中文分词、模糊/纠错、文件内容检索（第 5 步）仍关闭；本工作项完成后第 4 步标记 100%，下一主项进入第 5 步导入资料与来源跳转。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

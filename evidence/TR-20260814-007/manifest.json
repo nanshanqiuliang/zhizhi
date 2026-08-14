@@ -1,0 +1,32 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-007",
+  "created_at": "2026-08-14T08:40:00+08:00",
+  "reviewed_commit": "d6c8e015f3e3ad77a2649a838e03b7b5db9c8789",
+  "qa_attempt001_commit": "eeba07368b0f2d1f47ebfd893ef2675aca194656",
+  "ready_commit": "e451057b17eedeec5180d1ac5a41490021ea6236",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": {
+      "path": "ai-search-qa-attempt-001.md",
+      "reviewed_commit": "eeba07368b0f2d1f47ebfd893ef2675aca194656",
+      "decision": "pass"
+    },
+    "post_review_fix": {
+      "commit": "d6c8e015f3e3ad77a2649a838e03b7b5db9c8789",
+      "note": "P2-2 (search input maxLength + explicit failure hint) closed by d6c8e01; P2-1/P2-3 recorded as prototype boundaries"
+    }
+  },
+  "files": [
+    "ai-search-qa-attempt-001.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false
+}

@@ -513,3 +513,34 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: commit this Ready boundary, then add failing FTS5/API/Web
   tests before any implementation. Completing this work item makes natural-
   language Step 4 100%.
+
+## Step 4C closure checkpoint — 2026-08-14 08:40 +08:00
+
+- Active branch: `feature/WORK-2026-015-fts5-search`.
+- Frozen implementation: `d6c8e015f3e3ad77a2649a838e03b7b5db9c8789`
+  (initial `eeba073` + P2-2 fix); Ready boundary:
+  `e451057b17eedeec5180d1ac5a41490021ea6236`.
+- Process deviation (disclosed): the red-light tests and implementation were
+  merged into a single commit `eeba073` instead of separate commits. Red-light
+  truth was re-confirmed twice: a git worktree at the parent commit reproduces
+  `ImportError: cannot import name 'SearchResult'`, and QA verified at the
+  direct parent `e451057` that no SearchResult/endpoint/test file exists.
+- Role-separated QA reviewed `eeba073` and returned PASS (0 P0/P1, 3 P2).
+  P2-2 (search input maxLength + explicit failure hint) closed by `d6c8e01`;
+  P2-1 (no debounce/race) and P2-3 (hand-tampered non-FTS5 table error
+  classification) recorded as prototype boundaries.
+- Full gates pass at `d6c8e01`: repository validator, Ruff, scripts + strict
+  package mypy (incl. apps/api), pytest 193/193 (search 10/10), locked pnpm
+  install/peers, Web 12/12, TypeScript check, and production build. Live e2e
+  smoke via real uvicorn confirmed CJK label/note substring hits and empty-
+  query 422.
+- Evidence/report: `evidence/TR-20260814-007/` and
+  `docs/test-reports/TR-20260814-007_fts5-search.md`.
+- **Natural-language Step 4 is COMPLETE (100%)**: SQLite persistence kernel
+  (TR-005), FastAPI sidecar + Web auto-save (TR-006), and FTS5 search
+  (TR-007) are all verified. Overall personal MVP is approximately 55%.
+- Exact next action on the next "继续推进": enter natural-language Step 5
+  (import material and jump from nodes back to sources) with a separate Ready
+  work item (WORK-2026-016), starting from failing import/source red tests.
+- Current blocker: none for offline Step 5 preparation. Real Provider/Web and
+  owner acceptance remain separately gated and disabled.
