@@ -1038,3 +1038,28 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   draft pipeline).
 - Exact next action: run the calculus gold evaluation against the real
   DeepSeek adapter, then request role-separated QA for the frozen SHA.
+
+## Step 7 closure checkpoint — 2026-08-14 17:05 +08:00
+
+- Active branch: `feature/WORK-2026-008-deepseek-adapter-live`.
+- Roadmap Step 7 (safe first real-AI integration) is technically closed (~95%):
+  canonical LLM contract, mock, DeepSeek adapter, monetary budget, scoped
+  fallback, controlled live smoke, gold-eval baseline, RB-PROV-001 drill and an
+  isolated review.
+- Commits this round: `042f937` (monetary budget + ModelRunner fallback +
+  scripts/eval_llm_001.py + RB-PROV-001 drill + EVAL-LLM-001 report);
+  `dd49599` (close review findings: budget fail-closed, retry/fallback caps,
+  usage/finish_reason robustness, reasoning target, stream URLError, HTTPS).
+- Review: isolated review subagent returned blocking findings (monetary budget
+  silently skipped without pricing; retries ignoring request max_attempts) plus
+  4 should-fix; all closed with regression tests. Classification: correlated_review.
+- Evidence: live smoke 5/5 (~817 tokens); EVAL-LLM-001 baseline (concept recall
+  0.133, relation accuracy 0.667, answer ok; 369 in / 969 out tokens, ~$0.0012);
+  RB-PROV-001-drill-20260814.md; EVAL-LLM-001_deepseek-gold-eval.md.
+- Full gates: pytest 348/348 + 5 skipped; validator; ruff; mypy (scripts 10 +
+  strict packages 26); contracts-ts drift check all pass. Key never written.
+- Remaining: DeepSeek deployment `enabled: true` final approval is the only
+  owner-decision left (correlated review passed; residual risk acceptance is
+  the workspace owner's). Gold quality thresholds also await owner approval.
+- Exact next action: after owner approval, enter Step 8 (AI draft pipeline)
+  wiring DeepSeek adapter into the AI-generation flow.

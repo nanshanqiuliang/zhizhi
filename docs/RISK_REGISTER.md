@@ -18,7 +18,7 @@
 | RISK-2026-012 | Harness/validator 共同缺陷同时误导学科 Agent 和 QA | 中 | 极高 | 高 | 两角色共同漏检确定性 mutation | 纯领域验证、property/mutation test、content-addressed artifact、全部 attempt 留证；TR-005 已关闭 3 P1/3 P2 | 禁用机器通过状态、修复并重放所有受影响 run | workspace_owner（技术负责人确定前） | 阶段 0/2 | open |
 | RISK-2026-013 | Windows 开发路径含空格导致 Vite `@fs`/`?url` 解析失败，PDF.js worker 加载失败使渲染不可用 | 中 | 高 | 高 | 渲染视图无 canvas/一直"正在渲染"、worker 404 | public worker 固定 URL（`/pdf.worker.min.mjs`）规避 `@fs` 空格；TR-010 浏览器验证通过 | 回退到页文本查看器；重建 worker 资源 | 待定 | 阶段 1 | open |
 | RISK-2026-014 | headless/无头环境 canvas 渲染受限，自动化可能误报渲染失败 | 低 | 中 | 中 | headless 下 render promise 挂起或像素异常 | 真实浏览器人工验收（用户手册清单）；自动化只断言 canvas 存在与尺寸 | 用真实浏览器验证；不把 headless 限制当产品缺陷 | 待定 | 阶段 1 | open |
-| RISK-2026-015 | LLM 真实调用费用失控或超出预算 | 中 | 高 | 高 | 单次 usage 异常、attempt 超限、账单上升 | live 仅 `RUN_LIVE_LLM_TESTS=1` 门控；max_tokens/attempt 约束；本轮 smoke 约 817 token 远低于 3 元；`max_cost_usd` 金额预算尚未实现（记录为缺口） | 立即关闭 live 门、轮换密钥、核对账单 | 待定 | 阶段 2 | open |
+| RISK-2026-015 | LLM 真实调用费用失控或超出预算 | 中 | 高 | 高 | 单次 usage 异常、attempt 超限、账单上升 | 金额预算（`max_cost_usd` + `Pricing`/`CostBudget`，`042f937` 实现）、attempt/回退上限、live 仅 env 门控；本轮全部真实调用 < $0.002（约 2155 token）远低于 3 元 | 立即关闭 live 门、轮换密钥、核对账单 | 待定 | 阶段 2 | open |
 
 ## 评分
 

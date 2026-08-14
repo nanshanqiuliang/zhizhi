@@ -24,9 +24,12 @@
 | [TR-20260814-013](TR-20260814-013_diff-based-save.md) | `7106621` | 普通编辑 patch 化保存、GraphPatch delete 契约、跨会话撤销覆盖所有编辑、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-022 |
 
 > WORK-2026-007（canonical LLM contract + mock + TC-LLM-001..009）与 WORK-2026-008
-> （DeepSeek adapter + 受控 live smoke）已完成实现与开发验证（`b2e215b`/`d81c574`/
-> `a80f43d`：定向 56/56 + 21/21、live 5/5、全仓 335/335 + 5 skipped），但职责隔离
-> QA 尚未执行，TR 报告待封存后再补入本索引。
+> （DeepSeek adapter + 金额预算 + 受控回退 + 受控 live smoke + 金标基线 + RB-PROV-001
+> 演练）已完成实现与开发验证（`b2e215b`/`d81c574`/`a80f43d`/`042f937`/`dd49599`：
+> 定向 56/56 + 33/33、live 5/5、金标 EVAL-LLM-001 基线、隔离 review 已修复 blocking）；
+> 职责隔离 QA 尚未封存 TR 报告（`correlated_review` 已执行，最终 owner 接受待定）。
+
+| [EVAL-LLM-001](EVAL-LLM-001_deepseek-gold-eval.md) | `042f937` | DeepSeek 微积分金标基线（概念抽取/关系/命令解释/带引用回答）与成本/延迟汇总 | 基线记录（质量阈值与 deployment 批准待 owner） | WORK-2026-008 |
 
 正式执行时：
 

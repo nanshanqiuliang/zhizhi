@@ -50,7 +50,7 @@
 |---|---|---|---|---|---|---|
 | OPS-2026-001 | 高 | 尚无运行、备份、恢复和诊断能力 | 不进入真实运营 | 待定 | 阶段 1 | open |
 | OPS-2026-002 | 高 | 尚无构建签名、SBOM 和来源证明 | 不分发安装包 | 待定 | 阶段 1/3 | open |
-| OPS-2026-003 | 高 | DeepSeek 仅有配置/契约，尚无 API Key、live smoke、金标或运行遥测 | `enabled: false`；契约层 + mock + DeepSeek adapter + 受控 live smoke 已验证（`b2e215b`/`d81c574`/`a80f43d`） | 待定 | 阶段 0/2 | open |
+| OPS-2026-003 | 高 | DeepSeek 已有配置/契约/adapter/金标基线/演练，但 deployment `enabled: true` 正式批准待 owner | `enabled: false`；金额/attempt/回退三重预算约束，密钥仅 env 不落盘 | 待定 | 阶段 0/2 | open |
 
 ## 2026-08-13 — DeepSeek 运维边界建立
 

@@ -2,6 +2,18 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-14 — 第七步收口：金额预算、受控回退、金标评测、RB-PROV-001 演练与隔离审查
+
+- 关联 ID：WORK-2026-007/008、EVAL-LLM-001、RB-PROV-001、NFR-2026-006/007/008、RISK-2026-015、LLM-COMPAT-BASELINE-001。
+- 实际变化：实现金额预算（`Pricing`/`CostBudget`/`estimate_cost_usd` + DeepSeek adapter 接线，config 定价与 `max_cost_usd` 上限，providers schema 增 pricing）；实现受控回退（`ModelRunner`，仅瞬态错误码回退、`max_fallbacks` 上限）；新增 `scripts/eval_llm_001.py` 金标评测（概念抽取/关系候选/命令解释/带引用回答 4 子任务）；`RB-PROV-001` 演练报告（10 定位步骤 + 错误处置表核对，状态 draft→drilled）。
+- 隔离审查（review subagent，`correlated_review`）发现 2 blocking + 4 should-fix + 4 nits，已全部修复：金额预算缺 pricing 失败关闭、重试次数受 request `max_attempts` 约束、ModelRunner 受 `max_fallbacks` 约束、usage 非法值/finish_reason 缺失抛稳定码、reasoning_continuation 附加到 tool call 消息、stream URLError 映射 + 熔断、HTTP base_url 强制 HTTPS。
+- 影响模块/接口/schema/migration/prompt：扩展 `llm/`（resilience/runner/vendors/protocols/http_client）、`scripts/eval_llm_001.py`、config pricing/max_cost_usd；无 migration/prompt；canonical contract 不变（LlmErrorCode 上轮已对齐 17 码）。
+- 兼容性：金额预算缺定价失败关闭；回退有界；协议解析失败关闭。
+- 验证与证据：全仓 pytest 348/348 + 5 skipped；validator/Ruff/strict mypy（scripts 10 + packages 26）/contracts-ts drift 全绿；live smoke 5/5（~817 token）；EVAL-LLM-001 基线（concept recall 0.133、relation accuracy 0.667、answer 通过；369 in/969 out，~$0.0012）；review 修复 `dd49599`。
+- 性能/安全/运维影响：密钥仅 env、不落盘；HTTPS 强制；金额/attempt/fallback 三重预算约束；费用 < $0.002 远低于 3 元。
+- 回滚：回退 `042f937`/`dd49599` 即回到 mock-only；DeepSeek deployment 保持 `enabled: false`；红灯与证据保留。
+- 遗留风险与下一步：DeepSeek deployment `enabled: true` 的最终批准为唯一待 owner 决定的残余项（`correlated_review` 已通过并修复 blocking）；金标质量阈值（recall/accuracy 目标）待 owner 批准；随后进入第 8 步 AI 草案流水线。
+
 ## 2026-08-14 — 交付检查第三轮：同步第 7 步状态、环境清单、风险与 Runbook
 
 - 关联 ID：WORK-2026-007/008、RB-PROV-001、OPS-2026-003、RISK-2026-015。

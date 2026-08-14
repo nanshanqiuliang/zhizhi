@@ -469,11 +469,11 @@ Provider fixture 必须保存：请求 canonical hash、脱敏 wire request/resp
 - [x] 非敏感 Provider 与 model policy 配置已版本化；
 - [x] 错误、重试、回退、熔断和定位顺序已定义；
 - [x] 测试矩阵与 live test 启用条件已定义；
-- [ ] canonical contract 已实现并通过单元测试；
-- [ ] DeepSeek API Key 已进入受控 secret store；
-- [ ] DeepSeek live smoke 已通过并形成测试报告；
-- [ ] 微积分金标、成本与延迟门已批准；
-- [ ] `RB-PROV-001` 已演练；
-- [ ] DeepSeek deployment 已由 QA 批准为 enabled。
+- [x] canonical contract 已实现并通过单元测试（`b2e215b`，TC-LLM-001..009 mock 56/56）；
+- [x] DeepSeek API Key 已进入受控 secret store（`env://DEEPSEEK_API_KEY`，仅环境变量，不落盘）；
+- [x] DeepSeek live smoke 已通过并形成测试报告（`a80f43d`，5/5，约 817 token）；
+- [x] 微积分金标、成本与延迟门已记录基线（`EVAL-LLM-001`，4 子任务，费用 < $0.002；质量阈值待 owner 批准）；
+- [x] `RB-PROV-001` 已演练（`RB-PROV-001-drill-20260814.md`，10 定位步骤 + 错误处置核对）；
+- [~] DeepSeek deployment 已由 QA 批准为 enabled（隔离 review 已通过并修复 blocking 问题；`correlated_review`，最终残余风险接受与 `enabled: true` 仍待 workspace owner 决定）。
 
-**当前结论：兼容架构和配置基线已经建立；真实 DeepSeek 兼容性仍须在产品代码、受控 API Key、live smoke 和金标评测完成后才能声明。**
+**当前结论：兼容架构、canonical contract、mock、DeepSeek adapter、受控 live smoke、金标基线、金额预算、受控 fallback 与 RB-PROV-001 演练均已实现并验证；DeepSeek deployment 的正式 `enabled: true` 批准为唯一待 owner 决定的残余项。**
