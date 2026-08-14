@@ -95,7 +95,7 @@
 
 完成标志：真实模型能稳定返回符合契约的草案；失败可定位、费用可控、日志不泄露内容或密钥。
 
-当前状态：**离线契约层已冻结、mock 已验证（约 25%）；真实适配尚未实现**。canonical LLM contract（消息/请求/结果/能力/错误码的统一契约，`docs/contracts/llm.v1.schema.json`）、确定性 mock provider（文本/JSON/流式/工具调用/故障注入）与 TC-LLM-001..009 契约测试已完成（56/56 定向测试）。OpenAI 兼容协议适配器与 DeepSeek vendor profile、流式/思考/工具的真实接入、以及真实 DeepSeek 调用仍待实现；真实 smoke test 需 owner 提供受控 API Key 与预算。
+当前状态：**真实 DeepSeek adapter 已实现并通过受控 live smoke（约 45%）；金标评测与正式批准待后续**。canonical LLM contract、mock provider 与 TC-LLM-001..009 契约测试已完成；OpenAI Chat Completions 协议适配器 + DeepSeek vendor profile（显式 thinking、流式、工具调用、错误映射、重试/熔断/预算）已实现，并通过真实 DeepSeek 受控 smoke（文本/JSON/思考/工具/流式 5/5，约 817 token，费用远低于 3 元测试预算）。DeepSeek deployment 仍保持 `enabled: false`，正式启用待微积分金标评测（EVAL-LLM-001）、RB-PROV-001 演练与 QA 批准。
 
 ### 第 8 步：让 AI 从笔记和资料自动生成知识树草案
 
@@ -139,17 +139,17 @@
 
 ## 当前进度快照
 
-- 当前自然语言步骤：**第 7 步——安全接入第一个真实 AI（进行中，离线契约层已完成）**；本轮完成 canonical LLM contract 冻结与 mock adapter 验证。
+- 当前自然语言步骤：**第 7 步——安全接入第一个真实 AI（进行中，真实 DeepSeek adapter 已通过受控 live smoke）**；本轮完成 DeepSeek adapter 与 live smoke。
 - 第 2 步进度：**已完成底层 prototype（100%）**；持久化撤销属于第 4/6 步，不冒充已上线功能。
 - 第 3 步进度：**100%（developer demo 已验证）**。
 - 第 4 步进度：**100%**——SQLite 持久化内核（`TR-20260814-005`）+ FastAPI sidecar 与 Web 自动保存（`TR-20260814-006`）+ FTS5 基础搜索（`TR-20260814-007`）均通过职责隔离 QA。
 - 第 5 步进度：**100%**——安全文件导入（`TR-20260814-008`）+ PDF 页文本查看/锚点跳转（`TR-20260814-009`）+ PDF.js 渲染/bbox 高亮（`TR-20260814-010`）均通过职责隔离 QA 与真实浏览器验证。
 - 第 6 步进度：**100%**——锁定、撤销/重做（覆盖所有编辑）、冲突预览、崩溃恢复、重复任务保护、版本历史全部由 `TR-20260814-011..013` 验证；"不依赖 AI 也能使用"的手工 Alpha 完成。
-- 第 7 步进度：**约 25%（离线契约层）**——canonical LLM contract v1（`docs/contracts/llm.v1.schema.json`）、生成 artifact、mock provider 与 TC-LLM-001..009 mock 契约测试完成（`b2e215b`，56/56 定向、314/314 全仓）；协议适配器/DeepSeek vendor profile 与真实 smoke 待后续。
-- 个人可用 MVP 总进度：**粗略约 76%**。这是基于已提交、已验证的可见能力估算，不是按文件数计算。
+- 第 7 步进度：**约 45%（真实 adapter + 受控 live smoke）**——canonical LLM contract、mock provider、TC-LLM-001..009 mock 契约测试（`b2e215b`）；DeepSeek OpenAI Chat Completions adapter + vendor profile + resilience（`d81c574`）与真实 live smoke（`a80f43d`，5/5，约 817 token）；金标评测 EVAL-LLM-001 与 deployment 正式批准待后续。
+- 个人可用 MVP 总进度：**粗略约 77%**。这是基于已提交、已验证的可见能力估算，不是按文件数计算。
 - 已经能看到：可运行的三栏知识树网页；可编辑笔记/节点、增删叶节点、拖动/排布/锁定和撤销重做（跨会话覆盖所有编辑）；关闭重开内容仍在（需启动本地 API）；保存状态可见；概念与笔记全文搜索；本地资料（MD/TXT/PDF）安全导入；PDF 页文本/可视化查看与锚点目录跳转、bbox 区域高亮，Markdown/TXT 原文查看；内容/位置锁定、冲突预览、本地备份/恢复、版本历史面板。
-- 还不能看到：真实 AI 自动构图、对话/检索、Windows 安装包（真实 DeepSeek 调用需 owner 提供 API Key 与预算）。
-- 下一个用户可见里程碑：**第 7 步真实 DeepSeek 接入（先完成协议适配器与 vendor profile，再视 owner 的 API Key/预算决定 live smoke）**。
+- 还不能看到：AI 自动构图、对话/检索、Windows 安装包（DeepSeek 真实 adapter 已可用但仍未接 AI 草案流水线，deployment 保持 `enabled: false`）。
+- 下一个用户可见里程碑：**第 7 步收尾（DeepSeek 金标评测 + deployment 正式批准），随后进入第 8 步 AI 自动生成知识树草案**。
 
 ## 用户说“继续推进”时的固定工作方式
 

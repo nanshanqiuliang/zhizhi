@@ -12,6 +12,14 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-14 — 实现 DeepSeek adapter 与受控 live smoke（WORK-2026-008）
+
+- 关联：WORK-2026-008、OPS-2026-003、LLM-COMPAT-BASELINE-001。
+- 已完成：DeepSeek OpenAI Chat Completions 协议适配器 + vendor profile + stdlib 传输 + resilience 接线；离线契约测试 TC-DS-001..005 21/21；真实 live smoke 5/5（text/JSON/thinking/tool/stream，约 817 token，费用远低于 3 元预算）。
+- 未完成：微积分金标评测 `EVAL-LLM-001`、`RB-PROV-001` 演练、DeepSeek deployment 正式批准（`enabled: true`）。
+- 当前缓解：除 `mock` 外所有 provider `enabled: false`；live 仅 `RUN_LIVE_LLM_TESTS=1` + `DEEPSEEK_API_KEY` 门控；密钥只经环境变量，绝不落盘/日志/git。
+- 下一门：金标评测与 RB-PROV-001 演练，再由 QA 批准 model policy 与 capability snapshot。
+
 ## 2026-08-14 — 冻结 LLM port 契约层与 mock adapter（WORK-2026-007，第 7 步离线第 1 期）
 
 - 关联：WORK-2026-007、OPS-2026-003、LLM-COMPAT-BASELINE-001。
@@ -34,7 +42,7 @@
 |---|---|---|---|---|---|---|
 | OPS-2026-001 | 高 | 尚无运行、备份、恢复和诊断能力 | 不进入真实运营 | 待定 | 阶段 1 | open |
 | OPS-2026-002 | 高 | 尚无构建签名、SBOM 和来源证明 | 不分发安装包 | 待定 | 阶段 1/3 | open |
-| OPS-2026-003 | 高 | DeepSeek 仅有配置/契约，尚无 API Key、live smoke、金标或运行遥测 | `enabled: false`，只使用 mock/fixture；契约层与 mock 已验证（`b2e215b`） | 待定 | 阶段 0/2 | open |
+| OPS-2026-003 | 高 | DeepSeek 仅有配置/契约，尚无 API Key、live smoke、金标或运行遥测 | `enabled: false`；契约层 + mock + DeepSeek adapter + 受控 live smoke 已验证（`b2e215b`/`d81c574`/`a80f43d`） | 待定 | 阶段 0/2 | open |
 
 ## 2026-08-13 — DeepSeek 运维边界建立
 

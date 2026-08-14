@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-14 — 实现 DeepSeek OpenAI Chat Completions adapter 与受控 live smoke（WORK-2026-008，第 7 步真实接入第 1 期）
+
+- 关联 ID：WORK-2026-008、LLM-COMPAT-BASELINE-001、NFR-2026-006/007/008、WORK-2026-007、OPS-2026-003、TC-DS-001..005、TC-DS-LIVE-001..005。
+- 实际变化：`knowledge_tree_infrastructure/llm/protocols/openai_chat.py` 实现 canonical↔OpenAI Chat Completions 双向映射（消息/角色/内容、tool_calls、`response_format=json_object`、显式 `thinking.type`、reasoning_content 工具轮回传、usage/finish_reason、SSE 流解析容忍空行/keep-alive/`[DONE]`）；`vendors/deepseek.py` 实现 DeepSeek vendor profile（endpoint、模型 ID 快照、HTTP 错误映射按基线 4.6）+ `DeepSeekLlmAdapter`（有界重试/退避/熔断接线，auth/balance 立即熔断不重试）；`http_client.py` 用 stdlib `urllib` 传输（POST JSON + SSE 逐行，单 read 超时；Python 3.12 socket 不接受 timeout tuple）；`tests/e2e/test_deepseek_live_smoke.py` 在 `RUN_LIVE_LLM_TESTS=1` + `DEEPSEEK_API_KEY` 双重门控下跑真实 smoke。
+- 影响模块/接口/schema/migration/prompt：扩展 `knowledge_tree_infrastructure/llm/`（新增 protocols/vendors/http_client 子模块 + 两个测试文件）；无 canonical contract/migration/prompt 变更；config/llm YAML 语义不变（模型 ID 快照与真实 `/models` 探测一致）。
+- 兼容性：传输不依赖厂商 SDK；thinking 模式禁发 sampling 参数；reasoning_content 只临时回传不展示/不落盘；SSE 断流返回 `provider_stream_incomplete` 不续写中间 delta。
+- 验证与证据：红灯 `d6a7444`（1 collection error）；实现 `d81c574` + 修复 `a80f43d`；离线契约 21/21（TC-DS-001..005）；live smoke 5/5（真实 DeepSeek：text/JSON/thinking/tool/stream，约 817 token，费用远低于 3 元）；全仓 pytest 335/335 + 5 skipped；validator/Ruff/strict mypy（25 文件）/contracts-ts drift/pnpm build 全绿。
+- 性能/安全/运维影响：live 仅 env 门控运行；密钥只经环境变量进入 composition root，绝不落盘/日志/git；错误 details 与 fixture 脱敏；退避 500→1000→2000ms；预算受 max_tokens/attempt 约束。
+- 回滚：回退 `d81c574`/`a80f43d` 即回到 mock-only；DeepSeek deployment 保持 `enabled: false`；红灯与 evidence 保留。
+- 遗留风险与下一步：微积分金标评测 `EVAL-LLM-001` 与质量/成本/延迟门、`RB-PROV-001` 演练、DeepSeek deployment 正式批准（`enabled: true`）未做；AI 草案流水线接入（第 8 步）未开始；职责隔离 QA 待执行。
+
 ## 2026-08-14 — 冻结 canonical LLM contract 与 mock adapter（WORK-2026-007，第 7 步离线第 1 期）
 
 - 关联 ID：WORK-2026-007、LLM-COMPAT-BASELINE-001、REQ-2026-006、NFR-2026-001、TC-LLM-001..009、WORK-2026-006。

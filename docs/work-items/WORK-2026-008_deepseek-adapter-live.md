@@ -1,7 +1,7 @@
 # WORK-2026-008：DeepSeek OpenAI Chat Completions adapter 与受控 live smoke（第 7 步真实接入第 1 期）
 
 ```yaml
-status: in_progress
+status: implemented
 type: feature
 owner: Codex (llm-adapter + infra role)
 reviewers: [ai_qa_auditor, workspace_owner]
@@ -9,7 +9,7 @@ related_ids: [LLM-COMPAT-BASELINE-001, NFR-2026-006, NFR-2026-007, NFR-2026-008,
 target_stage: "阶段 1 / 自然语言第 7 步（安全接入第一个真实 AI）"
 risk: high
 created_at: 2026-08-14T23:00:00+08:00
-updated_at: 2026-08-14T23:00:00+08:00
+updated_at: 2026-08-14T23:15:00+08:00
 ```
 
 ## 问题与结果
@@ -76,9 +76,9 @@ updated_at: 2026-08-14T23:00:00+08:00
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-008-deepseek-adapter-live`；Ready → 红灯 → 实现 → 离线绿 → live smoke → 文档收口。
+- Commit/PR：分支 `feature/WORK-2026-008-deepseek-adapter-live`；Ready → 红灯 `d6a7444`（1 collection error）→ 实现 `d81c574` → live smoke + timeout 修复 `a80f43d` → 文档收口。
 - Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 `docs/contracts/llm.v1.schema.json` 与 config/llm v1。
-- Test Run：离线 fixture 契约测试全绿；live smoke（env 门控）通过并报告 usage；全仓门全绿；职责隔离 QA 待执行。
+- Test Run：离线 fixture 契约测试 TC-DS-001..005 21/21；live smoke 5/5（RUN_LIVE_LLM_TESTS=1 + DEEPSEEK_API_KEY，约 817 token，费用远低于 3 元）；全仓 pytest 335/335 + 5 skipped；validator/Ruff/strict mypy（25 文件）/contracts-ts drift/pnpm build 全绿；职责隔离 QA 待执行。
 - Release：无托管发布；DeepSeek deployment 保持 `enabled: false`（正式批准待金标/RB-PROV-001）。
-- 观察结果：DeepSeek OpenAI Chat Completions adapter 真实可用（受控 smoke 验证）。
+- 观察结果：DeepSeek OpenAI Chat Completions adapter 真实可用（受控 smoke 验证）；密钥从未落盘。
 - 未完成项的新 ID：微积分金标评测 `EVAL-LLM-001` 与质量/成本/延迟门、`RB-PROV-001` 演练、DeepSeek deployment 正式批准、AI 草案流水线接入（第 8 步）。

@@ -1013,3 +1013,28 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: implement the openai_chat_completions protocol adapter
   and DeepSeek vendor profile from offline fixtures (no network), then ask the
   owner about a controlled API key/budget before any live smoke.
+
+## WORK-2026-008 live-smoke checkpoint — 2026-08-14 23:15 +08:00
+
+- Active branch: `feature/WORK-2026-008-deepseek-adapter-live`.
+- Roadmap Step 7 order 3-7 completed: DeepSeek OpenAI Chat Completions
+  protocol adapter + vendor profile + stdlib urllib transport + resilience
+  wiring, verified by offline fixture tests and a controlled live smoke.
+- Committed chain: red baseline `d6a7444`; implementation `d81c574`;
+  live smoke + urllib timeout fix `a80f43d`.
+- Offline: TC-DS-001..005 (serialization/response/SSE/error mapping/redaction
+  + fake-HTTP end-to-end + retry semantics) 21/21. Full pytest 335/335 + 5
+  skipped; validator/ruff/strict mypy (25 files)/contracts-ts drift/pnpm build
+  all pass.
+- Live smoke (RUN_LIVE_LLM_TESTS=1 + DEEPSEEK_API_KEY, owner key): text
+  in=13/out=35, json in=44/out=55, thinking in=92/out=256, tool in=276/out=46,
+  stream ok. ~817 tokens total, far below the 3 CNY budget. The key was never
+  written to any file; non-mock providers stay `enabled: false`.
+- DeepSeek V4 thinking mode spends tokens on reasoning_content first, so small
+  max_tokens legitimately yields finish_reason=length and empty content; the
+  thinking smoke asserts connectivity + usage only.
+- Roadmap Step 7 ~45%; personal MVP ~77%. Remaining: EVAL-LLM-001 gold eval,
+  RB-PROV-001 drill, and QA approval before `enabled: true` (then Step 8 AI
+  draft pipeline).
+- Exact next action: run the calculus gold evaluation against the real
+  DeepSeek adapter, then request role-separated QA for the frozen SHA.
