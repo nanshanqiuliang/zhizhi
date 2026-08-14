@@ -16,6 +16,8 @@
 | RISK-2026-010 | AI 学科与 QA 同源错误造成虚假一致 | 高 | 极高 | 极高 | 相同模型/来源一致 PASS、mutation 漏检 | run/prompt/context 隔离；优先跨模型/Provider；同源自动标 `correlated_review`；TR-005 已验证离线披露/隔离 | 返回 inconclusive；认证 owner 边界未实现前拒绝风险接受；关闭自动放行 | workspace_owner | 阶段 0/2 | open |
 | RISK-2026-011 | 搜索结果提示注入、SEO/引用洗白或网页漂移污染自动复核 | 高 | 极高 | 极高 | 工具越权、引用不支持 claim、内容 hash 漂移 | SearchProvider allowlist、来源分级、内容视为不可信、引用/hash/获取时间、反证搜索；TR-005 已验证冻结 replay fixture | 隔离来源、使 attestation 失效、回到本地一手证据或 inconclusive | workspace_owner | 阶段 0/2/3 | open |
 | RISK-2026-012 | Harness/validator 共同缺陷同时误导学科 Agent 和 QA | 中 | 极高 | 高 | 两角色共同漏检确定性 mutation | 纯领域验证、property/mutation test、content-addressed artifact、全部 attempt 留证；TR-005 已关闭 3 P1/3 P2 | 禁用机器通过状态、修复并重放所有受影响 run | workspace_owner（技术负责人确定前） | 阶段 0/2 | open |
+| RISK-2026-013 | Windows 开发路径含空格导致 Vite `@fs`/`?url` 解析失败，PDF.js worker 加载失败使渲染不可用 | 中 | 高 | 高 | 渲染视图无 canvas/一直"正在渲染"、worker 404 | public worker 固定 URL（`/pdf.worker.min.mjs`）规避 `@fs` 空格；TR-010 浏览器验证通过 | 回退到页文本查看器；重建 worker 资源 | 待定 | 阶段 1 | open |
+| RISK-2026-014 | headless/无头环境 canvas 渲染受限，自动化可能误报渲染失败 | 低 | 中 | 中 | headless 下 render promise 挂起或像素异常 | 真实浏览器人工验收（用户手册清单）；自动化只断言 canvas 存在与尺寸 | 用真实浏览器验证；不把 headless 限制当产品缺陷 | 待定 | 阶段 1 | open |
 
 ## 评分
 

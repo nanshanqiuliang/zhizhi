@@ -4,15 +4,19 @@
 
 ## 当前状态
 
-当前仍处于早期工程阶段。仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了可操作的“知枝”知识树 Web developer demo。Demo 可编辑 8 节点示例树、增删叶节点、拖动/排布/锁定并在本会话撤销/重做；`TR-20260814-004` 已通过职责隔离 QA。真实 LLM/Web、资料导入、本地持久化、owner 风险接受和桌面安装包仍未启用。
+当前仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了本地优先的个人知识树 prototype：可编辑“知枝”知识树、自动保存到本地 SQLite、全文搜索、安全导入 Markdown/TXT/PDF、PDF 页文本与 PDF.js 渲染视图、锚点目录跳转与 bbox 区域高亮、内容漂移保护。`TR-20260814-002..010` 已通过职责隔离 QA（第 4、5 步完成，MVP 约 70%）。真实 LLM/Web、owner 风险接受和桌面安装包仍未启用。
 
-不要把当前骨架当作 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
+不要把当前原型当作最终 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
 
 如果只想了解“现在做到哪一步、什么时候能看到可用网页或 App”，请查看 [自然语言开发路线](docs/USER_FACING_DEVELOPMENT_ROADMAP.md)。
 
-本地查看当前 Demo：
+本地运行（人工验证，需要两个终端；详见 [用户手册](docs/USER_MANUAL.md)）：
 
 ```powershell
+# 终端 1：启动本地 API（数据目录放仓库外）
+uv run python -m apps.api --data-root C:\Users\<你>\knowledge-tree-data
+
+# 终端 2：启动 Web
 pnpm --filter @knowledge-tree/web dev
 ```
 
@@ -32,9 +36,10 @@ pnpm --filter @knowledge-tree/web dev
 ```powershell
 uv sync --locked --group dev
 uv run python -m scripts.validate_repository
-uv run ruff format --check scripts tests
+uv run ruff format --check packages scripts tests apps
 uv run ruff check .
 uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
 uv run pytest
 pnpm install --frozen-lockfile
 pnpm peers check

@@ -702,3 +702,17 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   (WORK-2026-019), starting from failing undo/lock red tests.
 - Current blocker: none for offline Step 6 preparation. Real Provider/Web and
   owner acceptance remain separately gated and disabled.
+
+## Manual-verification launcher checkpoint — 2026-08-14 11:55 +08:00
+
+- Added `uv run python -m apps.api --data-root <dir> [--port N] [--origin URL]`
+  (commit `ff02c3e`) so a human can start the loopback API without a custom
+  launcher; added `apps/__init__.py` + `apps/api/__init__.py` so mypy treats
+  `apps.api.main` as one module. Verified: health 200, allowed origin 200,
+  evil origin no ACAO header, pytest 224/224, mypy 11 source files.
+- Rewrote `docs/USER_MANUAL.md` (commit `356a75e`) to match verified
+  capabilities (persistence/save status, FTS5 search, safe import, PDF page
+  text + PDF.js render, anchor jump + bbox highlight, drift protection) with a
+  step-by-step manual acceptance checklist the workspace owner can follow.
+- The workspace owner is performing manual acceptance now; any discrepancy
+  should be reported and handled as red→fix→re-review.

@@ -28,10 +28,11 @@ Run the repository gates before requesting review:
 ```text
 uv sync --locked --group dev
 uv run python -m scripts.validate_repository
-uv run ruff format --check scripts tests
+uv run ruff format --check packages scripts tests apps
 uv run ruff check .
 uv run mypy scripts
-uv run pytest
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m pytest
 pnpm install --frozen-lockfile
 pnpm peers check
 pnpm check

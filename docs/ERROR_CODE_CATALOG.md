@@ -11,6 +11,28 @@
 - 未知异常对外映射 `internal_error`，内部保留 correlation ID 和受控 stack；
 - 不把文件路径、SQL、Provider 原始秘密或用户内容编码到错误码/文案。
 
+## 已验证实现（WORK-2026-013..018，第 4–5 步）
+
+以下错误码已在 `knowledge_tree_infrastructure`/`apps.api` 实现并有集成测试；
+HTTP 语义与用户文案见用户手册，证据为 `TR-20260814-005..010`。
+
+| Code | Layer/Owner | HTTP | Retryable | 用户动作 | Test | 状态 |
+|---|---|---:|---|---|---|---|
+| `workspace_missing` | API/Storage | 404 | no | 创建/选择工作区或先保存 | TC-PERS/API/IMPORT/VIEW | verified |
+| `workspace_corrupt` | API/Storage | 500 | no | 从备份恢复或重建 | TC-PERS-005 | verified |
+| `migration_conflict` | Storage | 500 | no | 使用支持的 schema 版本 | TC-PERS-003 | verified |
+| `graph_invalid` | API/Graph | 422 | no | 修正图数据 | TC-API-003 | verified |
+| `search_invalid_query` | API/Search | 422 | no | 修正搜索词（长度/语法） | TC-SEARCH-002 | verified |
+| `import_type_rejected` | API/Import | 422 | no | 导入白名单类型 | TC-IMPORT-003 | verified |
+| `import_too_large` | API/Import | 422 | no | 缩小文件（≤25 MiB） | TC-IMPORT-003 | verified |
+| `import_failed` | API/Import | 422 | no | 重试并检查存储 | TC-IMPORT-003 | verified |
+| `file_not_found` | API/Storage | 404 | no | 重新导入资源 | TC-RENDER-001 | verified |
+| `parse_failed` | API/Parser | 422 | maybe | 重新导入/诊断 PDF | TC-VIEW-001 | verified |
+| `parse_pending` | API/Parser | 422 | no | 先解析资源 | TC-VIEW-002 | verified |
+| `page_out_of_range` | API/Viewer | 422 | no | 选择有效页 | TC-VIEW-002 | verified |
+| `source_changed` | API/Anchor | 422 | no | 重新导入最新资料 | TC-VIEW-004 | verified |
+| `anchor_invalid` | API/Anchor | 422 | no | 修正 page/payload | TC-VIEW-003 | verified |
+
 ## 计划目录
 
 | Code | Layer/Owner | Retryable | 用户动作 | Event/Metric | Runbook | Test | 状态 |
@@ -55,10 +77,12 @@
 
 ## 新错误码 Definition of Done
 
-- [ ] contract 和前后端类型；
-- [ ] 安全、脱敏且可行动的用户文案；
-- [ ] 正确 HTTP/job/result 语义；
-- [ ] event/span status/metric；
-- [ ] 自动测试覆盖产生、传播和展示；
-- [ ] 需要时有 Runbook；
-- [ ] CHANGELOG/用户手册影响已判断。
+- [x] contract 和前后端类型（`workspace.py`/`main.py`/`api.ts`）；
+- [x] 安全、脱敏且可行动的用户文案（用户手册"失败与恢复"）；
+- [x] 正确 HTTP/job/result 语义（见"已验证实现"表）；
+- [ ] event/span status/metric（遥测未建立，后续工作项）；
+- [x] 自动测试覆盖产生、传播和展示（TC-PERS/API/SEARCH/IMPORT/VIEW/RENDER）；
+- [x] 需要时有 Runbook（本地存储/viewer Runbook 待建，记录于 TRACEABILITY_MATRIX）；
+- [x] CHANGELOG/用户手册影响已判断（CHANGELOG 保持空：无正式发布；用户手册已更新）。
+
+> 遥测 metric 为唯一未勾选项，归后续可观测性工作项；其余项在 WORK-2026-013..018 已交付。

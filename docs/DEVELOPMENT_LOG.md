@@ -265,6 +265,17 @@
 - 回滚：回退 `d56e7ef` 可回到页文本查看器；不影响既有持久化/导入/跳转证据。
 - 遗留风险与下一步：文本层与页面文本高亮联动、多页连续滚动渲染、Markdown/TXT 可视化渲染、OCR、中文分词仍关闭；本工作项完成后第 5 步标记 100%，下一主项进入第 6 步人工编辑安全感。
 
+## 2026-08-14 — 新增人工验证启动入口与用户手册重写
+
+- 关联 ID：WORK-2026-014/018、REQ-2026-010。
+- 实际变化：新增 `uv run python -m apps.api --data-root <dir> [--port N] [--origin URL]` 启动入口（loopback + Vite dev origins 默认允许，供人工验证直接启动本地 API）；补 `apps/__init__.py`/`apps/api/__init__.py` 修正 mypy 包识别（此前 main.py 被同时匹配为 "main" 与 "apps.api.main"）；重写 `docs/USER_MANUAL.md` 为当前已验证能力手册（持久化/保存状态、FTS5 搜索、安全导入、PDF 页文本与渲染视图、锚点跳转与 bbox 高亮、漂移保护）+ 分步人工验收清单。
+- 影响模块/接口/schema/migration/prompt：新增 `apps/api/__main__.py` 与两个 `__init__.py`；无 schema/migration/prompt 变化。
+- 兼容性：`python -m apps.api` 通过 sys.path 加载 packages 源树，行为与 pytest 一致；mypy 覆盖 11 源文件。
+- 验证与证据：`ff02c3e`（启动入口）+ `356a75e`（手册）；health 200、allowed origin 200、evil origin 无 ACAO 头；全仓 224/224、mypy 11 源文件、ruff 全绿、repository validator PASS。
+- 性能/安全/运维影响：无部署或常驻服务变化；数据目录默认用户主目录 `knowledge-tree-data`，文档提示用户自选位置。
+- 回滚：回退 `ff02c3e` 即恢复无启动入口状态（临时脚本仍可用）；`356a75e` 仅文档。
+- 遗留风险与下一步：无新增风险；人工验收清单为端到端补充，自动化未覆盖部分（关闭重开、非默认端口、漂移场景）由用户在真实浏览器按手册执行。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
