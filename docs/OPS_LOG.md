@@ -351,4 +351,4 @@
 - 影响：无部署或常驻服务变化；仅前端画布交互，无后端/schema 变化。
 - 证据：Web 新增 wheel 缩放测试（transform scale 断言）；pytest 256/256、Web 32/32、ruff、validator、build 全绿。
 - 缓解/回滚：回退 `8563fad` 即回到 scroll-only 画布。
-- 遗留风险/Owner/期限：缩放为左上角原点（未做鼠标为中心）；真实 Provider/Web、owner 接受保持禁用。
+- 遗留风险/Owner/期限：缩放已支持鼠标位置为中心（`62e0b72`）；真实 Provider/Web、owner 接受保持禁用。

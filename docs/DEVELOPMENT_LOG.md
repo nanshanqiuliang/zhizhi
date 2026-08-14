@@ -387,7 +387,7 @@
 - 验证与证据：`8563fad`；Web 新增 `zooms the canvas with the wheel`（transform scale 断言）；全仓 pytest 256/256、Web 32/32、validator/Ruff/mypy/构建全绿。
 - 性能/安全/运维影响：纯 CSS transform 渲染，无重排；`touch-action:none` 抑制浏览器默认手势；无网络/Provider/真实用户数据。
 - 回滚：回退 `8563fad` 即回到 scroll-only 画布；不影响持久化/提交门/查看器证据。
-- 遗留风险与下一步：缩放为左上角原点缩放（未做鼠标位置为中心）；文本层与页面文本高亮联动、多页连续滚动、tombstone 软删除仍为后续；真实 Provider/Web 与 owner 接受保持禁用。
+- 遗留风险与下一步：缩放已支持鼠标位置为中心（`62e0b72`，zoom/pan 合并为 camera 状态原子更新）；文本层与页面文本高亮联动、多页连续滚动、tombstone 软删除仍为后续；真实 Provider/Web 与 owner 接受保持禁用。
 
 ## 2026-08-12 — 建立总体架构技术基线
 

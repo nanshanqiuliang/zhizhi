@@ -972,3 +972,13 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: continue offline enhancements (mouse-centered zoom,
   text-layer highlight linkage, multi-page scroll, tombstone soft delete) or
   advance to Step 7 after the owner provides an API key and budget.
+
+## Mouse-centered zoom checkpoint — 2026-08-14 21:10 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- WORK-2026-025 follow-up: merged zoom/pan into a single `camera` state so the
+  wheel handler can atomically update both, zooming around the point under the
+  cursor (was top-left origin).
+- Verification: Web 32/32 (wheel zoom test still passes), pytest 256/256,
+  ruff/mypy/validator/build all pass.
+- Step 6 remains 100%, MVP ~75%.
