@@ -540,15 +540,21 @@ def backup_workspace(layout: WorkspaceLayout) -> Path:
 
 
 def restore_backup(layout: WorkspaceLayout, backup_path: Path) -> None:
-    """Restore the database from a checksummed backup file."""
+    """Restore the database from a checksummed backup file.
+
+    A missing checksum sidecar is rejected: the workspace guarantees every
+    backup is checksummed, so an unchecksummed file must not overwrite the
+    live database silently.
+    """
 
     backup_path = Path(backup_path)
     checksum_file = backup_path.with_suffix(backup_path.suffix + ".sha256")
-    if checksum_file.is_file():
-        expected = checksum_file.read_text(encoding="utf-8").strip()
-        actual = hashlib.sha256(backup_path.read_bytes()).hexdigest()
-        if expected != actual:
-            _reject("backup_checksum_mismatch", rule="restore_rejected")
+    if not checksum_file.is_file():
+        _reject("backup_invalid", rule="backup_checksum_missing")
+    expected = checksum_file.read_text(encoding="utf-8").strip()
+    actual = hashlib.sha256(backup_path.read_bytes()).hexdigest()
+    if expected != actual:
+        _reject("backup_checksum_mismatch", rule="restore_rejected")
     try:
         _remove_wal_sidecars(layout.db_path)
         shutil.copyfile(backup_path, layout.db_path)

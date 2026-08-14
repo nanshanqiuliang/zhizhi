@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from knowledge_tree_domain import GraphPatchError, validate_course_graph
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
+    WorkspaceLayout,
     apply_graph_patch,
     backup_workspace,
     create_workspace,
@@ -62,6 +63,25 @@ def _workspace_root(data_root: Path, workspace_id: str) -> Path:
     if not _is_uuidv7(workspace_id):
         raise HTTPException(status_code=404, detail={"code": "workspace_missing"})
     return data_root / workspace_id
+
+
+def _recovery_layout(workspace_root: Path) -> WorkspaceLayout:
+    """Resolve a workspace for backup/restore, tolerating a missing db file.
+
+    A lost/corrupt database is exactly the crash-recovery case that backup and
+    restore must handle, so they fall back to creating the layout instead of
+    failing on `database_file_absent`.
+    """
+
+    try:
+        return resolve_workspace(workspace_root)
+    except WorkspaceError as error:
+        if (
+            error.code == "workspace_missing"
+            and error.details.get("rule") == "database_file_absent"
+        ):
+            return create_workspace(workspace_root)
+        raise
 
 
 def _http_error(error: WorkspaceError) -> HTTPException:
@@ -236,7 +256,7 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
     def get_backups(workspace_id: str) -> JsonObject:
         workspace_root = _workspace_root(root, workspace_id)
         try:
-            layout = resolve_workspace(workspace_root)
+            layout = _recovery_layout(workspace_root)
             return {"backups": list_backups(layout)}
         except WorkspaceError as error:
             raise _http_error(error) from error
@@ -254,7 +274,7 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
                 status_code=422, detail={"code": "backup_invalid", "rule": "filename_missing"}
             )
         try:
-            layout = resolve_workspace(workspace_root)
+            layout = _recovery_layout(workspace_root)
             restore_backup_by_name(layout, filename)
             return {"status": "restored", "filename": filename}
         except WorkspaceError as error:

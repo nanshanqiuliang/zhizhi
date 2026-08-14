@@ -66,3 +66,33 @@ def test_restore_missing_backup_rejected(client: TestClient) -> None:
     )
     assert response.status_code == 422
     assert response.json()["code"] == "backup_invalid"
+
+
+def test_restore_rejects_missing_checksum_sidecar(client: TestClient, tmp_path: Path) -> None:
+    _put_graph(client, valid_graph())
+    backed = client.post(f"/api/workspaces/{WORKSPACE_ID}/backup")
+    assert backed.status_code == 200
+    filename = Path(backed.json()["backup_path"]).name
+
+    # Remove the checksum sidecar so restore must fail closed.
+    sidecar = tmp_path / WORKSPACE_ID / "backups" / f"{filename}.sha256"
+    sidecar.unlink()
+
+    response = client.post(f"/api/workspaces/{WORKSPACE_ID}/restore", json={"filename": filename})
+    assert response.status_code == 422
+    assert response.json()["code"] == "backup_invalid"
+    assert response.json()["rule"] == "backup_checksum_missing"
+
+
+def test_restore_rejects_checksum_mismatch(client: TestClient, tmp_path: Path) -> None:
+    _put_graph(client, valid_graph())
+    backed = client.post(f"/api/workspaces/{WORKSPACE_ID}/backup")
+    assert backed.status_code == 200
+    filename = Path(backed.json()["backup_path"]).name
+
+    sidecar = tmp_path / WORKSPACE_ID / "backups" / f"{filename}.sha256"
+    sidecar.write_text("0" * 64 + "\n", encoding="utf-8")
+
+    response = client.post(f"/api/workspaces/{WORKSPACE_ID}/restore", json={"filename": filename})
+    assert response.status_code == 409
+    assert response.json()["code"] == "backup_checksum_mismatch"

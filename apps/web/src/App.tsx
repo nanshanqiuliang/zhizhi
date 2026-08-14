@@ -382,6 +382,7 @@ export function App({ api }: { api?: PersistApi }) {
         setConnection("connected");
       }
       setStatus("已从备份恢复");
+      void refreshHistory();
     } catch (error) {
       setStatus(`恢复失败（${(error as Error).message}）`);
     }
@@ -846,7 +847,13 @@ export function App({ api }: { api?: PersistApi }) {
           </div>
           <div className="session-notice">
             <span aria-hidden="true">◷</span>
-            <p><strong>会话内演示</strong>所有修改仅保留在本次会话，刷新页面后会恢复示例。</p>
+            <p>
+              {api ? (
+                <><strong>本地持久化</strong>修改自动保存到本地，可备份与恢复。</>
+              ) : (
+                <><strong>会话内演示</strong>所有修改仅保留在本次会话，刷新页面后会恢复示例。</>
+              )}
+            </p>
             {api && (
               <div className="backup-actions" aria-label="本地备份与恢复">
                 <button type="button" onClick={() => void handleBackup()}>备份数据</button>

@@ -258,7 +258,8 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
 }
 
 export function httpPersistApi(baseUrl: string): PersistApi {
-  const endpoint = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/graph`;
+  const workspaceBase = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}`;
+  const endpoint = `${workspaceBase}/graph`;
   return {
     async loadGraph(): Promise<WorkspaceSnapshot | null> {
       const response = await fetch(endpoint);
@@ -317,7 +318,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       return (await response.json()) as { status: string; revision_no: number };
     },
     async backupGraph(): Promise<{ status: string; backup_path: string }> {
-      const response = await fetch(`${endpoint}/backup`, { method: "POST" });
+      const response = await fetch(`${workspaceBase}/backup`, { method: "POST" });
       if (!response.ok) {
         const body = await readError(response);
         throw new Error(body.code ?? `backup failed: ${response.status}`);
@@ -325,7 +326,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       return (await response.json()) as { status: string; backup_path: string };
     },
     async listBackups(): Promise<string[]> {
-      const response = await fetch(`${endpoint}/backups`);
+      const response = await fetch(`${workspaceBase}/backups`);
       if (!response.ok) {
         throw new Error(`list backups failed: ${response.status}`);
       }
@@ -333,7 +334,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       return body.backups;
     },
     async restoreBackup(filename: string): Promise<{ status: string }> {
-      const response = await fetch(`${endpoint}/restore`, {
+      const response = await fetch(`${workspaceBase}/restore`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename }),
@@ -345,7 +346,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       return (await response.json()) as { status: string };
     },
     async listHistory(): Promise<HistoryRecord[]> {
-      const response = await fetch(`${endpoint}/history`);
+      const response = await fetch(`${workspaceBase}/history`);
       if (!response.ok) {
         throw new Error(`history failed: ${response.status}`);
       }
@@ -353,7 +354,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       return body.records;
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
-      const searchEndpoint = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/search?q=${encodeURIComponent(query)}`;
+      const searchEndpoint = `${workspaceBase}/search?q=${encodeURIComponent(query)}`;
       const response = await fetch(searchEndpoint);
       if (!response.ok) {
         throw new Error(`search failed: ${response.status}`);
