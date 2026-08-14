@@ -1,0 +1,19 @@
+TR-20260814-009 / WORK-2026-017
+reviewed commit: 267fb7e3e15670fed11a8727960eec738662cbaf
+qa attempt-001 commit: 8c3c62071df1a297cbfb6ae8bd9ec2abef2925dc
+red baseline: 53eb2cd0effde49bf00b5347e03cf287131ceffa
+ready commit: 2829ff22dc5d312df7bb6aeac4c74db53cb9e7f8
+repository validator: PASS
+ruff format/lint (incl apps): PASS
+mypy scripts + strict packages + apps/api: PASS (9 + 9 source files)
+pytest: PASS (218/218; pdf viewer target 10/10)
+pnpm frozen install and peer check: PASS
+web check/test: PASS (18/18)
+web production build: PASS
+live e2e smoke (uvicorn 127.0.0.1:8126, gold PDF): parse 52 pages; page 1 text correct; out-of-range 422 page_out_of_range
+QA attempt 001 (8c3c620): PASS (0 P0/P1, 6 P2); P2-1/P2-3/P2-4/P2-6 fixed by 267fb7e
+correlation: correlated_review
+human signature: false
+owner acceptance: false
+network/live provider/user data: none
+database: sqlite3 stdlib, local test directories only; pypdf 6.15.0

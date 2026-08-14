@@ -1,15 +1,15 @@
 # WORK-2026-017：PDF 文本解析与 Anchor 来源跳转
 
 ```yaml
-status: ready
+status: verified_prototype
 type: feature
 owner: Codex (parser + viewer + anchor role)
 reviewers: [ai_qa_auditor, workspace_owner]
-related_ids: [REQ-2026-006, REQ-2026-010, NFR-2026-002, ADR-0001, WORK-2026-004, WORK-2026-005, WORK-2026-016, TR-20260814-005, TR-20260814-008]
+related_ids: [REQ-2026-006, REQ-2026-010, NFR-2026-002, ADR-0001, WORK-2026-004, WORK-2026-005, WORK-2026-016, TR-20260814-005, TR-20260814-008, TR-20260814-009]
 target_stage: "阶段 1 / 自然语言第 5 步"
 risk: high
 created_at: 2026-08-14T09:30:00+08:00
-updated_at: 2026-08-14T09:30:00+08:00
+updated_at: 2026-08-14T09:45:00+08:00
 ```
 
 ## 问题与结果
@@ -42,31 +42,31 @@ updated_at: 2026-08-14T09:30:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1：导入的 PDF 可解析为页文本并存入 `resource_segment`（每页一条，含 text_hash）；重复解析幂等。
-- [ ] AC-2：`GET .../resources/{rid}/pages/{n}` 返回该页文本与元数据；页越界/未解析 → 稳定错误；缺失 workspace/resource → 404。
-- [ ] AC-3：`GET .../resources/{rid}/anchors` 返回该资源锚点列表（复用 canonical anchor 结构）。
-- [ ] AC-4：按 anchor 定位：金标 50 锚点的 `selector.page` 均能定位到对应页；文本漂移（content_hash 变化）→ `source_changed` 不误跳。
-- [ ] AC-5：Web 提供页文本查看器（选择资源→翻页）与"从节点跳回原文"入口（节点携带 anchor 时可跳转）；漂移/缺失时明确提示。
-- [ ] AC-6：集成/组件/安全测试覆盖正/负路径；全仓门通过。
-- [ ] 错误和恢复路径：未解析资源提示"请先解析"；解析失败以稳定错误返回且不污染既有数据。
-- [ ] 回滚/禁用方法：回退本工作项提交可回到导入-only；不影响既有持久化与导入证据。
+- [x] AC-1：导入的 PDF 可解析为页文本并存入 `resource_segment`（每页一条，含 text_hash）；重复解析幂等。
+- [x] AC-2：`GET .../resources/{rid}/pages/{n}` 返回该页文本与元数据；页越界/未解析 → 稳定错误；缺失 workspace/resource → 404。
+- [x] AC-3：`GET .../resources/{rid}/anchors` 返回该资源锚点列表（复用 canonical anchor 结构）；缺失资源 404。
+- [x] AC-4：按 anchor 定位：金标 50 锚点的 `selector.page` 均能定位到对应页；文本漂移（content_hash 变化）→ `source_changed` 不误跳。
+- [x] AC-5：Web 提供页文本查看器（选择资源→翻页）与"从节点跳回原文"入口（节点携带 anchor 时可跳转）；漂移/缺失时明确提示。
+- [x] AC-6：集成/组件/安全测试覆盖正/负路径；全仓门通过。
+- [x] 错误和恢复路径：未解析资源提示"请先解析"；解析失败以稳定错误返回且不污染既有数据。
+- [x] 回滚/禁用方法：回退本工作项提交可回到导入-only；不影响既有持久化与导入证据。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-VIEW-001 | integration | PDF 解析 → segment | 每页文本+hash，幂等 | 红灯→绿灯 |
-| TC-VIEW-002 | integration | 页文本端点 | 正确文本/越界/未解析/404 | 红灯→绿灯 |
-| TC-VIEW-003 | integration | anchors 端点 | 金标 50 锚点列表 | 红灯→绿灯 |
-| TC-VIEW-004 | security | 漂移/缺失定位 | source_changed/anchor_not_found，不误跳 | 红灯→绿灯 |
-| TC-VIEW-005 | component | Web 查看器与跳转 | 翻页、跳转、漂移提示 | 红灯→绿灯 |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 绿灯 |
+| TC-VIEW-001 | integration | PDF 解析 → segment | 每页文本+hash，幂等 | 10/10 PASS / TR-009 |
+| TC-VIEW-002 | integration | 页文本端点 | 正确文本/越界/未解析/404 | 10/10 PASS / TR-009 |
+| TC-VIEW-003 | integration | anchors 端点 | 金标 50 锚点、UPSERT、缺失 404 | 10/10 PASS / TR-009 |
+| TC-VIEW-004 | security | 漂移/缺失定位 | source_changed/anchor_not_found，不误跳 | 10/10 PASS / TR-009 |
+| TC-VIEW-005 | component | Web 查看器与跳转 | 翻页、跳转、漂移提示 | Web 18/18 PASS / TR-009 |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 218/218、18/18 PASS / TR-009 |
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-017-pdf-viewer-anchor`；先提交失败测试，再实现最小解析与查看器。
-- Contract/ADR/migration/prompt：schema v3（resource_segment）；消费既有 anchor v1 契约；无新 canonical contract/prompt。
-- Test Run：integration + security + component + 全仓门按 DoD；职责隔离 QA 对冻结 SHA 复核。
+- Commit/PR：分支 `feature/WORK-2026-017-pdf-viewer-anchor`；Ready `2829ff2`，红灯 `53eb2cd`，实现 `8c3c620`，P2 修复 `267fb7e`。
+- Contract/ADR/migration/prompt：schema v3（resource_segment/anchor）；消费 anchor v1 契约；无新 canonical contract/prompt。
+- Test Run：viewer 10/10、全仓 Python 218/218、Web 18/18、Ruff、strict mypy、repository validator、frozen installs/peers/check/build 全通过；职责隔离 QA attempt 001 PASS；真实 uvicorn e2e（金标 PDF）PASS；证据为 `TR-20260814-009`。
 - Release：无托管发布；本地 API + Web 可演示 PDF 页文本查看与跳转。
-- 观察结果：本轮交付"从节点跳回资料原文页"的 prototype；PDF.js 真实渲染、bbox 高亮属于后续。
+- 观察结果："从节点跳回资料原文页"prototype 已验证；PDF.js 真实渲染、bbox 高亮属于后续。
 - 未完成项的新 ID：PDF.js 可视化渲染、bbox 区域高亮、Markdown/TXT 查看器、OCR、中文分词分别后续建项。

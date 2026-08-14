@@ -616,3 +616,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   locate fails closed; Web viewer + jump + drift notice.
 - Exact next action: commit this Ready boundary, then add failing viewer/anchor
   tests (expected ImportError/collection failure) before any implementation.
+
+## Step 5B closure checkpoint — 2026-08-14 09:45 +08:00
+
+- Active branch: `feature/WORK-2026-017-pdf-viewer-anchor`.
+- Frozen implementation: `267fb7e3e15670fed11a8727960eec738662cbaf`
+  (initial `8c3c620` + P2-1/3/4/6 fix); red baseline:
+  `53eb2cd0effde49bf00b5347e03cf287131ceffa`; Ready boundary:
+  `2829ff22dc5d312df7bb6aeac4c74db53cb9e7f8`.
+- Role-separated QA reviewed `8c3c620` and returned PASS (0 P0/P1, 6 P2).
+  P2-1 (anchor upsert returned a dangling id), P2-3 (anchor endpoints did not
+  404 on missing resources), P2-4 (storage_key not guarded to workspace),
+  and P2-6 (stale migrate docstring) were closed by `267fb7e` with regression
+  tests. P2-2 (read-time drift check, not concurrent-atomic) and P2-5
+  (front-end maps out-of-range to drift) are recorded prototype boundaries.
+- Full gates pass at `267fb7e`: repository validator, Ruff, scripts + strict
+  package mypy (incl. apps/api), pytest 218/218 (viewer 10/10), locked pnpm
+  install/peers, Web 18/18, TypeScript check, and production build. Live e2e
+  smoke via real uvicorn on the gold PDF confirmed 52-page parse, correct
+  page-1 text, and out-of-range 422.
+- Evidence/report: `evidence/TR-20260814-009/` and
+  `docs/test-reports/TR-20260814-009_pdf-viewer-anchor.md`.
+- Natural-language Step 5 progress: safe import (TR-008) + PDF page-text
+  viewer/anchor jump (TR-009) done (approximately 50% of Step 5); overall
+  personal MVP approximately 65%.
+- Exact next action on the next "继续推进": create a separate Ready work item
+  for PDF.js visual rendering and bbox highlighting (WORK-2026-018), starting
+  from failing render red tests, or continue with Step 6 (undo/lock safety).
+- Current blocker: none for offline Step 5/6 preparation. Real Provider/Web
+  and owner acceptance remain separately gated and disabled.

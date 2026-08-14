@@ -24,6 +24,7 @@
 | REQ-2026-006/008 / ADR-0011 | 浏览器↔本地 API 保存/加载闭环、自动保存与保存状态 | WORK-2026-014 | FastAPI loopback sidecar；Web PersistApi client + snapshot↔canonical 转换 | `4fe918b` 红灯；`6c0c33c` 实现；`e0a4c72` P2-1 修复 | TC-API-001..006 / TR-20260814-006：API 8/8、全仓 183/183、Web 10/10、QA-001/002 PASS、e2e smoke PASS；Tauri 打包/认证/token/FTS5 待后续 | — | sidecar Runbook 待建 | prototype_verified |
 | REQ-2026-006/010 | 已保存笔记/概念可被全文检索 | WORK-2026-015 | FTS5 派生索引 + MATCH/子串回退；search 端点；Web 搜索框 | `e451057` Ready；`eeba073` 实现；`d6c8e01` P2-2 修复 | TC-SEARCH-001..003 / TR-20260814-007：搜索 10/10、全仓 193/193、Web 12/12、QA PASS、e2e smoke PASS；中文分词/文件内容检索待第 5 步 | — | 本地搜索 Runbook 待建 | prototype_verified |
 | REQ-2026-006/010 / NFR-2026-002 / ADR-0001 | 本地资料可安全导入并注册为资源 | WORK-2026-016 | schema v2 resource/resource_version；受控存储 + 类型/大小/路径守卫 + 去重 | `50b3245` 红灯；`10e104f` 实现；`eee15d0` P2 修复 | TC-IMPORT-001..005 / TR-20260814-008：import 15/15、全仓 208/208、Web 15/15、QA PASS、e2e smoke PASS；PDF 解析/查看器/Anchor 跳转待第 5 步后续 | — | 导入 Runbook 待建 | prototype_verified |
+| REQ-2026-010 / NFR-2026-002 / ADR-0001 | PDF 可查看原文页并从节点跳回锚点位置 | WORK-2026-017 | schema v3 resource_segment/anchor；pypdf 页文本；页文本/锚点端点；漂移不误跳 | `53eb2cd` 红灯；`8c3c620` 实现；`267fb7e` P2 修复 | TC-VIEW-001..005 / TR-20260814-009：viewer 10/10、全仓 218/218、Web 18/18、QA PASS、e2e smoke PASS（金标 50 锚点）；PDF.js 渲染/bbox 高亮待后续 | — | viewer Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

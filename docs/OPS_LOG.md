@@ -223,6 +223,19 @@
 - 验证：migration v1→v2、类型/伪造/超大/路径守卫、去重幂等、写失败无孤儿、列表元数据全部通过。
 - 遗留风险/Owner/期限：PDF 解析/查看器、Markdown 渲染、Anchor 来源跳转、url/note 资源保持关闭；P2-2/P2-4/P2-5 已知边界记录在 QA 报告。
 
+## 2026-08-14 09:45 — PDF 文本解析与 Anchor 来源跳转验证
+
+- 关联 ID：WORK-2026-017、TR-20260814-009。
+- 环境/版本/build/config：Windows 11 x64；Python 3.12.6/uv 0.12.3；Node 24.14.1/pnpm 11.19.0；pypdf 6.15.0；commit `267fb7e`。
+- 操作者：Codex（实现与 e2e smoke）；职责隔离 `graph_qa_fresh`（只读机器证明，非真人签字/owner 接受）。
+- 变更或症状：新增 schema v3 与 PDF 页文本解析/查看器/锚点端点；无部署或常驻服务变化。
+- 时间线：`2829ff2` Ready → `53eb2cd` 红灯 → `8c3c620` 实现 → QA-001 PASS（6 P2）→ `267fb7e` P2-1/3/4/6 修复。
+- 影响：无部署、端口常驻、网络出站、Provider、真实用户数据、秘密或费用；API 仅测试期临时监听 127.0.0.1:8126，已关闭。
+- 证据：`evidence/TR-20260814-009/` 与 `docs/test-reports/TR-20260814-009_pdf-viewer-anchor.md`；viewer 10/10、全仓 218/218、Web 18/18、完整本地门 PASS、e2e smoke PASS。
+- 缓解/回滚：回退 `267fb7e` 回到导入-only；不影响既有持久化与导入证据。
+- 验证：解析幂等、页文本/越界/未解析/404、锚点 UPSERT/排序/缺失 404、漂移 source_changed 全部通过。
+- 遗留风险/Owner/期限：PDF.js 渲染、bbox 高亮、Markdown/TXT 查看器、OCR、中文分词保持关闭；P2-2/P2-5 已知边界记录在 QA 报告。
+
 ---
 
 ## 新条目模板

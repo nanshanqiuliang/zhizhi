@@ -243,6 +243,17 @@
 - 回滚：回退 `eee15d0` 可回到 v1 库（迁移前数据保留）；红灯测试保留，不得以删除测试替代不变量。
 - 遗留风险与下一步：PDF 解析/查看器、Markdown 渲染、Anchor 生成与来源跳转、url/note 资源仍关闭，由第 5 步后续工作项承接。
 
+## 2026-08-14 — 实现 PDF 文本解析与 Anchor 来源跳转
+
+- 关联 ID：WORK-2026-017、REQ-2026-010、NFR-2026-002、TR-20260814-009。
+- 实际变化：schema v3 migration（resource_segment + anchor 表）；`parse_pdf_resource`（pypdf 页文本、幂等、storage_key 越界守卫）、`get_page_text`（越界/未解析/漂移守卫）、`register_anchor`/`list_anchors`（UPSERT 返回实际 id、缺失资源 404）；API parse/pages/anchors 端点；Web 页文本查看器（打开/翻页/锚点跳转/漂移提示）。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure/api/web；PRAGMA user_version 2→3（向前兼容）；消费 Anchor v1 契约；无新 canonical contract/prompt。
+- 兼容性：v2 库自动迁移保留数据；pypdf 6.15.0 已有；页文本 ≤ 单页提取。
+- 验证与证据：Ready `2829ff2`；红灯 `53eb2cd`（API 1 ImportError + Web 3 失败）；实现 `8c3c620` 后 viewer 8/8、全仓 216/216、Web 18/18；QA attempt 001 PASS（0 P0/P1，6 P2）；P2 修复 `267fb7e` 后 viewer 10/10、全仓 218/218；真实 uvicorn e2e（金标 PDF 52 页）通过。
+- 性能/安全/运维影响：只读受控资源；漂移不误跳；错误不含正文；无网络出站、Provider、secret、真实用户数据或费用。
+- 回滚：回退 `267fb7e` 可回到导入-only；红灯测试保留，不得以删除测试替代不变量。
+- 遗留风险与下一步：PDF.js 可视化渲染、bbox 高亮、Markdown/TXT 查看器、OCR、中文分词仍关闭，由第 5 步后续工作项承接。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。
