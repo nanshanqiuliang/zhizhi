@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-当前仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了本地优先的个人知识树 prototype：可编辑“知枝”知识树、自动保存到本地 SQLite、全文搜索、安全导入 Markdown/TXT/PDF、PDF 页文本与 PDF.js 渲染视图、锚点目录跳转与 bbox 区域高亮、内容漂移保护。`TR-20260814-002..010` 已通过职责隔离 QA（第 4、5 步完成，MVP 约 70%）。真实 LLM/Web、owner 风险接受和桌面安装包仍未启用。
+当前仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了本地优先的个人知识树 prototype：可编辑“知枝”知识树、自动保存到本地 SQLite、全文搜索、安全导入 Markdown/TXT/PDF、PDF 页文本与 PDF.js 渲染视图、锚点目录跳转与 bbox 区域高亮、内容漂移保护，以及人工编辑安全感（第 6 步进行中）：内容/位置锁定（锁定项在整图保存时不被覆盖）与跨会话撤销/重做。`TR-20260814-002..010` 已通过职责隔离 QA（第 4、5 步完成）；第 6 步约 60%（后端提交门 + 锁定存储保护 + 锁定/撤销 Web UI 已实现并真实浏览器验证，职责隔离 QA 待执行），MVP 约 72%。真实 LLM/Web、owner 风险接受和桌面安装包仍未启用。
 
 不要把当前原型当作最终 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
 

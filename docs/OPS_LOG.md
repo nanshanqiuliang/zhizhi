@@ -312,3 +312,13 @@
 - 证据：`git log --oneline main..HEAD | wc -l` = 64；`git branch -a` 列出 12 个 feature 分支；CI 触发条件 `on: push branches [main] / pull_request`。
 - 缓解/回滚：无需回滚；不擅自合并 main（仓库治理属项目负责人决策，归 WORK-2026-003）。本地交付完整性不受影响（证据/日志/测试均在 feature 分支）。
 - 遗留风险/Owner/期限：项目负责人决定 main 合并策略与远端仓库/许可证（WORK-2026-003）；在此之前 main 不作为当前状态的权威指针，以 feature/WORK-2026-018 与 checkpoint 为准。
+
+## 2026-08-14 17:25 — 交付检查：第 6 步能力文档同步与运维记录
+
+- 关联 ID：WORK-2026-019/020、REQ-2026-006/008、NFR-2026-001/003。
+- 环境/版本/build/config：commit `3547cbb`（feature/WORK-2026-019-patch-gate）；本地 local-dev Windows x64。
+- 变更或症状：交付检查关闭第 6 步（WORK-2026-019/020）的 DoD 文档缺口——CHANGELOG 补第 4–6 步用户可见变化（持久化/搜索/导入/PDF/锁定/撤销）；README 当前状态更新到第 6 步（约 60%、MVP 约 72%）；USER_MANUAL 增补内容/位置锁定与撤销能力、锁定被拒失败恢复与第 7 项人工验收清单、验证范围改为 Python 241/Web 22；OPS_LOG 登记本条目；work-items README、ENVIRONMENT_INVENTORY、RISK_REGISTER 同步。
+- 影响：无部署或常驻服务变化；仅文档与运维事实同步。
+- 证据：repository validator PASS；pytest 241/241、Web 22/22、CDP 浏览器端到端（锁定→409→撤销）PASS。
+- 缓解/回滚：回退本次文档提交仅撤销文档修正；不影响实现与证据。
+- 遗留风险/Owner/期限：职责隔离 QA（WORK-2026-019/020）仍待执行；普通编辑跨会话撤销、冲突预览/崩溃恢复 UI 归 WORK-2026-021；真实 Provider/Web 与 owner 接受保持禁用。

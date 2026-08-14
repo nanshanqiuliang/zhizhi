@@ -5,7 +5,7 @@
 | ID | 风险 | 概率 | 影响 | 等级 | 触发信号 | 预防 | 应急 | Owner | 目标阶段 | 状态 |
 |---|---|---:|---:|---:|---|---|---|---|---|---|
 | RISK-2026-001 | 锚点无法稳定恢复，产品核心价值不成立 | 中 | 极高 | 高 | 页/区域指标未达标 | `e918fdf`/`232d0cd` 与 TR-20260813-003/004 已建 50 个页级金标及 v1 覆盖门；仍需 v2 AI 机器复核、parser/viewer 对照和区域金标 | 降级格式/暂停产品开发 | workspace_owner | 阶段 0 | open |
-| RISK-2026-002 | AI 覆盖用户锁定内容 | 中 | 极高 | 高 | lock regression 非 0 | GraphPatch 确定性校验、属性测试 | 禁用 AI 写入、恢复 revision | 待定 | 阶段 0/2 | open |
+| RISK-2026-002 | AI 覆盖用户锁定内容 | 中 | 极高 | 高 | lock regression 非 0 | GraphPatch 确定性校验 + 四维锁确认门（WORK-2026-005/019）+ 整图保存锁定维度保护（WORK-2026-020：锁降级/内容变化/删除均 target_locked）+ 属性/集成测试 | 禁用 AI 写入、恢复 revision | 待定 | 阶段 0/2 | open |
 | RISK-2026-003 | 本地安装依赖过重影响验证 | 中 | 高 | 高 | 需 Docker/外部 DB | SQLite + sidecar 本地基线 | 缩减功能或提供云模式 | 待定 | 阶段 1 | open |
 | RISK-2026-004 | 日志/诊断包泄露课件、路径或密钥 | 中 | 极高 | 高 | 敏感字段进入 evidence | allowlist、redaction、隐私测试 | 停止上传、轮换密钥、事故响应 | 待定 | 阶段 1/3 | open |
 | RISK-2026-005 | 模型/Prompt 更新造成静默质量退化 | 高 | 高 | 高 | eval、schema failure、cost 漂移 | calculus-gold v1 已作者复核；v2 将绑定模型/prompt/tool/harness hash、隔离 QA 和 replay eval；实现仍待完成 | 回退 model policy/prompt，机器审查状态失效 | workspace_owner | 阶段 0/2 | open |
