@@ -332,3 +332,13 @@
 - 证据：pytest 256/256、Web 28/28、ruff、strict mypy、validator、contracts-ts drift、pnpm 锁依赖/check/build 全绿；TR-013 evidence checksums OK。
 - 缓解/回滚：回退 `78c5264` 回到 PDF-only 查看器；回退 `ab50aa2`/`7106621` 回到整图替换保存；不回退已验证 GraphPatch 提交门/纯领域 history。
 - 遗留风险/Owner/期限：第 6 步 100%、MVP 约 75%；tombstone 软删除未引入（硬删除 + 历史可恢复）；真实 Provider/Web、owner 接受保持禁用，第 7 步 DeepSeek 适配待 owner 提供 API Key 与预算。
+
+## 2026-08-14 20:55 — Markdown 富文本渲染（WORK-2026-024）运维记录
+
+- 关联 ID：WORK-2026-024、REQ-2026-010、WORK-2026-023。
+- 环境/版本/build/config：commit `0310061`（feature/WORK-2026-019-patch-gate）；本地 local-dev Windows x64。
+- 变更或症状：Markdown 笔记从纯文本升级为富文本显示——新增 XSS 安全的 `renderMarkdown`（先 HTML 转义再应用最小 Markdown 语法），`text/markdown` 走 `markdown-body` 渲染视图，`text/plain` 保持纯文本；无第三方渲染依赖。
+- 影响：无部署或常驻服务变化；仅前端查看器增强，无后端/schema 变化。
+- 证据：`markdown.test.ts` 3/3（含注入转义）；pytest 256/256、Web 31/31、ruff、validator、build 全绿。
+- 缓解/回滚：回退 `0310061` 即回到 Markdown 纯文本查看。
+- 遗留风险/Owner/期限：Markdown 仅最小语法子集（无表格/链接）；真实 Provider/Web、owner 接受保持禁用。

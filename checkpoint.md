@@ -944,3 +944,17 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
 - Exact next action: continue offline enhancements (e.g. tombstone soft delete,
   Markdown rich rendering, multi-page continuous scroll) or advance to Step 7
   (DeepSeek live adapter) after the owner provides an API key and budget.
+
+## Markdown rich rendering checkpoint — 2026-08-14 20:55 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- WORK-2026-024 (offline enhancement): Markdown rich rendering. New
+  `apps/web/src/markdown.ts` exports an XSS-safe `renderMarkdown` (escape-first,
+  then headings/bold/italic/inline-code/list/fenced-code); `App.tsx` renders
+  `text/markdown` through `.markdown-body`, `text/plain` stays `<pre>`.
+- Verification: markdown.test.ts 3/3 (formatting + injection escaping), Web
+  31/31, pytest 256/256, ruff/mypy/validator/build all pass.
+- Natural-language Step 5 enhancement only; Step 6 remains 100%, MVP ~75%.
+- Exact next action: continue offline enhancements (tombstone soft delete,
+  text-layer highlight linkage, multi-page continuous scroll) or advance to
+  Step 7 after the owner provides an API key and budget.
