@@ -345,6 +345,17 @@
 - 回滚：回退 `fb745bd` 即回到无备份/恢复 UI 状态；不影响已验证提交门/锁定保护。
 - 遗留风险与下一步：第 6 步产物基本齐全（锁定/撤销/冲突预览/崩溃恢复），普通编辑 patch 化保存（跨会话撤销覆盖所有编辑）与版本历史 UI 面板仍待；真实 Provider/Web 与 owner 接受保持禁用。
 
+## 2026-08-14 — 普通编辑 patch 化保存与跨会话撤销（WORK-2026-022）
+
+- 关联 ID：WORK-2026-022、REQ-2026-006/008、NFR-2026-001/003、ADR-0005、WORK-2026-005/019、TR-20260814-013。
+- 实际变化：GraphPatch v1 契约新增 `delete_concept`/`delete_edge`（含 EdgeTarget，生成 TS/Python 产物）；领域 `_apply_delete_concept`（锁定概念删除拒绝 + 存活端点 relations 锁检查 + 级联）与 `_apply_delete_edge`；后端 `save_course_graph` 改为首次整图替换、后续 diff 生成有序 patch 走 `apply_graph_patch`（`_build_diff_patch`：删边→删概念→建概念→建边→update/lock/annotation→layout），普通编辑保留历史、跨会话撤销覆盖所有编辑；删除死代码 `_guard_locked_dimensions`/`_guard_revision_monotonic` 等（锁/revision 由提交门接管）。
+- 影响模块/接口/schema/migration/prompt：扩展 GraphPatch v1 canonical schema（新增两个操作）、contracts-ts/py 生成产物、infrastructure；无 migration/prompt。
+- 兼容性：锁语义收敛为提交门（锁降级=用户主动解锁）；noop 保存不递增 revision；前端零改动（继续整图 PUT）。
+- 验证与证据：`ab50aa2` 实现；`7106621` QA 修复；QA attempt 001 FAIL（3 P1 + 2 P2）→ 复审 PASS；全仓 pytest 256/256、Web 27/27、contracts-ts drift、validator/Ruff/mypy/构建全绿；证据 `TR-20260814-013`。
+- 性能/安全/运维影响：diff 为 O(V+E) 纯内存；删除为硬删除 + 历史可恢复（tombstone 软删除未引入）；错误仅含标识，不落正文/secret。
+- 回滚：回退 `ab50aa2`/`7106621` 即回到整图替换保存；不回退已验证 GraphPatch 提交门/纯领域 history。
+- 遗留风险与下一步：**第 6 步完成（100%）**，"不依赖 AI 也能使用"的手工 Alpha 形成；tombstone 软删除、真实 Provider/Web、owner 接受保持禁用，第 7 步 DeepSeek 适配待 owner 提供 API Key 与预算。
+
 ## 2026-08-12 — 建立总体架构技术基线
 
 - 状态：已形成文档，未开始实现。

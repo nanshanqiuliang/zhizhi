@@ -21,6 +21,7 @@
 | [TR-20260814-010](TR-20260814-010_pdfjs-render.md) | `d56e7ef` | PDF.js canvas 渲染、bbox 高亮、窄视口对齐、file/anchors 端点、真实浏览器验证 | GO（仅 prototype；correlated） | WORK-2026-018 |
 | [TR-20260814-011](TR-20260814-011_patch-gate-undo-redo-lock-guard.md) | `a6a471a` | 持久化 GraphPatch 提交门、跨会话 undo/redo、锁定维度存储保护、Web 锁定/撤销、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-019/020 |
 | [TR-20260814-012](TR-20260814-012_recovery-history-ui.md) | `2cfa883` | 冲突预览、备份/恢复崩溃恢复、版本历史面板、URL 契约、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-021 |
+| [TR-20260814-013](TR-20260814-013_diff-based-save.md) | `7106621` | 普通编辑 patch 化保存、GraphPatch delete 契约、跨会话撤销覆盖所有编辑、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-022 |
 
 正式执行时：
 

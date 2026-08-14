@@ -31,6 +31,7 @@
 | NFR-2026-001/003 / REQ-2026-006/008 / ADR-0005 | 锁定项不被覆盖、失败/重启不重复写入、跨会话撤销 | WORK-2026-019 | 持久化 initial graph + applied 栈指针；GraphPatch 确认门 + 四维锁 + 单事务原子 | `4f5fbd3` Ready；`db3cb26` 红灯；`e0a5ed9` 实现；`a6a471a` QA 修复 | TC-GATE-001..006 / TR-20260814-011：apply→重放、跨会话 undo/redo、锁定维度拒绝、重复 change_id、篡改 record_tampered；全仓 243/243、Web 23/23；QA FAIL→修复收敛 | `docs/USER_MANUAL.md` | DB/history Runbook 待建 | prototype_verified |
 | NFR-2026-001 / REQ-2026-006/008 | 锁定项在整图保存/UI 层不被覆盖、可锁定/撤销 | WORK-2026-020 | `save_course_graph` 锁定维度保护；前端四维锁保真 + patch 门锁定 + 撤销回退后端 + 编辑前查锁 | `618420c` 实现；`a6a471a` QA 修复 | TC-LOCK-001..006 + Web App.lock 3/3 / TR-20260814-011；全仓 243/243、Web 23/23；QA FAIL→修复收敛 | `docs/USER_MANUAL.md` | DB/history Runbook 待建 | prototype_verified |
 | REQ-2026-006/008 / NFR-2026-001 | 冲突预览提示、数据损坏可从本地备份恢复、版本历史 | WORK-2026-021 | `list_backups`/`restore_backup_by_name`（路径守卫 + checksum 必需）+ backups/restore 端点（`_recovery_layout` db 缺失恢复）；前端错误码细化提示 + 备份/恢复 + 版本历史面板 | `fb745bd` 实现；`2cd8270`/`8562ee7`/`2cfa883` QA 修复 | TC-BACKUP-001..004 + Web 冲突/备份/历史 3/3 + URL 契约 / TR-20260814-012；全仓 249/249、Web 27/27；QA FAIL→修复 | `docs/USER_MANUAL.md` | DB/history Runbook 待建 | prototype_verified |
+| REQ-2026-006/008 / NFR-2026-001/003 | 普通编辑跨会话撤销（增删改拖） | WORK-2026-022 | GraphPatch v1 新增 delete_concept/delete_edge；后端 save 改 diff 生成 patch 走提交门 | `ab50aa2` 实现；`7106621` QA 修复 | TC-DIFF-001..006 + TC-LOCK / TR-20260814-013；全仓 256/256、Web 27/27；QA FAIL→修复 | `docs/USER_MANUAL.md` | DB/history Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

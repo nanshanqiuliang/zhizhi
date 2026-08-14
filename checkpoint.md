@@ -903,3 +903,29 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   (WORK-2026-022, needs GraphPatch contract extension + re-QA), or advance to
   Step 7 (DeepSeek live adapter) once the owner provides an API key and budget.
   Keep real Provider/Web, user data, and owner acceptance disabled.
+
+## Step 6 completion checkpoint — 2026-08-14 20:15 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- WORK-2026-022 (ordinary-edit patch-based save) closes the last Step 6 gap:
+  GraphPatch v1 gains `delete_concept`/`delete_edge`; `save_course_graph` now
+  diffs the incoming graph against the current one and applies the resulting
+  patch through the protected gate, so ordinary edits (add/edit/delete/drag)
+  keep history and are cross-session undoable.
+- Role-separated QA attempt 001 (ab50aa2) FAIL 3 P1 + 2 P2; fix 7106621 closes
+  P1 (surviving-endpoint relations lock on delete cascade, duplicate
+  update_concept, dropped new-concept layout); P2 recorded as boundaries;
+  superseding review PASS.
+- Full gates at 7106621: repository validator, Ruff, mypy (scripts 9 + strict
+  11), pytest 256/256 (diff_save_undo 4/4, delete unit 3/3), contracts-ts
+  drift, Web 27/27, production build all pass.
+- Evidence/report: `evidence/TR-20260814-013/` and
+  `docs/test-reports/TR-20260814-013_diff-based-save.md` (GO, prototype,
+  correlated_review).
+- **Natural-language Step 6 is COMPLETE (100%)** — lock, undo/redo (all edits),
+  conflict preview, crash recovery, duplicate-task protection and version
+  history are all verified. The offline "usable without AI" manual Alpha is
+  complete. Overall personal MVP approximately 75%.
+- Exact next action: enter Step 7 (DeepSeek live adapter) only after the owner
+  provides a controlled API key and approves a budget (live gate); until then
+  keep real Provider/Web, user data, and owner acceptance disabled.
