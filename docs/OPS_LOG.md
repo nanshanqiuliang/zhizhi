@@ -12,6 +12,14 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-14 — DeepSeek deployment 正式启用（owner 批准）
+
+- 关联：WORK-2026-008、OPS-2026-003、LLM-COMPAT-BASELINE-001。
+- 已完成：owner 批准后将 `config/llm/providers.yaml` 的 `deepseek.enabled` 置为 `true`；路由验证 concept_extract→deepseek/fast、relation_validate→deepseek/quality；OPS-2026-003 关闭（剩余生产遥测归后续可观测性）。
+- 未完成：AI 草案流水线接入（第 8 步 WORK-2026-009）未开始；生产运行遥测/监控未建立。
+- 当前缓解：真实调用仍仅显式构造 adapter（live 门控）；金额/attempt/回退预算约束生效；密钥仅 env 不落盘。
+- 下一门：第 8 步 Ready 工作项 + 红灯测试；随后按需建立 Provider 运行遥测。
+
 ## 2026-08-14 — 交付检查：环境清单、费用风险与 Runbook 部分演练登记
 
 - 关联：WORK-2026-007/008、RISK-2026-015、RB-PROV-001。
@@ -50,7 +58,7 @@
 |---|---|---|---|---|---|---|
 | OPS-2026-001 | 高 | 尚无运行、备份、恢复和诊断能力 | 不进入真实运营 | 待定 | 阶段 1 | open |
 | OPS-2026-002 | 高 | 尚无构建签名、SBOM 和来源证明 | 不分发安装包 | 待定 | 阶段 1/3 | open |
-| OPS-2026-003 | 高 | DeepSeek 已有配置/契约/adapter/金标基线/演练，但 deployment `enabled: true` 正式批准待 owner | `enabled: false`；金额/attempt/回退三重预算约束，密钥仅 env 不落盘 | 待定 | 阶段 0/2 | open |
+| OPS-2026-003 | 高 | DeepSeek 已配置/契约/adapter/金标/演练齐全并经 owner 批准 `enabled: true`；剩余为生产运行遥测未建立 | `enabled: true`（2026-08-14 owner 批准）；金额/attempt/回退三重预算约束，密钥仅 env 不落盘 | 待定 | 阶段 0/2 | closed（遥测归后续可观测性工作项） |
 
 ## 2026-08-13 — DeepSeek 运维边界建立
 

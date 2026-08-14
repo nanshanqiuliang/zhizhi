@@ -95,7 +95,7 @@
 
 完成标志：真实模型能稳定返回符合契约的草案；失败可定位、费用可控、日志不泄露内容或密钥。
 
-当前状态：**已完成技术收口（约 95%），仅 deployment 正式批准待 owner**。canonical LLM contract、mock provider、DeepSeek OpenAI Chat Completions adapter（显式 thinking、流式、工具调用、错误映射、重试/熔断/预算/回退）已实现；真实 DeepSeek 受控 smoke 5/5、微积分金标基线（EVAL-LLM-001，费用 < $0.002）、金额预算与受控回退、RB-PROV-001 演练、隔离审查（发现并修复 2 blocking + 4 should-fix）均完成。DeepSeek deployment 仍保持 `enabled: false`，正式启用为唯一待 workspace owner 决定的残余项（correlated review 已通过）。
+当前状态：**已完成（100%）**。canonical LLM contract、mock provider、DeepSeek OpenAI Chat Completions adapter（显式 thinking、流式、工具调用、错误映射、重试/熔断/预算/回退）已实现；真实 DeepSeek 受控 smoke 5/5、微积分金标基线（EVAL-LLM-001，费用 < $0.002）、金额预算、受控回退、RB-PROV-001 演练、隔离审查（修复全部 blocking）均完成；workspace owner 已于 2026-08-14 批准 DeepSeek deployment `enabled: true`（config 已生效，路由已验证）。真实 AI 草案流水线（第 8 步）为下一主工作项。
 
 ### 第 8 步：让 AI 从笔记和资料自动生成知识树草案
 
@@ -139,17 +139,17 @@
 
 ## 当前进度快照
 
-- 当前自然语言步骤：**第 7 步——安全接入第一个真实 AI（已完成技术收口，约 95%；deployment 正式批准待 owner）**。
+- 当前自然语言步骤：**第 7 步——安全接入第一个真实 AI（已完成 100%）**；下一主项为第 8 步。
 - 第 2 步进度：**已完成底层 prototype（100%）**；持久化撤销属于第 4/6 步，不冒充已上线功能。
 - 第 3 步进度：**100%（developer demo 已验证）**。
 - 第 4 步进度：**100%**——SQLite 持久化内核（`TR-20260814-005`）+ FastAPI sidecar 与 Web 自动保存（`TR-20260814-006`）+ FTS5 基础搜索（`TR-20260814-007`）均通过职责隔离 QA。
 - 第 5 步进度：**100%**——安全文件导入（`TR-20260814-008`）+ PDF 页文本查看/锚点跳转（`TR-20260814-009`）+ PDF.js 渲染/bbox 高亮（`TR-20260814-010`）均通过职责隔离 QA 与真实浏览器验证。
 - 第 6 步进度：**100%**——锁定、撤销/重做（覆盖所有编辑）、冲突预览、崩溃恢复、重复任务保护、版本历史全部由 `TR-20260814-011..013` 验证；"不依赖 AI 也能使用"的手工 Alpha 完成。
-- 第 7 步进度：**约 95%（技术收口完成）**——canonical contract、mock、DeepSeek adapter、金额预算、受控回退、live smoke 5/5、金标基线、RB-PROV-001 演练、隔离审查（修复 2 blocking + 4 should-fix）全部完成；仅 deployment `enabled: true` 正式批准待 owner。
+- 第 7 步进度：**100%**——canonical contract、mock、DeepSeek adapter、金额预算、受控回退、live smoke 5/5、金标基线、RB-PROV-001 演练、隔离审查全部完成；owner 已批准 deployment `enabled: true`。
 - 个人可用 MVP 总进度：**粗略约 80%**。这是基于已提交、已验证的可见能力估算，不是按文件数计算。
 - 已经能看到：可运行的三栏知识树网页；可编辑笔记/节点、增删叶节点、拖动/排布/锁定和撤销重做（跨会话覆盖所有编辑）；关闭重开内容仍在（需启动本地 API）；保存状态可见；概念与笔记全文搜索；本地资料（MD/TXT/PDF）安全导入；PDF 页文本/可视化查看与锚点目录跳转、bbox 区域高亮，Markdown/TXT 原文查看；内容/位置锁定、冲突预览、本地备份/恢复、版本历史面板。
-- 还不能看到：AI 自动构图、对话/检索、Windows 安装包（DeepSeek 真实 adapter 已完整可用但仍未接 AI 草案流水线，deployment 保持 `enabled: false` 待 owner 批准）。
-- 下一个用户可见里程碑：**第 8 步 AI 自动生成知识树草案**（待 owner 批准 DeepSeek deployment 后启动）。
+- 还不能看到：AI 自动构图、对话/检索、Windows 安装包（DeepSeek adapter 已批准可用，但 AI 草案流水线属第 8 步，尚未接入产品界面）。
+- 下一个用户可见里程碑：**第 8 步 AI 自动生成知识树草案**（WORK-2026-009 待启动）。
 
 ## 用户说“继续推进”时的固定工作方式
 

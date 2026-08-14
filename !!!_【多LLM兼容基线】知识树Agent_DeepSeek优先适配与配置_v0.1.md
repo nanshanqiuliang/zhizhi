@@ -474,6 +474,6 @@ Provider fixture 必须保存：请求 canonical hash、脱敏 wire request/resp
 - [x] DeepSeek live smoke 已通过并形成测试报告（`a80f43d`，5/5，约 817 token）；
 - [x] 微积分金标、成本与延迟门已记录基线（`EVAL-LLM-001`，4 子任务，费用 < $0.002；质量阈值待 owner 批准）；
 - [x] `RB-PROV-001` 已演练（`RB-PROV-001-drill-20260814.md`，10 定位步骤 + 错误处置核对）；
-- [~] DeepSeek deployment 已由 QA 批准为 enabled（隔离 review 已通过并修复 blocking 问题；`correlated_review`，最终残余风险接受与 `enabled: true` 仍待 workspace owner 决定）。
+- [~] DeepSeek deployment 已由 QA 批准为 enabled（隔离 review 已通过并修复 blocking 问题；**workspace owner 已于 2026-08-14 批准 `enabled: true`**，config 已生效、路由已验证；`correlated_review` 披露保留）。
 
-**当前结论：兼容架构、canonical contract、mock、DeepSeek adapter、受控 live smoke、金标基线、金额预算、受控 fallback 与 RB-PROV-001 演练均已实现并验证；DeepSeek deployment 的正式 `enabled: true` 批准为唯一待 owner 决定的残余项。**
+**当前结论：兼容架构、canonical contract、mock、DeepSeek adapter、受控 live smoke、金标基线、金额预算、受控 fallback、RB-PROV-001 演练均已实现并验证；DeepSeek deployment 已经 owner 批准正式启用（`enabled: true`），第 7 步完成（100%）。**

@@ -54,7 +54,7 @@ providers:
           max_output_tokens: 8192
 
   deepseek:
-    enabled: false
+    enabled: true
     enablement_gate: live_smoke_and_eval_required
     priority: 10
     protocol: openai_chat_completions

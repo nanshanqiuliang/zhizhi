@@ -9,7 +9,7 @@
 
 产品方向已由用户明确为个人使用、本地优先的 AI Agent App；学科复核和 QA 将由确定性 harness 编排的职责隔离 AI 子 Agent执行，并通过受控搜索/验证工具形成机器证明。本地 Git、依赖锁、模块/CI 骨架、LLM 配置校验、最小 React 状态页和 WORK-2026-004 的 review v2 离线 mock/replay 原型已经实现；`TR-20260813-005` 固化三轮学科与两轮 QA 机器证明，最终 QA PASS。由于无外部模型/Provider 独立性证明，结论标为 `correlated_review`，且 mock 状态保持 `inconclusive`；产品化 harness、远端仓库、托管 CI、Rust/Tauri、产品代码和运行环境仍未建立。
 
-面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感已完成（100%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做、WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入（均经 `TR-20260814-011` 验证），WORK-2026-021 冲突预览 + 备份/恢复崩溃恢复 + 版本历史面板（经 `TR-20260814-012` 验证），WORK-2026-022 普通编辑 patch 化保存（GraphPatch delete 契约 + 后端 diff，经 `TR-20260814-013` 验证）；"不依赖 AI 也能使用"的手工 Alpha 完成；个人可用 MVP 粗略完成度约 75%。第 7 步（安全接入真实 AI）已完成技术收口（约 95%）：WORK-2026-007 冻结 canonical LLM contract + mock + TC-LLM-001..009（`b2e215b`）；WORK-2026-008 实现 DeepSeek OpenAI Chat Completions 协议适配器 + vendor profile + 金额预算 + 受控回退 + 受控 live smoke 5/5 + 金标 EVAL-LLM-001 基线 + RB-PROV-001 演练 + 隔离审查（`042f937`/`dd49599`，修复 2 blocking + 4 should-fix）；DeepSeek deployment 的正式 `enabled: true` 批准为唯一待 workspace owner 决定的残余项。
+面向用户的自然语言阶段、可见里程碑和“继续推进”报告格式见 [知识树笔记 App 自然语言开发路线](USER_FACING_DEVELOPMENT_ROADMAP.md)。第 1–4 步已完成并通过职责隔离 QA（TR-20260814-001..007）。第 5 步已由 TR-008/009/010 验证完成：安全文件导入、PDF 页文本查看/锚点跳转、PDF.js 可视化渲染与 bbox 区域高亮，全部通过职责隔离 QA（TR-010 中 QA 发现 1 P1 窄视口 bbox 错位已由 `d56e7ef` 修复并经真实浏览器验证）；第 5 步标记 100%。第 6 步人工编辑安全感已完成（100%）：WORK-2026-019 后端持久化 GraphPatch 提交门 + 跨会话撤销/重做、WORK-2026-020 锁定维度存储保护 + WebUI 锁定/撤销接入（均经 `TR-20260814-011` 验证），WORK-2026-021 冲突预览 + 备份/恢复崩溃恢复 + 版本历史面板（经 `TR-20260814-012` 验证），WORK-2026-022 普通编辑 patch 化保存（GraphPatch delete 契约 + 后端 diff，经 `TR-20260814-013` 验证）；"不依赖 AI 也能使用"的手工 Alpha 完成；个人可用 MVP 粗略完成度约 75%。第 7 步（安全接入真实 AI）已完成（100%）：WORK-2026-007 冻结 canonical LLM contract + mock + TC-LLM-001..009（`b2e215b`）；WORK-2026-008 实现 DeepSeek OpenAI Chat Completions 协议适配器 + vendor profile + 金额预算 + 受控回退 + 受控 live smoke 5/5 + 金标 EVAL-LLM-001 基线 + RB-PROV-001 演练 + 隔离审查（`042f937`/`dd49599`）；workspace owner 已批准 DeepSeek deployment `enabled: true`（config 已生效，路由已验证指向 deepseek）。第 8 步（AI 自动生成知识树草案）为下一主工作项。
 
 ## 当前阶段出口门
 
@@ -35,8 +35,8 @@
 | WORK-2026-004 | 建立微积分金标集、许可清单与 AI 自动复核 v2 原型 | 已完成 | 开发 + AI 学科/QA 子 Agent | MIT OCW RES.18-001 已冻结；ADR-0015 | v1 数据包；v2 machine attestation、mock harness、安全 fixture | v1 `e918fdf`/`232d0cd` + TR-003/004；v2 `73a74da..ae834d9` + TR-005，84/84 Python、QA PASS（correlated） |
 | WORK-2026-005 | 冻结 Anchor/GraphPatch v1 | 已验证 prototype（正式验收待 owner） | 总工程师 | WORK-2026-002 离线默认值 QA 已通过；正式阶段出口仍待 owner | JSON Schema、纯领域 validator、生成 TS enum/Python runtime artifact、ADR | `44b6233` 原始红灯；`a25470c` QA FAIL；`1278e79` I/O 红灯；`5ff02a4` 修复；`b946855` QA PASS；`TR-20260814-002`，专项 50/50 + 集成 4/4、全仓 136/136、Web 1/1 |
 | WORK-2026-006 | 建仓和最小 CI/证据骨架 | 待验收 | 开发+QA+运维 | WORK-2026-003（远端治理仍待定） | 本地 Git、CI workflow、锁文件、状态页 | `TR-20260813-002` CONDITIONAL GO；独立 QA/远端 CI 待验收 |
-| WORK-2026-007 | 冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约 | 第 1 期已验证（协议/HTTP 与 live 待后续） | AI+后端+QA+运维 | WORK-2026-001 | 多 LLM 基线、配置 v1、错误与 Runbook | `b5747ec` 红灯；`b2e215b` 实现；TC-LLM-001..009 mock 部分 56/56、全仓 314/314、Web 32/32、validator/Ruff/mypy/构建全绿；协议适配器/DeepSeek vendor profile（实施顺序 3–6）与 live smoke/金标（顺序 7，WORK-2026-008，需 owner API Key 与预算）未开始 |
-| WORK-2026-008 | DeepSeek 真实兼容验证与金标评测 | 已完成技术收口（deployment `enabled: true` 批准待 owner） | AI+QA | WORK-2026-004/006/007 | live smoke、EVAL-LLM-001、成本/延迟报告 | `d6a7444` 红灯；`d81c574` 实现；`a80f43d` live smoke；`042f937` 金额预算/回退/金标/演练；`dd49599` review 修复；TC-DS-001..005 + 金额预算/回退 33/33、live smoke 5/5（~817 token）、EVAL-LLM-001 基线（~$0.0012）、RB-PROV-001 演练、隔离 review（2 blocking + 4 should-fix 已修）；全仓 348/348 + 5 skipped；deployment 正式批准为唯一待 owner 残余项 |
+| WORK-2026-007 | 冻结 canonical LLM contract、配置 schema 与 DeepSeek adapter 契约 | 已完成 | AI+后端+QA+运维 | WORK-2026-001 | 多 LLM 基线、配置 v1、错误与 Runbook | `b5747ec` 红灯；`b2e215b` 实现；TC-LLM-001..009 mock 部分 56/56、全仓 314/314、Web 32/32、validator/Ruff/mypy/构建全绿 |
+| WORK-2026-008 | DeepSeek 真实兼容验证与金标评测 | 已完成（owner 已批准 `enabled: true`） | AI+QA | WORK-2026-004/006/007 | live smoke、EVAL-LLM-001、成本/延迟报告 | `d6a7444` 红灯；`d81c574` 实现；`a80f43d` live smoke；`042f937` 金额预算/回退/金标/演练；`dd49599` review 修复；TC-DS-001..005 + 金额预算/回退 33/33、live smoke 5/5（~817 token）、EVAL-LLM-001 基线（~$0.0012）、RB-PROV-001 演练、隔离 review 已修；全仓 348/348 + 5 skipped；owner 已批准 deployment `enabled: true`（`config/llm/providers.yaml`） |
 | WORK-2026-009 | 选择并验证 Embedding Provider | 未开始 | AI+检索+QA | WORK-2026-004/007 | embedding policy、索引版本策略 | Recall/成本/离线对照 |
 | WORK-2026-010 | 产品化 AI 自动审查 Harness | 未开始 | AI 平台 + AI 学科/QA 子 Agent | WORK-2026-004 v2 prototype、WORK-2026-007；live 另依赖 008 | 通用 harness、角色策略、evidence ledger、状态机、owner risk acceptance | TC-AIREV-001..010 待执行 |
 | WORK-2026-011 | 纯领域修改回放与 LIFO 撤销/重做 | 已验证 prototype（持久化/owner 待后续） | graph_revision domain + QA | WORK-2026-005 / TR-20260814-002 | immutable entity delta、history/replay/undo/redo、ADR-0005 | `2425718` 红灯；`4fc8e60` 实现；`TR-20260814-003` QA PASS；专项 18/18、既有 graph 50/50、全仓 154/154、Web 1/1 |
@@ -51,13 +51,14 @@
 | WORK-2026-020 | 锁定维度存储保护与 WebUI 锁定/撤销接入 | 已验证 prototype | persistence + api + web + QA | WORK-2026-005/019 已实现 | `save_course_graph` 锁定维度保护（锁降级/内容变化/删除/revision 回退拒绝）；前端四维锁保真往返 + `toggleLock` patch 门 + 撤销/重做回退后端 + 编辑前查锁 | `618420c` 实现；`a6a471a` QA 修复；lock-guard 6/6、Web 23/23、全仓 243/243；`TR-20260814-011` QA FAIL→修复 |
 | WORK-2026-021 | 冲突预览与备份/恢复崩溃恢复 UI | 已验证 prototype | recovery + api + web + QA | WORK-2026-019/020 已验证 | `list_backups`/`restore_backup_by_name`（路径守卫 + checksum 必需）+ `GET backups`/`POST restore` 端点（含 `_recovery_layout` db 缺失恢复）；前端错误码细化提示 + 侧边栏备份/恢复 + 版本历史面板 | `fb745bd` 实现；`2cd8270`/`8562ee7`/`2cfa883` QA 修复；backup_api 6/6、Web 27/27、全仓 249/249；`TR-20260814-012` QA FAIL→修复 |
 | WORK-2026-022 | 普通编辑 patch 化保存与跨会话撤销 | 已验证 prototype | patch + persistence + QA | WORK-2026-005/019 已验证 | GraphPatch v1 新增 delete_concept/delete_edge；后端 save 改为 diff 生成 patch 走提交门（普通编辑保留历史、跨会话撤销覆盖所有编辑） | `ab50aa2` 实现；`7106621` QA 修复；diff_save_undo 4/4、delete 单元 3/3、全仓 256/256、Web 27/27；`TR-20260814-013` QA FAIL→修复 |
+| WORK-2026-009 | AI 从笔记/资料自动生成知识树草案（第 8 步） | 规划完成/待实现 | AI + persistence + web + QA | WORK-2026-004/005/008/016/017/018 已验证 | 文档分块、概念抽取、别名合并、关系候选、置信度、DAG 校验、自动布局、批量接受/拒绝、来源绑定 | 待红灯/TR（DeepSeek adapter 与 GraphPatch 提交门已就绪，可复用） |
 
 ## 当前受阻项
 
 | 项目 | 原因 | 解除条件 |
 |---|---|---|
-| DeepSeek live smoke | 无产品代码、受控 API Key、CI 隔离任务或金标资料 | WORK-2026-004/006/007 完成并配置 secret store |
+| 无实质受阻项 | DeepSeek live smoke/金标/演练已由 WORK-2026-008 完成，owner 已批准 `enabled: true` | — |
 
 ## 下一门
 
-`Gate A：阶段 -1 出口验收`。WORK-2026-002 的修正已由 `TR-20260814-001` QA PASS，允许在阶段 -1 内从失败测试启动 WORK-2026-005 的离线 Anchor/GraphPatch contract spike；阶段整体出口和 PRD/ADR 的正式接受仍需 workspace owner 精确确认。真实 Provider/Web Search 在 WORK-2026-007/008 的 opt-in、秘密、预算和来源策略门完成前保持关闭；owner 风险接受在 WORK-2026-010 建立认证边界前也保持拒绝。
+`第 8 步（WORK-2026-009：AI 从笔记/资料自动生成知识树草案）`：第 0–7 步已全部完成（第 7 步经 owner 批准 deployment `enabled: true`）。下一动作：创建 Ready 工作项 WORK-2026-009（文档分块、概念抽取、别名合并、关系候选、置信度、DAG 校验、自动布局、批量接受/拒绝、来源绑定），复用已验证的 DeepSeek adapter 与 GraphPatch 提交门，从失败测试启动。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。

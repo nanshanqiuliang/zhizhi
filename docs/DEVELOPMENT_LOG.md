@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-14 — owner 批准 DeepSeek deployment，第 7 步正式完成（100%）
+
+- 关联 ID：WORK-2026-008、LLM-COMPAT-BASELINE-001、OPS-2026-003、NFR-2026-008。
+- 实际变化：workspace owner 批准 DeepSeek deployment 正式启用——`config/llm/providers.yaml` 的 `deepseek.enabled` 由 `false` 改为 `true`；路由行为验证：`select_deployment` 对 concept_extract→deepseek/fast、relation_validate/answer_with_sources→deepseek/quality（批准前为 mock/deterministic）；多 LLM 基线签字检查表最后一项勾选。
+- 影响模块/接口/schema/migration/prompt：仅 config 声明变化；无代码/schema/migration/prompt 变化；`model-policies.yaml` 的 `production_preference` 已指向 deepseek，无需改动。
+- 兼容性：`enabled: true` 仅使 deployment 可被路由选中；无产品代码自动调用（AI 草案流水线属第 8 步）；live 测试仍受 `RUN_LIVE_LLM_TESTS` 门控；金额/attempt/回退预算约束保持生效。
+- 验证与证据：repository validator PASS（config schema/语义）；全仓 pytest 348/348 + 5 skipped；`select_deployment` 真实 config 验证 deepseek 路由；secret scan 无命中。
+- 性能/安全/运维影响：真实调用仍仅显式构造 adapter 时发生（评测/live smoke 门控）；密钥仅 env、不落盘；费用约束已接线。
+- 回滚：将 `deepseek.enabled` 改回 `false` 即恢复 mock-only 路由；不影响已验证 adapter/契约/评测证据。
+- 遗留风险与下一步：第 7 步 100% 完成；下一主项为第 8 步 WORK-2026-009（AI 自动生成知识树草案），复用 DeepSeek adapter 与 GraphPatch 提交门从失败测试启动。
+
 ## 2026-08-14 — 第七步收口：金额预算、受控回退、金标评测、RB-PROV-001 演练与隔离审查
 
 - 关联 ID：WORK-2026-007/008、EVAL-LLM-001、RB-PROV-001、NFR-2026-006/007/008、RISK-2026-015、LLM-COMPAT-BASELINE-001。

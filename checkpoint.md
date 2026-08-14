@@ -1063,3 +1063,24 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   the workspace owner's). Gold quality thresholds also await owner approval.
 - Exact next action: after owner approval, enter Step 8 (AI draft pipeline)
   wiring DeepSeek adapter into the AI-generation flow.
+
+## Step 7 owner-approval checkpoint — 2026-08-14 17:20 +08:00
+
+- Workspace owner approved the DeepSeek deployment on 2026-08-14; config
+  `config/llm/providers.yaml` now sets `deepseek.enabled: true`. Routing
+  verified with real config: concept_extract -> deepseek/fast,
+  relation_validate/answer_with_sources -> deepseek/quality (was
+  mock/deterministic).
+- Step 7 is now 100% (all of canonical contract, mock, DeepSeek adapter,
+  monetary budget, scoped fallback, live smoke 5/5, EVAL-LLM-001 baseline,
+  RB-PROV-001 drill, isolated review and owner approval complete). MVP ~80%.
+- Docs synced: ENGINEERING_PLAN (WORK-2026-008 done, WORK-2026-009 planned for
+  Step 8), DEVELOPMENT_LOG, OPS_LOG (OPS-2026-003 closed), roadmap (Step 7
+  100%), multi-LLM baseline sign-off checklist, README, USER_MANUAL,
+  ENVIRONMENT_INVENTORY (deepseek enabled: true), config/llm README,
+  TRACEABILITY_MATRIX (NFR-2026-008 prototype_verified).
+- Gates: validator + full pytest 348/348 + 5 skipped pass with enabled: true.
+  Key never written to any file.
+- Exact next action: create Ready WORK-2026-009 (AI draft pipeline, Step 8)
+  reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
+  failing tests.
