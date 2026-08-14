@@ -861,3 +861,19 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   visible surface, or advance to Step 7 (DeepSeek live adapter) after the owner
   provides an API key and approves a budget. Keep real Provider/Web, user data,
   and owner acceptance disabled.
+
+## Step 6 version-history panel checkpoint — 2026-08-14 19:05 +08:00
+
+- Active branch: `feature/WORK-2026-019-patch-gate`.
+- Added the version-history UI panel (WORK-2026-021): `api.ts` gains
+  `listHistory()`; the sidebar shows `vN -> vN+1` + change_id prefix for each
+  persisted record, refreshed on load, backend undo/redo and lock toggle.
+- Verification: Web 26/26 (new history panel test), full pytest 246/246,
+  ruff/mypy/validator/build all pass.
+- Natural-language Step 6 progress: approximately 85% — version history is now
+  visible; the only remaining item is the ordinary-edit patch-based save
+  (cross-session undo for all edits, needs GraphPatch delete/tombstone).
+  Overall personal MVP approximately 74%.
+- Exact next action: either finish Step 6 with ordinary-edit patch-based save
+  (needs a GraphPatch contract extension) or advance to Step 7 (DeepSeek live
+  adapter) once the owner provides an API key and budget.
