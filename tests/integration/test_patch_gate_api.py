@@ -16,7 +16,6 @@ from fastapi.testclient import TestClient
 from apps.api.main import create_app
 from tests.contract.test_graph_contracts import (
     CONCEPT_B_ID,
-    COURSE_ID,
     WORKSPACE_ID,
     valid_graph,
     valid_patch,
@@ -81,9 +80,7 @@ def _update_label_patch(*, base_revision: int) -> JsonObject:
 def test_patch_endpoint_applies_and_lists_history(client: TestClient) -> None:
     _seed_graph(client)
 
-    applied = client.post(
-        f"/api/workspaces/{WORKSPACE_ID}/graph/patches", json=_confirmed_patch()
-    )
+    applied = client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/patches", json=_confirmed_patch())
     assert applied.status_code == 200
     assert applied.json()["status"] == "applied"
     assert applied.json()["revision_no"] == 1
@@ -96,7 +93,9 @@ def test_patch_endpoint_applies_and_lists_history(client: TestClient) -> None:
 def test_undo_redo_endpoints(client: TestClient) -> None:
     _seed_graph(client)
     patch = _confirmed_patch()
-    assert client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/patches", json=patch).status_code == 200
+    assert (
+        client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/patches", json=patch).status_code == 200
+    )
 
     undone = client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/undo")
     assert undone.status_code == 200
@@ -115,9 +114,7 @@ def test_undo_empty_history_conflict(client: TestClient) -> None:
 
 
 def test_patch_missing_workspace_404(client: TestClient) -> None:
-    response = client.post(
-        f"/api/workspaces/{WORKSPACE_ID}/graph/patches", json=_confirmed_patch()
-    )
+    response = client.post(f"/api/workspaces/{WORKSPACE_ID}/graph/patches", json=_confirmed_patch())
     assert response.status_code == 404
 
 

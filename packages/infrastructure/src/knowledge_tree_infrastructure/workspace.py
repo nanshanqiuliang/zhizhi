@@ -404,9 +404,7 @@ def _rebuild_history(layout: WorkspaceLayout) -> GraphHistory:
     # apply/undo/redo keeps the revision strictly monotonic.
     snapshot = history.snapshot
     snapshot["revision_no"] = current["revision_no"]
-    snapshot_json = json.dumps(
-        snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    )
+    snapshot_json = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return GraphHistory(
         _snapshot_json=snapshot_json,
         undo_records=history.undo_records,

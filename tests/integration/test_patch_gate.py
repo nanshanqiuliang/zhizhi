@@ -56,9 +56,7 @@ def _edge_patch(*, base_revision: int) -> JsonObject:
     patch = valid_patch()
     patch["base_revision_no"] = base_revision
     patch["patch_id"] = f"00000000-0000-7000-9000-0000000000{base_revision + 1:02d}"
-    patch["operations"][0]["op_id"] = (
-        f"00000000-0000-7000-9000-0000000001{base_revision:02d}"
-    )
+    patch["operations"][0]["op_id"] = f"00000000-0000-7000-9000-0000000001{base_revision:02d}"
     patch["operations"][0]["expected_source_revision_no"] = base_revision
     patch["operations"][0]["expected_target_revision_no"] = base_revision
     return patch
@@ -164,9 +162,7 @@ def test_apply_patch_persists_and_replays(tmp_path: Path) -> None:
 # TC-GATE-002: cross-session undo/redo
 def test_undo_redo_across_sessions(tmp_path: Path) -> None:
     layout = _setup_workspace(tmp_path)
-    apply_graph_patch(
-        layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER
-    )
+    apply_graph_patch(layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER)
     apply_graph_patch(
         layout,
         _annotation_patch(base_revision=1, target_revision=1, value="critical"),
@@ -193,17 +189,17 @@ def test_undo_on_empty_history_fails_closed(tmp_path: Path) -> None:
 # TC-GATE-003: locked dimension must not be overwritten
 def test_locked_dimension_rejects_update(tmp_path: Path) -> None:
     layout = _setup_workspace(tmp_path)
+    apply_graph_patch(layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER)
     apply_graph_patch(
-        layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER
-    )
-    apply_graph_patch(
-        layout, _set_lock_patch(base_revision=1, target_revision=1, dimension="content"),
+        layout,
+        _set_lock_patch(base_revision=1, target_revision=1, dimension="content"),
         trusted_actor=TRUSTED_USER,
     )
 
     with pytest.raises(WorkspaceError) as excinfo:
         apply_graph_patch(
-            layout, _update_label_patch(base_revision=2, target_revision=2, label="被覆盖"),
+            layout,
+            _update_label_patch(base_revision=2, target_revision=2, label="被覆盖"),
             trusted_actor=TRUSTED_USER,
         )
     assert excinfo.value.code == "target_locked"
@@ -223,9 +219,7 @@ def test_unconfirmed_patch_rejected(tmp_path: Path) -> None:
 
 def test_stale_base_revision_rejected(tmp_path: Path) -> None:
     layout = _setup_workspace(tmp_path)
-    apply_graph_patch(
-        layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER
-    )
+    apply_graph_patch(layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER)
     with pytest.raises(WorkspaceError) as excinfo:
         apply_graph_patch(
             layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER
@@ -252,9 +246,7 @@ def test_duplicate_change_id_rejected_across_sessions(tmp_path: Path) -> None:
 # TC-GATE-005: tampered history fails closed
 def test_tampered_history_record_fails_closed(tmp_path: Path) -> None:
     layout = _setup_workspace(tmp_path)
-    apply_graph_patch(
-        layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER
-    )
+    apply_graph_patch(layout, _confirmed(_edge_patch(base_revision=0)), trusted_actor=TRUSTED_USER)
 
     import sqlite3
 
