@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { ConceptNode, PersistApi, WorkspaceSnapshot } from "./api";
+import type { ConceptNode, PersistApi, SearchResultItem, WorkspaceSnapshot } from "./api";
 
 type DragState = {
   nodeId: string;
@@ -182,6 +182,9 @@ export function App({ api }: { api?: PersistApi }) {
   const [status, setStatus] = useState("已载入示例知识树，可以开始编辑");
   const [connection, setConnection] = useState<"idle" | "connected" | "offline">("idle");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [searchStatus, setSearchStatus] = useState<"idle" | "searching" | "done" | "failed">("idle");
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -247,6 +250,32 @@ export function App({ api }: { api?: PersistApi }) {
         .then(() => setSaveState("saved"))
         .catch(() => setSaveState("failed"));
     }, 600);
+  }
+
+  async function runSearch(query: string) {
+    if (!api || !query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchStatus("searching");
+    try {
+      const results = await api.searchGraph(query.trim());
+      setSearchResults(results);
+      setSearchStatus("done");
+    } catch {
+      setSearchResults([]);
+      setSearchStatus("failed");
+    }
+  }
+
+  function jumpToResult(resultId: string) {
+    const node = present.nodes.find((candidate) => candidate.id === resultId);
+    if (!node) return;
+    selectNode(node.id);
+    const viewport = canvasViewport.current;
+    if (viewport) {
+      viewport.scrollLeft = Math.max(0, node.x + 75 - viewport.clientWidth / 2);
+    }
   }
 
   function commit(next: WorkspaceSnapshot, message: string) {
@@ -435,6 +464,40 @@ export function App({ api }: { api?: PersistApi }) {
         <div className="course-heading">
           <span className="course-path">学习空间 / 高等数学</span>
           <h1>微积分 · 连续性与可导性</h1>
+        </div>
+        <div className="search-area">
+          <label className="visually-hidden" htmlFor="concept-search">搜索概念或笔记</label>
+          <input
+            id="concept-search"
+            type="search"
+            placeholder="搜索概念或笔记…"
+            value={searchQuery}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              void runSearch(event.target.value);
+            }}
+          />
+          {searchStatus === "searching" && <span className="search-note">搜索中…</span>}
+          {searchStatus === "failed" && <span className="search-note">搜索失败</span>}
+          {searchQuery.trim() && searchStatus === "done" && searchResults.length > 0 && (
+            <ul className="search-results" aria-label="搜索结果">
+              {searchResults.map((result) => (
+                <li key={result.id}>
+                  <button
+                    type="button"
+                    onClick={() => jumpToResult(result.id)}
+                    aria-label={`定位到概念：${result.label}`}
+                  >
+                    <strong>{result.label}</strong>
+                    <span>{result.snippet}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {searchQuery.trim() && searchStatus === "done" && searchResults.length === 0 && (
+            <p className="search-note">没有匹配的概念</p>
+          )}
         </div>
         <div className="mode-badges" aria-label="当前工作模式">
           <span className="mode-badge sample">示例数据</span>

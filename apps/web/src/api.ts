@@ -24,9 +24,16 @@ export type WorkspaceSnapshot = {
   edges: ConceptEdge[];
 };
 
+export type SearchResultItem = {
+  id: string;
+  label: string;
+  snippet: string;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
+  searchGraph(query: string): Promise<SearchResultItem[]>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -190,6 +197,15 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       if (!response.ok) {
         throw new Error(`save failed: ${response.status}`);
       }
+    },
+    async searchGraph(query: string): Promise<SearchResultItem[]> {
+      const searchEndpoint = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/search?q=${encodeURIComponent(query)}`;
+      const response = await fetch(searchEndpoint);
+      if (!response.ok) {
+        throw new Error(`search failed: ${response.status}`);
+      }
+      const body = (await response.json()) as { results: SearchResultItem[] };
+      return body.results;
     },
   };
 }

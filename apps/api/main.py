@@ -25,6 +25,7 @@ from knowledge_tree_infrastructure.workspace import (
     migrate,
     resolve_workspace,
     save_course_graph,
+    search_course_graph,
 )
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -51,6 +52,8 @@ def _http_error(error: WorkspaceError) -> HTTPException:
     if error.code == "workspace_missing":
         return HTTPException(status_code=404, detail={"code": error.code, **error.details})
     if error.code == "graph_invalid":
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code == "search_invalid_query":
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "workspace_corrupt" and error.details.get("rule") == "course_graph_absent":
         # A workspace without a saved graph is equivalent to "not found".
@@ -130,6 +133,21 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
             load_course_graph(layout)
             backup_path = backup_workspace(layout)
             return {"status": "backed_up", "backup_path": str(backup_path)}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/search")
+    def search_graph(workspace_id: str, q: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            results = search_course_graph(layout, q)
+            return {
+                "results": [
+                    {"id": result.id, "label": result.label, "snippet": result.snippet}
+                    for result in results
+                ]
+            }
         except WorkspaceError as error:
             raise _http_error(error) from error
 

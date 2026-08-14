@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { PersistApi, WorkspaceSnapshot } from "./api";
+import type { PersistApi, SearchResultItem, WorkspaceSnapshot } from "./api";
 import { App } from "./App";
 
 function nodeButton(name: string) {
@@ -16,6 +16,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi & { saved: Wor
     saveGraph: vi.fn(async (graph: WorkspaceSnapshot) => {
       saved.push(graph);
     }),
+    searchGraph: vi.fn(async () => []),
     ...overrides,
   };
   return Object.assign(api, { saved });
@@ -84,5 +85,47 @@ describe("knowledge tree persistence hookup", () => {
       expect(screen.getAllByText(/本地服务未连接/).length).toBeGreaterThan(0);
     });
     expect(screen.getAllByRole("button", { name: /概念：/ })).toHaveLength(8);
+  });
+
+  it("searches and locates a matching concept", async () => {
+    const api = mockApi({
+      searchGraph: vi.fn(async () => [
+        { id: "limit", label: "极限", snippet: "极限：趋近" },
+      ] satisfies SearchResultItem[]),
+    });
+    render(<App api={api} />);
+
+    const input = screen.getByLabelText("搜索概念或笔记");
+    fireEvent.change(input, { target: { value: "趋近" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "定位到概念：极限" })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "定位到概念：极限" }));
+    await waitFor(() => {
+      expect(nodeButton("极限")).toBeInTheDocument();
+    });
+  });
+
+  it("shows no-match feedback and a failed-search state", async () => {
+    const api = mockApi({
+      searchGraph: vi.fn(async () => []),
+    });
+    render(<App api={api} />);
+
+    const input = screen.getByLabelText("搜索概念或笔记");
+    fireEvent.change(input, { target: { value: "不存在" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("没有匹配的概念")).toBeInTheDocument();
+    });
+
+    api.searchGraph = vi.fn(async () => {
+      throw new Error("search down");
+    });
+    fireEvent.change(input, { target: { value: "又失败" } });
+    await waitFor(() => {
+      expect(screen.getByText("搜索失败")).toBeInTheDocument();
+    });
   });
 });

@@ -1,6 +1,7 @@
 """Concrete local adapters for the Knowledge Tree graph domain."""
 
 from .workspace import (
+    SearchResult,
     WorkspaceError,
     WorkspaceLayout,
     backup_workspace,
@@ -16,9 +17,11 @@ from .workspace import (
     restore_backup,
     save_course_graph,
     save_history_records,
+    search_course_graph,
 )
 
 __all__ = [
+    "SearchResult",
     "WorkspaceError",
     "WorkspaceLayout",
     "backup_workspace",
@@ -34,4 +37,5 @@ __all__ = [
     "restore_backup",
     "save_course_graph",
     "save_history_records",
+    "search_course_graph",
 ]

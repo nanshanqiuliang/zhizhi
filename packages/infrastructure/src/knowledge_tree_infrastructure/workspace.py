@@ -30,6 +30,9 @@ from knowledge_tree_domain import (
 JsonObject = dict[str, Any]
 SUPPORTED_SCHEMA_VERSION = 1
 _GRAPH_KEY = "course_graph"
+_MAX_QUERY_LENGTH = 100
+_SNIPPET_LENGTH = 60
+_SEARCH_TABLE = "concept_search"
 
 
 class WorkspaceError(ValueError):
@@ -39,6 +42,15 @@ class WorkspaceError(ValueError):
         self.code = code
         self.details = dict(details)
         super().__init__(f"{code}: workspace rejected")
+
+
+@dataclass(frozen=True, slots=True)
+class SearchResult:
+    """A single concept match with a content-safe label and snippet."""
+
+    id: str
+    label: str
+    snippet: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +128,7 @@ def migrate(db_path: Path) -> None:
 
 
 def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None:
-    """Validate and persist a CourseGraph inside one atomic transaction."""
+    """Validate and persist a CourseGraph, then rebuild the search index."""
 
     _validate_graph(graph)
     payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -127,8 +139,62 @@ def save_course_graph(layout: WorkspaceLayout, graph: Mapping[str, Any]) -> None
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (_GRAPH_KEY, payload),
             )
+            _rebuild_search_index(conn, graph)
     except sqlite3.DatabaseError as error:
         raise WorkspaceError("save_failed", details={"rule": "database_not_writable"}) from error
+
+
+def search_course_graph(layout: WorkspaceLayout, query: str) -> list[SearchResult]:
+    """Full-text search over saved concept labels and notes.
+
+    FTS5 MATCH is used as the primary index (best for tokenized languages);
+    a plain substring filter over label/note backs it up so CJK text that
+    FTS5's unicode61 tokenizer would treat as one big token still matches.
+    """
+
+    if not isinstance(query, str) or not query.strip():
+        _reject("search_invalid_query", rule="query_empty")
+    if len(query) > _MAX_QUERY_LENGTH:
+        _reject("search_invalid_query", rule="query_too_long")
+    try:
+        with _connect(layout.db_path) as conn:
+            _ensure_search_table(conn)
+            rows = conn.execute(f"SELECT concept_id, label, note FROM {_SEARCH_TABLE}").fetchall()
+            match_ids: set[str] = set()
+            try:
+                for (concept_id,) in conn.execute(
+                    f"SELECT concept_id FROM {_SEARCH_TABLE} WHERE {_SEARCH_TABLE} MATCH ?",
+                    (query,),
+                ):
+                    match_ids.add(str(concept_id))
+            except sqlite3.DatabaseError:
+                _reject("search_invalid_query", rule="query_syntax_invalid")
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "search_not_readable"}
+        ) from error
+
+    needle = query.strip().casefold()
+    results: list[SearchResult] = []
+    for concept_id, label, note in rows:
+        concept_id = str(concept_id)
+        label = str(label)
+        note = str(note)
+        if (
+            concept_id not in match_ids
+            and needle not in label.casefold()
+            and needle not in note.casefold()
+        ):
+            continue
+        results.append(
+            SearchResult(
+                id=concept_id,
+                label=label,
+                snippet=_snippet(label, note, needle),
+            )
+        )
+    results.sort(key=lambda result: result.label.casefold())
+    return results
 
 
 def load_course_graph(layout: WorkspaceLayout) -> JsonObject:
@@ -378,6 +444,56 @@ def _digest(payload: Mapping[str, Any]) -> str:
         )
     ).hexdigest()
     return f"sha256:{digest}"
+
+
+def _ensure_search_table(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        f"CREATE VIRTUAL TABLE IF NOT EXISTS {_SEARCH_TABLE} "
+        "USING fts5(concept_id UNINDEXED, label, note)"
+    )
+
+
+def _rebuild_search_index(conn: sqlite3.Connection, graph: Mapping[str, Any]) -> None:
+    _ensure_search_table(conn)
+    conn.execute(f"DELETE FROM {_SEARCH_TABLE}")
+    concepts = graph.get("concepts")
+    if not isinstance(concepts, list):
+        return
+    rows: list[tuple[str, str, str]] = []
+    for concept in concepts:
+        if not isinstance(concept, dict):
+            continue
+        concept_id = str(concept.get("id", ""))
+        label = str(concept.get("label", ""))
+        annotations = concept.get("annotations")
+        note = ""
+        if isinstance(annotations, list):
+            for annotation in annotations:
+                if isinstance(annotation, dict) and annotation.get("kind") == "note":
+                    note = str(annotation.get("value", ""))
+                    break
+        rows.append((concept_id, label, note))
+    if rows:
+        conn.executemany(
+            f"INSERT INTO {_SEARCH_TABLE}(concept_id, label, note) VALUES(?, ?, ?)",
+            rows,
+        )
+
+
+def _snippet(label: str, note: str, needle: str) -> str:
+    """Return a bounded snippet centred on the first match, never full text."""
+
+    combined = f"{label}：{note}" if note else label
+    index = combined.casefold().find(needle)
+    if index < 0:
+        index = 0
+    start = max(0, index - _SNIPPET_LENGTH // 2)
+    snippet = combined[start : start + _SNIPPET_LENGTH]
+    if start > 0:
+        snippet = f"…{snippet}"
+    if start + _SNIPPET_LENGTH < len(combined):
+        snippet = f"{snippet}…"
+    return snippet
 
 
 def _validate_graph(graph: Mapping[str, Any]) -> None:
