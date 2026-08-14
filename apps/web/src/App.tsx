@@ -227,8 +227,7 @@ export function App({ api }: { api?: PersistApi }) {
   const [importStatus, setImportStatus] = useState<"idle" | "importing" | "failed">("idle");
   const [backups, setBackups] = useState<string[]>([]);
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [camera, setCamera] = useState({ zoom: 1, x: 0, y: 0 });
   const [viewerResource, setViewerResource] = useState<ResourceInfo | null>(null);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerText, setViewerText] = useState("");
@@ -470,12 +469,13 @@ export function App({ api }: { api?: PersistApi }) {
   function centerOnNode(node: ConceptNode) {
     const viewport = canvasViewport.current;
     if (!viewport) return;
-    const nodeCenterX = (node.x + 75) * zoom;
-    const nodeCenterY = (node.y + 34) * zoom;
-    setPan({
+    const nodeCenterX = (node.x + 75) * camera.zoom;
+    const nodeCenterY = (node.y + 34) * camera.zoom;
+    setCamera((prev) => ({
+      ...prev,
       x: viewport.clientWidth / 2 - nodeCenterX,
       y: viewport.clientHeight / 2 - nodeCenterY,
-    });
+    }));
   }
 
   function selectNode(nodeId: string) {
@@ -729,8 +729,8 @@ export function App({ api }: { api?: PersistApi }) {
       originY: 0,
       currentX: 0,
       currentY: 0,
-      startPanX: pan.x,
-      startPanY: pan.y,
+      startPanX: camera.x,
+      startPanY: camera.y,
       before: present,
     };
   }
@@ -739,14 +739,15 @@ export function App({ api }: { api?: PersistApi }) {
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId) return;
     if (active.mode === "pan") {
-      setPan({
+      setCamera((prev) => ({
+        ...prev,
         x: active.startPanX + (event.clientX - active.startX),
         y: active.startPanY + (event.clientY - active.startY),
-      });
+      }));
       return;
     }
-    const deltaX = (event.clientX - active.startX) / zoom;
-    const deltaY = (event.clientY - active.startY) / zoom;
+    const deltaX = (event.clientX - active.startX) / camera.zoom;
+    const deltaY = (event.clientY - active.startY) / camera.zoom;
     const x = Math.max(8, Math.min(835, active.originX + deltaX));
     const y = Math.max(8, Math.min(555, active.originY + deltaY));
     active.currentX = x;
@@ -776,8 +777,21 @@ export function App({ api }: { api?: PersistApi }) {
 
   function handleWheel(event: React.WheelEvent<HTMLDivElement>) {
     event.preventDefault();
+    const viewport = canvasViewport.current;
+    if (!viewport) return;
+    const rect = viewport.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
     const step = event.deltaY > 0 ? -0.1 : 0.1;
-    setZoom((current) => Math.max(0.5, Math.min(2.5, current + step)));
+    setCamera((prev) => {
+      const nextZoom = Math.max(0.5, Math.min(2.5, prev.zoom + step));
+      const factor = nextZoom / prev.zoom;
+      return {
+        zoom: nextZoom,
+        x: mouseX - (mouseX - prev.x) * factor,
+        y: mouseY - (mouseY - prev.y) * factor,
+      };
+    });
   }
 
   return (
@@ -959,7 +973,7 @@ export function App({ api }: { api?: PersistApi }) {
           <div className="canvas-viewport" ref={canvasViewport} onWheel={handleWheel}>
             <div
               className="canvas-surface"
-              style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+              style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})` }}
               onPointerDown={startPan}
               onPointerMove={moveDrag}
               onPointerUp={endDrag}
