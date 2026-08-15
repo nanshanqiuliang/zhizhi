@@ -1,0 +1,9 @@
+{
+  "os": "Windows",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "branch": "feature/WORK-2026-039-multi-workspace",
+  "reviewed_commits": "036 69d0de9, 037 1f01795, 038 abf2d9a, 039 e0fc05f"
+}

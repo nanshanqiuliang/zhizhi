@@ -80,5 +80,6 @@ updated_at: 2026-08-15T23:20:00+08:00
 - Contract/ADR/migration/prompt：无新 canonical contract；新增本地工作区端点。
 - Test Run：TC-WS-001..004 + 全仓门。
 - Release：随下一个桌面构建。
-- 观察结果：可新建课程并在多课程间切换。
+- 观察结果：职责隔离 QA `TR-20260815-004` PASS；可新建课程并在多课程间切换（图内部 workspace id
+  为默认值为已接受 MVP 边界）。
 - 未完成项的新 ID：课程重命名/删除、工作区多笔记、跨课程迁移（第 11 步）。

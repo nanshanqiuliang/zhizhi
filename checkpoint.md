@@ -2,6 +2,23 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Post-delivery fixes QA closure checkpoint — 2026-08-15 23:40 +08:00
+
+- Role-separated QA reviewed the four post-delivery fixes (WORK-2026-036..039) and returned
+  **PASS** (0 P0/P1; 1 P2 + 3 P3). P2 (ruff format of test_resource_reveal.py) and P3 (right-button
+  drag start) closed by `c577928`; P2* (graph-internal workspace id default) and P3 (env key after
+  DELETE) recorded as documented MVP boundaries.
+- QA executed all gates (pytest 454/454 + 5 skipped, ruff, mypy 40, validator, Web 47/47) plus 45
+  adversarial API probes and a frozen-exe probe (12/12) confirming all four fixes are in the rebuilt
+  artifact; red baselines for 037/038/039 re-run.
+- Evidence sealed under `evidence/TR-20260815-004/`; report:
+  `docs/test-reports/TR-20260815-004_desktop-fixes.md`.
+- All 5 user-reported issues are fixed and QA-sealed: drag stickiness (036), open local directory
+  (037), AI settings (038), multi-course (039).
+- Exact next action: rebuild desktop artifacts (already rebuilt post-fix), then optionally merge the
+  verified chain to `main` and run CI; remaining: code signing (optional), vector retrieval
+  (Step 9 owner-unresolved).
+
 ## Post-delivery fixes checkpoint — 2026-08-15 23:30 +08:00 (5 项使用反馈)
 
 - 用户在桌面版使用中反馈 5 个问题，均已定位并修复（每项独立 Ready → 红灯 → 实现）：

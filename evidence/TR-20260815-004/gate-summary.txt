@@ -1,0 +1,13 @@
+# Gate summary for TR-20260815-004 (WORK-2026-036..039)
+
+decision: PASS (0 P0 / 0 P1 / 1 P2 / 3 P3)
+
+- focused pytest (reveal+ai_settings+workspaces): 6 passed
+- full pytest: 454 passed, 5 skipped (live-LLM gate)
+- ruff check .: clean
+- ruff format --check: FAILED at review time (test_resource_reveal.py:26); fixed by c577928 -> 113 files formatted
+- mypy scripts: 16 files; mypy --strict: 40 files
+- scripts.validate_repository: PASS (incl. secret scan)
+- pnpm check: tsc + eslint 0 warnings + vitest 13 files / 47 tests
+- desktop e2e (frozen exe): 18/18
+- frozen exe new-endpoint probe: 12/12

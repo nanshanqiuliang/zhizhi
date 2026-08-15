@@ -71,5 +71,5 @@ updated_at: 2026-08-15T22:40:00+08:00
 - Contract/ADR/migration/prompt：无新 canonical contract；新增 2 个端点（本地只读操作）。
 - Test Run：TC-REVEAL-001..004 + 全仓门。
 - Release：随下一个桌面构建。
-- 观察结果：可一键打开资料目录/在文件夹中显示。
+- 观察结果：职责隔离 QA `TR-20260815-004` PASS；可一键打开资料目录/在文件夹中显示（仅守卫路径）。
 - 未完成项的新 ID：无。

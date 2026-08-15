@@ -88,5 +88,5 @@ updated_at: 2026-08-15T23:00:00+08:00
 - Contract/ADR/migration/prompt：无新 canonical contract；新增本地设置端点。
 - Test Run：TC-AI-001..004 + 全仓门。
 - Release：随下一个桌面构建。
-- 观察结果：应用内可接入 DeepSeek（设置 key 后草案/问答/指令可用）。
-- 未完成项的新 ID：key 加密存储、用量展示、多 Provider（第 11 步）。
+- 观察结果：职责隔离 QA `TR-20260815-004` PASS；应用内可接入 DeepSeek（设置 key 后草案/问答/指令可用）。
+- 未完成项的新 ID：key 加密存储、用量展示、多 Provider（第 11 步）；env key 在「清除」后仍为 configured（MVP 边界）。
