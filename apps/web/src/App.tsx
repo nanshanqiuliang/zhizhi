@@ -571,13 +571,13 @@ export function App({
     }
   }
 
-  async function handleGenerateDraft(resource: ResourceInfo) {
+  async function handleGenerateDraft(resource?: ResourceInfo) {
     if (!api) return;
     setDraft(null);
     setDraftError(null);
     setDraftStatus("generating");
     try {
-      const result = await api.generateDraft(resource.id);
+      const result = await api.generateDraft(resource?.id);
       setDraft(result);
       setDraftStatus("ready");
       setStatus(`已生成草案：${result.draft.concepts.length} 个概念，${result.draft.relations.length} 条关系`);
@@ -1325,6 +1325,16 @@ export function App({
                 onClick={() => void handleOpenDir()}
               >
                 打开资料目录
+              </button>
+            )}
+            {api && (
+              <button
+                type="button"
+                className="import-control workspace-draft-control"
+                disabled={draftStatus === "generating" || draftStatus === "applying"}
+                onClick={() => void handleGenerateDraft()}
+              >
+                从全部资料生成思维导图
               </button>
             )}
             {importStatus === "failed" && <p className="import-note">导入失败，请检查文件类型与大小</p>}

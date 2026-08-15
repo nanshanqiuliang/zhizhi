@@ -217,10 +217,48 @@ def test_ai_draft_without_generator_returns_503(tmp_path: Path) -> None:
         assert response.json()["code"] == "ai_not_available"
 
 
-def test_ai_draft_missing_resource_id_returns_422(client: TestClient) -> None:
+def test_ai_draft_workspace_mode_without_generator_returns_503(client: TestClient) -> None:
+    # `{}` now means "whole-workspace mode"; the fixture has no workspace generator.
     _seed_md_resource(client)
     response = client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={})
-    assert response.status_code == 422
+    assert response.status_code == 503
+    assert response.json()["code"] == "ai_not_available"
+
+
+def test_ai_draft_workspace_mode_returns_draft(tmp_path: Path) -> None:
+    def fake_workspace(texts: list[tuple[str, str]], graph: JsonObject) -> JsonObject:
+        assert texts
+        return _fake_generator("\n\n".join(text for _rid, text in texts), texts[0][0], graph)
+
+    app = create_app(
+        data_root=tmp_path,
+        allowed_origins=[ALLOWED_ORIGIN],
+        workspace_draft_generator=fake_workspace,
+    )
+    with TestClient(app) as ws_client:
+        ws_client.put(f"/api/workspaces/{WORKSPACE_ID}/graph", json=_empty_graph())
+        ws_client.post(
+            f"/api/workspaces/{WORKSPACE_ID}/resources",
+            files={"file": ("notes.md", b"# limit\n\ncontinuity", "text/markdown")},
+        )
+        response = ws_client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={})
+        assert response.status_code == 200
+        body = response.json()
+        assert body["draft"]["concepts"]
+        assert body["patch"]["operations"]
+
+
+def test_ai_draft_workspace_mode_no_resources_returns_422(tmp_path: Path) -> None:
+    app = create_app(
+        data_root=tmp_path,
+        allowed_origins=[ALLOWED_ORIGIN],
+        workspace_draft_generator=lambda texts, graph: {"draft": {}, "patch": {}},
+    )
+    with TestClient(app) as ws_client:
+        ws_client.put(f"/api/workspaces/{WORKSPACE_ID}/graph", json=_empty_graph())
+        response = ws_client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={})
+        assert response.status_code == 422
+        assert response.json()["code"] == "draft_invalid"
 
 
 def test_ai_draft_missing_resource_returns_404(client: TestClient) -> None:

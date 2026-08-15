@@ -71,6 +71,9 @@ AnswerGenerator = Callable[[str, str, list[JsonObject]], JsonObject]
 # Injected command generator: (command, concepts) -> {summary, operations}.
 CommandGenerator = Callable[[str, list[JsonObject]], JsonObject]
 
+# Injected whole-workspace draft generator: ((resource_id, text) list, graph) -> {draft, patch}.
+WorkspaceDraftGenerator = Callable[[list[tuple[str, str]], JsonObject], JsonObject]
+
 
 def _is_uuidv7(value: str) -> bool:
     try:
@@ -118,6 +121,24 @@ def _reveal_in_explorer(path: Path, *, select: bool) -> None:
         return
     args = ["explorer", "/select,", str(path)] if select else ["explorer", str(path)]
     subprocess.Popen(args)
+
+
+def _read_workspace_texts(layout: WorkspaceLayout) -> list[tuple[str, str]]:
+    """Read every imported resource's text (auto-parsing PDFs) for the agent.
+
+    Unreadable resources are skipped individually (fail-closed per resource);
+    the caller fails closed if the whole corpus is empty.
+    """
+
+    texts: list[tuple[str, str]] = []
+    for info in list_resources(layout):
+        try:
+            if info.mime == "application/pdf":
+                parse_pdf_resource(layout, info.id)
+            texts.append((info.id, read_resource_text(layout, info.id)))
+        except WorkspaceError:
+            continue
+    return texts
 
 
 def _fresh_course_graph(workspace_id: str, name: str) -> JsonObject:
@@ -266,6 +287,14 @@ def _build_command_generator(api_key: str | None) -> CommandGenerator | None:
     return build_deepseek_command_generator(api_key)
 
 
+def _build_workspace_draft_generator(api_key: str | None) -> WorkspaceDraftGenerator | None:
+    if not api_key:
+        return None
+    from apps.api.ai_draft import build_deepseek_workspace_draft_generator
+
+    return build_deepseek_workspace_draft_generator(api_key)
+
+
 def create_app(
     *,
     data_root: Path,
@@ -273,13 +302,14 @@ def create_app(
     draft_generator: DraftGenerator | None = None,
     answer_generator: AnswerGenerator | None = None,
     command_generator: CommandGenerator | None = None,
+    workspace_draft_generator: WorkspaceDraftGenerator | None = None,
     web_dist: Path | None = None,
 ) -> FastAPI:
     """Build the persistence API with an explicit data root and CORS allowlist.
 
-    `draft_generator`/`answer_generator`/`command_generator` are the AI
-    composition roots; when None the corresponding endpoints fail closed with
-    503 `ai_not_available`.
+    `draft_generator`/`answer_generator`/`command_generator`/`workspace_draft_generator`
+    are the AI composition roots; when None the corresponding endpoints fail
+    closed with 503 `ai_not_available`.
 
     `web_dist` optionally points at a built Web UI directory (`index.html` +
     `assets/`); when present it is served from the same origin as the API, so a
@@ -304,6 +334,11 @@ def create_app(
             command_generator
             if command_generator is not None
             else _build_command_generator(saved_key)
+        ),
+        "workspace_draft_generator": (
+            workspace_draft_generator
+            if workspace_draft_generator is not None
+            else _build_workspace_draft_generator(saved_key)
         ),
     }
 
@@ -374,6 +409,7 @@ def create_app(
         ai_state["draft_generator"] = _build_draft_generator(api_key.strip())
         ai_state["answer_generator"] = _build_answer_generator(api_key.strip())
         ai_state["command_generator"] = _build_command_generator(api_key.strip())
+        ai_state["workspace_draft_generator"] = _build_workspace_draft_generator(api_key.strip())
         return {"status": "saved", "configured": True}
 
     @app.delete("/api/settings/ai")
@@ -382,6 +418,7 @@ def create_app(
         ai_state["draft_generator"] = None
         ai_state["answer_generator"] = None
         ai_state["command_generator"] = None
+        ai_state["workspace_draft_generator"] = None
         return {"status": "cleared", "configured": False}
 
     @app.get("/api/workspaces/{workspace_id}/graph")
@@ -702,24 +739,43 @@ def create_app(
 
     @app.post("/api/workspaces/{workspace_id}/ai-draft")
     async def post_ai_draft(workspace_id: str, request: Request) -> JsonObject:
-        if ai_state["draft_generator"] is None:
-            raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
-        workspace_root = _workspace_root(root, workspace_id)
         try:
             payload = await _read_json(request)
         except HTTPException as error:
             raise error
         resource_id = payload.get("resource_id")
-        if not isinstance(resource_id, str) or not resource_id:
-            raise HTTPException(
-                status_code=422,
-                detail={"code": "draft_invalid", "rule": "resource_id_missing"},
-            )
+        # Fail closed before touching storage when the needed generator is absent.
+        if isinstance(resource_id, str) and resource_id:
+            if ai_state["draft_generator"] is None:
+                raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
+        elif ai_state["workspace_draft_generator"] is None:
+            raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
+
+        workspace_root = _workspace_root(root, workspace_id)
         try:
             layout = resolve_workspace(workspace_root)
             graph = load_course_graph(layout)
-            text = read_resource_text(layout, resource_id)
-            result = cast(DraftGenerator, ai_state["draft_generator"])(text, resource_id, graph)
+            if isinstance(resource_id, str) and resource_id:
+                # Single-resource mode: auto-parse PDFs so a freshly imported
+                # PDF can be drafted without opening the viewer first.
+                if get_resource_mime(layout, resource_id) == "application/pdf":
+                    parse_pdf_resource(layout, resource_id)
+                text = read_resource_text(layout, resource_id)
+                result = cast(DraftGenerator, ai_state["draft_generator"])(
+                    text, resource_id, graph
+                )
+            else:
+                # Whole-workspace agent mode: read every imported resource and
+                # plan the mind map from the whole corpus.
+                texts = _read_workspace_texts(layout)
+                if not texts:
+                    raise HTTPException(
+                        status_code=422,
+                        detail={"code": "draft_invalid", "rule": "no_resources"},
+                    )
+                result = cast(WorkspaceDraftGenerator, ai_state["workspace_draft_generator"])(
+                    texts, graph
+                )
         except WorkspaceError as error:
             raise _http_error(error) from error
         except (DraftError, DraftExtractionError) as error:

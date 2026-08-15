@@ -18,6 +18,7 @@ from knowledge_tree_domain.ai_draft import (
     DraftConcept,
     DraftRelation,
     chunk_text,
+    deterministic_uuidv7,
     merge_concept_candidates,
     normalize_concept_label,
     uuid7,
@@ -147,6 +148,74 @@ def build_incremental_ai_draft(
     candidates: list[DraftConcept] = []
     for chunk in chunks:
         candidates.extend(extractor.extract(chunk))
+    merged = merge_concept_candidates(candidates)
+
+    existing_keys = {
+        normalize_concept_label(str(concept["label"]))
+        for concept in existing_graph.get("concepts", [])
+        if isinstance(concept, dict) and isinstance(concept.get("label"), str)
+    }
+    existing_placeholders = tuple(
+        DraftConcept(label=str(concept["label"]), aliases=(), confidence=1.0, evidence_ids=())
+        for concept in existing_graph.get("concepts", [])
+        if isinstance(concept, dict) and isinstance(concept.get("label"), str)
+    )
+    new_only = tuple(
+        concept for concept in merged if normalize_concept_label(concept.label) not in existing_keys
+    )
+    all_concepts = existing_placeholders + new_only
+
+    relations = relation_provider.provide(all_concepts)
+    new_keys = {normalize_concept_label(concept.label) for concept in new_only}
+    relations = tuple(
+        relation
+        for relation in relations
+        if normalize_concept_label(relation.source_label) in new_keys
+        or normalize_concept_label(relation.target_label) in new_keys
+    )
+    return AiDraft(concepts=all_concepts, relations=relations)
+
+
+def build_workspace_ai_draft(
+    existing_graph: Mapping[str, Any],
+    texts: list[tuple[str, str]],
+    *,
+    extractor: ConceptExtractor,
+    relation_provider: RelationCandidateProvider,
+    chunk_id_factory: Callable[[], str] = uuid7,
+    chunk_size: int = 1200,
+    overlap: int = 200,
+    max_chunks: int = 40,
+) -> AiDraft:
+    """Whole-workspace draft: extract/merge concepts across all resources.
+
+    Each resource contributes its chunks (bound to a deterministic per-resource
+    anchor id); candidates are merged across the whole corpus, existing labels
+    are never re-created, and relations are proposed over the union of existing
+    placeholders and new concepts. `max_chunks` bounds the total LLM calls so a
+    huge corpus fails closed rather than blowing the budget.
+    """
+
+    candidates: list[DraftConcept] = []
+    total_chunks = 0
+    for resource_id, text in texts:
+        anchor_id = deterministic_uuidv7(resource_id)
+        chunks = chunk_text(
+            text,
+            resource_id=resource_id,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            chunk_id_factory=chunk_id_factory,
+        )
+        chunks = tuple(replace(chunk, anchor_id=anchor_id) for chunk in chunks)
+        if total_chunks + len(chunks) > max_chunks:
+            chunks = chunks[: max(0, max_chunks - total_chunks)]
+        total_chunks += len(chunks)
+        for chunk in chunks:
+            candidates.extend(extractor.extract(chunk))
+        if total_chunks >= max_chunks:
+            break
+
     merged = merge_concept_candidates(candidates)
 
     existing_keys = {

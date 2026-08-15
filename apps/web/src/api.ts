@@ -137,7 +137,7 @@ export interface PersistApi {
     Array<{ id: string; name: string; concept_count: number; updated_at: number | string }>
   >;
   createWorkspace?(name: string): Promise<{ id: string; name: string }>;
-  generateDraft(resourceId: string): Promise<AiDraftResult>;
+  generateDraft(resourceId?: string): Promise<AiDraftResult>;
   acceptDraft(
     patch: Record<string, unknown>,
     evidence: DraftEvidence[],
@@ -595,11 +595,13 @@ export function httpPersistApi(
       }
       return (await response.json()) as { id: string; name: string };
     },
-    async generateDraft(resourceId: string): Promise<AiDraftResult> {
+    async generateDraft(resourceId?: string): Promise<AiDraftResult> {
+      const body: Record<string, unknown> = {};
+      if (resourceId) body.resource_id = resourceId;
       const response = await fetch(`${workspaceBase}/ai-draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resource_id: resourceId }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) {
         const body = await readError(response);

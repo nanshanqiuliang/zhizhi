@@ -1279,6 +1279,29 @@ a:focus-visible {
   background: #eef4ee;
 }
 
+.workspace-draft-control {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border: 1px solid #7d9a8a;
+  border-radius: 8px;
+  background: #eaf3ec;
+  color: #2f5740;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.workspace-draft-control:hover:not(:disabled) {
+  background: #ddefdd;
+}
+
+.workspace-draft-control:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .resource-reveal {
   padding: 4px 9px;
   border: 1px solid #b9c4bb;
