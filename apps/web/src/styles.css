@@ -1244,6 +1244,17 @@ a:focus-visible {
   color: #1f3d2c;
 }
 
+/* --- WORK-2026-032: AI edit history badge --- */
+
+.history-source {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #e7f0ea;
+  color: #2f5740;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
 
 .pdf-viewer {
   margin: 18px 28px 6px;

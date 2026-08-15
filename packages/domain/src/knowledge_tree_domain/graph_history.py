@@ -46,6 +46,7 @@ class GraphChangeRecord:
     after_semantic_hash: str
     deltas: tuple[EntityDelta, ...]
     record_digest: str
+    source: str = "manual"
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +111,7 @@ class GraphHistory:
         patch: Mapping[str, Any],
         *,
         trusted_actor: Mapping[str, str],
+        source: str = "manual",
     ) -> GraphHistory:
         """Apply a confirmed user GraphPatch and derive its trusted delta record."""
 
@@ -132,7 +134,7 @@ class GraphHistory:
                 change_id=change_id,
             )
 
-        record = _build_record(change_id, current, preview.snapshot)
+        record = _build_record(change_id, current, preview.snapshot, source=source)
         return GraphHistory(
             _snapshot_json=_canonical_json(preview.snapshot),
             undo_records=(*self.undo_records, record),
@@ -271,8 +273,9 @@ def _record_payload(
     before_semantic_hash: str,
     after_semantic_hash: str,
     deltas: tuple[EntityDelta, ...],
+    source: str = "manual",
 ) -> JsonObject:
-    return {
+    payload: JsonObject = {
         "change_id": change_id,
         "before_revision_no": before_revision_no,
         "after_revision_no": after_revision_no,
@@ -290,6 +293,11 @@ def _record_payload(
             for delta in deltas
         ],
     }
+    # Only non-manual sources enter the payload/digest, so records persisted
+    # before this field existed keep their exact digest (backward compatible).
+    if source != "manual":
+        payload["source"] = source
+    return payload
 
 
 def _digest_record_payload(payload: Mapping[str, Any]) -> str:
@@ -301,6 +309,8 @@ def _build_record(
     change_id: str,
     before: Mapping[str, Any],
     after: Mapping[str, Any],
+    *,
+    source: str = "manual",
 ) -> GraphChangeRecord:
     before_revision = before.get("revision_no")
     after_revision = after.get("revision_no")
@@ -316,6 +326,7 @@ def _build_record(
         before_semantic_hash=semantic_graph_hash(before),
         after_semantic_hash=semantic_graph_hash(after),
         deltas=deltas,
+        source=source,
     )
     return GraphChangeRecord(
         change_id=change_id,
@@ -325,6 +336,7 @@ def _build_record(
         after_semantic_hash=str(payload["after_semantic_hash"]),
         deltas=deltas,
         record_digest=_digest_record_payload(payload),
+        source=source,
     )
 
 
@@ -336,6 +348,7 @@ def _validate_record(record: GraphChangeRecord) -> None:
         before_semantic_hash=record.before_semantic_hash,
         after_semantic_hash=record.after_semantic_hash,
         deltas=record.deltas,
+        source=record.source,
     )
     if record.record_digest != _digest_record_payload(payload):
         _reject(

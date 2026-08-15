@@ -11,19 +11,18 @@ from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
-
-from apps.api.main import create_app
 from knowledge_tree_infrastructure.workspace import (
     accept_ai_draft,
     apply_graph_patch,
     create_workspace,
     import_resource,
-    load_course_graph,
     migrate,
     record_from_json,
     record_to_json,
     save_course_graph,
 )
+
+from apps.api.main import create_app
 from tests.contract.test_graph_contracts import COURSE_ID, WORKSPACE_ID
 
 JsonObject = dict[str, Any]

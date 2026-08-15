@@ -32,6 +32,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
     acceptDraft: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     askQuestion: vi.fn(async () => ({ answer: "", sources: [] })),
     interpretCommand: vi.fn(async () => ({ summary: "", patch: {} })),
+    acceptCommand: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),
@@ -176,6 +177,7 @@ describe("lock and cross-session undo hookup", () => {
           change_id: "00000000-0000-7000-8000-000000000099",
           before_revision_no: 0,
           after_revision_no: 1,
+          source: "manual",
         },
       ]),
     });

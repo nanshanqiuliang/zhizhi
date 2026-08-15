@@ -263,6 +263,7 @@ def create_app(
                         "change_id": record.change_id,
                         "before_revision_no": record.before_revision_no,
                         "after_revision_no": record.after_revision_no,
+                        "source": record.source,
                     }
                     for record in records
                 ]
@@ -562,6 +563,31 @@ def create_app(
         try:
             layout = resolve_workspace(workspace_root)
             record = accept_ai_draft(layout, patch, trusted_actor=_LOCAL_ACTOR, anchors=anchors)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        return {
+            "status": "applied",
+            "change_id": record.change_id,
+            "revision_no": record.after_revision_no,
+        }
+
+    @app.post("/api/workspaces/{workspace_id}/interpret/accept")
+    async def post_interpret_accept(workspace_id: str, request: Request) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        patch = payload.get("patch")
+        if not isinstance(patch, dict):
+            raise HTTPException(
+                status_code=422, detail={"code": "command_invalid", "rule": "patch_missing"}
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            record = apply_graph_patch(
+                layout, patch, trusted_actor=_LOCAL_ACTOR, source="ai_command"
+            )
         except WorkspaceError as error:
             raise _http_error(error) from error
         return {

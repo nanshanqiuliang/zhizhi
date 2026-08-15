@@ -394,6 +394,7 @@ def apply_graph_patch(
     patch: Mapping[str, Any],
     *,
     trusted_actor: Mapping[str, str],
+    source: str = "manual",
 ) -> GraphChangeRecord:
     """Apply a confirmed user GraphPatch through the protected commit gate.
 
@@ -407,7 +408,7 @@ def apply_graph_patch(
     history = _rebuild_history(layout)
     initial_graph = history.snapshot
     try:
-        next_history = history.apply_patch(patch, trusted_actor=trusted_actor)
+        next_history = history.apply_patch(patch, trusted_actor=trusted_actor, source=source)
     except (GraphHistoryError, GraphPatchError) as error:
         raise _convert_domain_error(error) from error
     record = next_history.undo_records[-1]
@@ -427,6 +428,7 @@ def accept_ai_draft(
     *,
     trusted_actor: Mapping[str, str],
     anchors: Sequence[Mapping[str, Any]],
+    source: str = "ai_draft",
 ) -> GraphChangeRecord:
     """Apply a confirmed AI draft patch and materialize its source anchors.
 
@@ -441,7 +443,7 @@ def accept_ai_draft(
     history = _rebuild_history(layout)
     initial_graph = history.snapshot
     try:
-        next_history = history.apply_patch(patch, trusted_actor=trusted_actor)
+        next_history = history.apply_patch(patch, trusted_actor=trusted_actor, source=source)
     except (GraphHistoryError, GraphPatchError) as error:
         raise _convert_domain_error(error) from error
     record = next_history.undo_records[-1]
@@ -799,6 +801,8 @@ def record_to_json(record: GraphChangeRecord) -> str:
             for delta in record.deltas
         ],
     }
+    if record.source != "manual":
+        payload["source"] = record.source
     payload["record_digest"] = _digest(payload)
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -857,6 +861,9 @@ def record_from_json(payload: str) -> GraphChangeRecord:
         "after_semantic_hash": after_semantic_hash,
         "deltas": parsed["deltas"],
     }
+    source = str(parsed.get("source", "manual"))
+    if "source" in parsed:
+        verification["source"] = source
     if _digest(verification) != declared_digest:
         _reject("record_tampered", rule="record_digest_mismatch")
     return GraphChangeRecord(
@@ -867,6 +874,7 @@ def record_from_json(payload: str) -> GraphChangeRecord:
         after_semantic_hash=after_semantic_hash,
         deltas=tuple(deltas),
         record_digest=declared_digest,
+        source=source,
     )
 
 

@@ -49,6 +49,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
         operations: [],
       },
     })),
+    acceptCommand: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),
@@ -94,9 +95,9 @@ describe("natural-language command", () => {
     await waitFor(() => {
       expect(screen.queryByRole("region", { name: /指令预览/ })).not.toBeInTheDocument();
     });
-    expect(api.applyPatch).not.toHaveBeenCalled();
+    expect(api.acceptCommand).not.toHaveBeenCalled();
 
-    // Interpret again and accept: applyPatch is called with confirmed=true.
+    // Interpret again and accept: acceptCommand is called with confirmed=true.
     fireEvent.change(screen.getByRole("textbox", { name: /向知识树下达指令/ }), {
       target: { value: "锁定极限的内容" },
     });
@@ -106,9 +107,9 @@ describe("natural-language command", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /接受并写入/ }));
     await waitFor(() => {
-      expect(api.applyPatch).toHaveBeenCalledTimes(1);
+      expect(api.acceptCommand).toHaveBeenCalledTimes(1);
     });
-    const applied = (api.applyPatch as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
+    const applied = (api.acceptCommand as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
       string,
       unknown
     >;

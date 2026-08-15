@@ -568,7 +568,7 @@ export function App({ api }: { api?: PersistApi }) {
     if (!api || !commandResult) return;
     setCommandStatus("applying");
     try {
-      await api.applyPatch({ ...commandResult.patch, confirmed: true });
+      await api.acceptCommand({ ...commandResult.patch, confirmed: true });
       const refreshed = await api.loadGraph();
       if (refreshed) {
         setPresent(refreshed);
@@ -1154,6 +1154,9 @@ export function App({ api }: { api?: PersistApi }) {
                     <span className="history-rev">
                       v{record.before_revision_no} → v{record.after_revision_no}
                     </span>
+                    {record.source !== "manual" && (
+                      <span className="history-source" aria-label="AI 修改">AI</span>
+                    )}
                     <span className="history-id">{record.change_id.slice(0, 8)}</span>
                   </li>
                 ))}

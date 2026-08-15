@@ -67,6 +67,7 @@ export type HistoryRecord = {
   change_id: string;
   before_revision_no: number;
   after_revision_no: number;
+  source: string;
 };
 
 export type DraftConcept = {
@@ -134,6 +135,11 @@ export interface PersistApi {
   ): Promise<{ status: string; change_id: string; revision_no: number }>;
   askQuestion(question: string): Promise<AnswerResult>;
   interpretCommand(command: string): Promise<CommandResult>;
+  acceptCommand(patch: Record<string, unknown>): Promise<{
+    status: string;
+    change_id: string;
+    revision_no: number;
+  }>;
   applyPatch(patch: Record<string, unknown>): Promise<{
     status: string;
     change_id: string;
@@ -561,6 +567,26 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(body.code ?? `interpret failed: ${response.status}`);
       }
       return (await response.json()) as CommandResult;
+    },
+    async acceptCommand(patch: Record<string, unknown>): Promise<{
+      status: string;
+      change_id: string;
+      revision_no: number;
+    }> {
+      const response = await fetch(`${workspaceBase}/interpret/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patch }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `interpret accept failed: ${response.status}`);
+      }
+      return (await response.json()) as {
+        status: string;
+        change_id: string;
+        revision_no: number;
+      };
     },
   };
 }
