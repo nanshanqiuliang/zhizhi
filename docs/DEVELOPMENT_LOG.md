@@ -2,6 +2,34 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步后第二轮使用反馈修复（WORK-2026-040..043）
+
+- 关联 ID：WORK-2026-040（拖拽背景稳定）、041（文件名保留）、042（AI 内容右移 + 边栏可调/
+  隐藏）、043（思维导图 agent）、NFR-2026-001、REQ-2026-001。
+- 实际变化：
+  1. 拖拽起点不再居中视图（`selectNodeKeepCamera`），背景保持稳定（040）。
+  2. 导入文件按原文件名+扩展名存盘：`_safe_storage_name`（Windows 非法字符中性化、保留
+     stem/suffix、保留字防护）+ `_unique_storage_path`（冲突 `-1/-2` 后缀）（041）。
+  3. 布局：草案/回答/指令预览移入右侧栏（`right-column`）；左侧栏右缘拖拽调宽（170–480px）、
+     「«」隐藏、「显示边栏」恢复（042）。
+  4. 思维导图 agent（043）：`build_workspace_ai_draft` 全库合并内核（按资源锚点、既有概念不
+     重建、跨语料关系、40 块上限）；`/ai-draft` 不带 resource_id 即全库模式（503/422
+     fail-closed，PDF 自动解析）；relation_validate thinking=disabled + max_tokens 8192（修
+     「每次生成失败」：reasoning 耗尽令牌导致空内容/JSON 解析失败）；Web「从全部资料生成思维
+     导图」按钮；harness 约束文档 `docs/ai-mindmap-agent-harness.md`（不可信草案/预览确认/
+     证据绑定/确定性校验/fail-closed/预算）。
+- 影响模块/接口/schema/migration/prompt：新增 `WorkspaceDraftGenerator` 与全库端点语义（
+  resource_id 可选）；导入存储命名变化（旧数据 UUID 名不变，向前兼容）；无 canonical
+  contract/迁移。
+- 兼容性：单资源生成路径不变；旧资源仍按 UUID 文件名工作；`api` prop 与既有测试兼容。
+- 验证与证据：pytest 461/461 + 5 skipped；Web 51/51（新增布局/背景稳定/全库内核用例）；
+  ruff/mypy/validator 全绿；桌面 e2e 18/18；桌面产物重建。
+- 性能/安全/运维影响：全库模式有块数上限防爆预算；relation 非思考模式更快更稳；文件名安全化
+  无目录逃逸。
+- 回滚：逐项回退 WORK-2026-040..043 提交。
+- 遗留风险与下一步：职责隔离 QA 待封存（`TR-20260815-005`）；全库模式 live 验证需 owner key；
+  向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步后修复 QA 封存（WORK-2026-036..039，TR-20260815-004）
 
 - 关联 ID：WORK-2026-036..039、TR-20260815-004、NFR-2026-001、REQ-2026-001。

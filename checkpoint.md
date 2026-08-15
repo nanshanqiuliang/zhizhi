@@ -2,6 +2,27 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Post-delivery fixes round 2 checkpoint — 2026-08-15 23:45 +08:00 (5 项新反馈)
+
+- 用户第二轮反馈 5 项已定位并修复：
+  1. **AI 内容右移**（WORK-2026-042，`f7c845a`）：草案/回答/指令预览移入右侧栏（节点详情下方），
+     不再出现在页面底部。
+  2. **拖拽背景跳变**（WORK-2026-040，`992af8b`）：拖拽起点不再触发视图居中（
+     `selectNodeKeepCamera`）；Web 48/48（新增红灯用例）。
+  3. **AI 生成失败 + 思维导图 agent**（WORK-2026-043，`cba4238`）：PDF 自动解析（此前未打开
+     查看器的 PDF 会 `parse_pending` 失败）；relation_validate 改 thinking=disabled（避免
+     reasoning 耗尽令牌导致空内容）；新增**全库模式**——`POST /ai-draft` 不带 resource_id 时
+     agent 读取全部导入资料合并生成草案（`build_workspace_ai_draft`，按资源锚点证据、既有
+     概念不重建、40 块上限）；Web 增「从全部资料生成思维导图」；harness 约束见
+     `docs/ai-mindmap-agent-harness.md`。
+  4. **文件名保留**（WORK-2026-041，`93321f5`）：导入文件按原文件名+扩展名存盘（Windows 安全
+     化 + 冲突后缀 `-1`）。
+  5. **边栏可调/可隐藏**（WORK-2026-042）：左侧栏右缘拖拽调宽（170–480px）、「«」隐藏、「显示
+     边栏」恢复。
+- Verification: pytest 461/461 + 5 skipped；Web 51/51；ruff/mypy/validator 全绿；桌面 e2e 18/18；
+  桌面产物（exe/安装器/zip）已重建含全部修复。
+- Exact next action: 职责隔离 QA 封存（`TR-20260815-005`）。
+
 ## Post-delivery fixes QA closure checkpoint — 2026-08-15 23:40 +08:00
 
 - Role-separated QA reviewed the four post-delivery fixes (WORK-2026-036..039) and returned
