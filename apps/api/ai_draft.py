@@ -284,6 +284,7 @@ def build_deepseek_workspace_draft_generator(
             texts,
             extractor=fail_soft_extractor(concept_extractor),
             relation_provider=fail_soft_relation_provider(relation_provider),
+            max_chunks=_MAX_CHUNKS,
         )
         evidence = [
             {

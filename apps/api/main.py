@@ -782,6 +782,13 @@ def create_app(
         except WorkspaceError as error:
             raise _http_error(error) from error
         except (DraftError, DraftExtractionError) as error:
+            if error.code == "draft_invalid" and error.details.get("rule") == "no_concepts":
+                # Empty-draft (all extraction failed / nothing new) surfaces as
+                # the same clear rule as the endpoint's own empty-patch check.
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "draft_invalid", "rule": "no_new_concepts"},
+                ) from error
             raise HTTPException(
                 status_code=422, detail={"code": error.code, **error.details}
             ) from error

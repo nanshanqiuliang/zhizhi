@@ -161,6 +161,24 @@ describe("AI draft preview", () => {
     });
   });
 
+  it("shows the precise code/rule when draft generation fails", async () => {
+    const api = mockApi({
+      listResources: vi.fn(async () => [RESOURCE]),
+      generateDraft: vi.fn(async () => {
+        throw new Error("draft_invalid/no_new_concepts");
+      }),
+    });
+    render(<App api={api} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("notes.md")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /生成草案/ }));
+    await waitFor(() => {
+      expect(screen.getByText(/draft_invalid\/no_new_concepts/)).toBeInTheDocument();
+    });
+  });
+
   it("offers jump-to-source for each draft concept", async () => {
     const api = mockApi({ listResources: vi.fn(async () => [RESOURCE]) });
     render(<App api={api} />);

@@ -694,7 +694,8 @@ async function readError(response: Response): Promise<{ code?: string; rule?: un
 // draft_invalid/no_new_concepts) instead of an opaque top-level code.
 function formatCode(body: { code?: string; rule?: unknown }): string {
   if (!body.code) return "";
-  return body.rule !== undefined && body.rule !== "" ? `${body.code}/${String(body.rule)}` : body.code;
+  const hasRule = body.rule !== undefined && body.rule !== null && body.rule !== "";
+  return hasRule ? `${body.code}/${String(body.rule)}` : body.code;
 }
 
 // Build a confirmed user set_lock GraphPatch for a single lock dimension.
