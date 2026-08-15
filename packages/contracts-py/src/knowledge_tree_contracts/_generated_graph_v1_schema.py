@@ -922,7 +922,7 @@ GRAPH_V1_SCHEMA_JSON = r"""{
             "$ref": "#/$defs/Operation"
           },
           "minItems": 1,
-          "maxItems": 100
+          "maxItems": 5000
         }
       }
     }

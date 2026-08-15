@@ -511,7 +511,7 @@
           "type": "array",
           "items": { "$ref": "#/$defs/Operation" },
           "minItems": 1,
-          "maxItems": 100
+          "maxItems": 5000
         }
       }
     }
