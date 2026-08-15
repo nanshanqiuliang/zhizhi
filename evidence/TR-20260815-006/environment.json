@@ -1,0 +1,9 @@
+{
+  "os": "Windows",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "branch": "feature/WORK-2026-044-draft-diagnostics",
+  "reviewed_commit": "0abe9e9"
+}

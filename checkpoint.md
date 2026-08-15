@@ -2,6 +2,21 @@
 
 Updated: 2026-08-16 (Asia/Shanghai)
 
+## Post-delivery fixes round 3 QA closure checkpoint — 2026-08-16 00:58 +08:00
+
+- Role-separated QA reviewed `0abe9e9` (WORK-2026-044 draft diagnostics) and returned **PASS**
+  (0 P0/P1; 4 P2 closed by `33ba11a`: consistent no_new_concepts mapping, rule:null guard,
+  explicit max_chunks, UI rule test). One observation (fail-soft swallows per-chunk details)
+  recorded as a defense-in-depth boundary.
+- QA re-ran red baselines in isolated worktrees, executed 16/17 Python + 8/8 TS adversarial
+  probes, and verified the frozen exe embeds the fixed web build; e2e 18/18, no-key 503.
+- Evidence sealed under `evidence/TR-20260815-006/`; report
+  `docs/test-reports/TR-20260815-006_ai-draft-diagnostics.md`.
+- **User outcome**: 草案失败现在显示精确子错误码（如 `draft_invalid/no_new_concepts`）；大 PDF
+  （paper.pdf 88 页/27.9 万字符）生成被 40 块上限 + fail-soft 保护；桌面产物已重建。
+- Exact next action: WORK-2026-045 画布无限上下延伸（去 835×555 钳制、surface 随内容增长、
+  自动布局无上限，4–8h）。
+
 ## Post-delivery fixes round 3 checkpoint — 2026-08-16 00:10 +08:00 (草案生成可诊断化)
 
 - 用户反馈：桌面版「草案生成失败 draft_invalid」无法定位；大 PDF（实测 paper.pdf 88 页 27.9

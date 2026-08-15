@@ -1,0 +1,14 @@
+# Gate summary for TR-20260815-006 (WORK-2026-044)
+
+reviewed_commit: 0abe9e9
+decision: PASS (0 P0 / 0 P1 / 4 P2 / 1 observation)
+
+- focused pytest (robustness): 3 passed
+- full pytest: 466 passed, 5 skipped (live-LLM gate)
+- ruff check .: clean; ruff format --check: 116 files
+- mypy scripts: 16 files; mypy --strict: 40 files
+- scripts.validate_repository: PASS (incl. secret scan)
+- pnpm check: 52/52 tests (14 files)
+- desktop e2e (frozen exe, rebuilt): 18/18
+- frozen exe probe: POST /ai-draft without key -> 503
+- adversarial probes: 16/17 Python + 8/8 TS passed
