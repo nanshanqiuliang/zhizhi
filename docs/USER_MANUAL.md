@@ -6,21 +6,32 @@
 > 数据目录、备份/恢复、撤销/锁定、导入/PDF/AI 草案等能力在两种方式下一致。
 > 本手册按当前已验证功能编写；AI 能力需设置 `DEEPSEEK_API_KEY` 环境变量（无 key 时安全显示「AI 未连接」）。
 
-## 桌面打包版（便携 exe，第 10 步切片 1+2）
+## 桌面打包版（第 10 步：安装器 + 便携 exe）
 
-不用装 Python/Node，也不用开两个终端：构建后得到一个便携目录，解压即用。
+不用装 Python/Node，也不用开两个终端。
 
 **构建**（开发者，仓库根目录；需先 `uv sync --group dev --group build` 与
-`pnpm install --frozen-lockfile`）：
+`pnpm install --frozen-lockfile`，安装器另需 Inno Setup 6：`winget install --id JRSoftware.InnoSetup -e`）：
 
 ```powershell
-uv run python scripts/build_desktop.py
-uv run python scripts/package_desktop.py   # 可选：打成便携 zip
+uv run python scripts/build_desktop.py      # 冻结 dist\zhizhi\（含 zhizhi.exe）
+uv run python scripts/build_installer.py    # 打包安装器 dist\zhizhi-0.1.0-setup.exe
+uv run python scripts/package_desktop.py    # 可选：打成便携 zip
 ```
 
-产物：`dist\zhizhi\`（含 `zhizhi.exe` 与 `_internal\`）；便携 zip `dist\zhizhi-0.1.0-portable.zip`。
+产物：`dist\zhizhi\`（含 `zhizhi.exe` 与 `_internal\`）；安装器 `dist\zhizhi-0.1.0-setup.exe`；
+便携 zip `dist\zhizhi-0.1.0-portable.zip`。
 
 **使用**（任意 Windows 10/11 机器）：
+
+**方式 A：安装器（推荐）**
+
+1. 双击 `zhizhi-0.1.0-setup.exe`，按向导安装（按用户安装，无需管理员）。
+2. 从开始菜单「知枝」启动；可选创建桌面快捷方式。
+3. 卸载：开始菜单「卸载 知枝」或「设置 → 应用」里卸载。
+4. 升级：直接运行新版本的 `zhizhi-<版本>-setup.exe` 覆盖安装即可。
+
+**方式 B：便携目录**
 
 1. 把整个 `dist\zhizhi\` 目录复制/解压到任意位置（例如 `D:\apps\zhizhi\`）。
 2. 双击 `zhizhi.exe` → 打开**原生桌面窗口**（pywebview/WebView2），显示「知枝」界面。
@@ -31,14 +42,15 @@ uv run python scripts/package_desktop.py   # 可选：打成便携 zip
 说明：
 
 - 数据目录默认 `%LOCALAPPDATA%\知枝\data`（即 `C:\Users\<你>\AppData\Local\知枝\data`）；
-  升级/替换 `zhizhi\` 目录不会丢失数据；可用 `--data-root` 改到别处（含旧的
-  `knowledge-tree-data`）。
+  安装/升级/卸载都**不会**动这个目录，换版本、卸载重装后内容仍在；可用 `--data-root`
+  改到别处（含旧的 `knowledge-tree-data`）。
 - 单实例：已有一个实例在运行时会自动退出，不会双写数据或抢端口。
 - AI 功能（草案/问答/指令）：设一次环境变量 `DEEPSEEK_API_KEY` 后启动，无 key 时界面安全
   显示「AI 未连接」。
 - 备份/恢复、撤销/重做、锁定、来源回跳等能力与源码运行完全一致。
 - 窗口版无控制台，运行诊断写 `%LOCALAPPDATA%\知枝\data\zhizhi.log`。
-- 尚未实现：Inno Setup 安装器（开始菜单/卸载/升级覆盖）与自动升级——待切片 3b。
+- 尚未实现：代码签名（当前安装器未签名，SmartScreen 可能提示）、自动更新、向量检索（第 9 步
+  owner 未决项）。
 
 ## 当前可以做什么
 

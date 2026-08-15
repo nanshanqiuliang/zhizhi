@@ -2,6 +2,26 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Step 10 slice 3b implementation checkpoint — 2026-08-15 22:05 +08:00
+
+- Active branch: `feature/WORK-2026-035-inno-setup-installer`.
+- Ready work item: `docs/work-items/WORK-2026-035_inno-setup-installer.md` (Ready `04029a7`);
+  red baseline `babf418` (installer.iss absent + build_installer ModuleNotFoundError);
+  implementation `c0cd6a9`.
+- Scope delivered (slice 3b): `apps/desktop/installer.iss`（固定 AppId、按用户安装到
+  `{localappdata}\Programs\知枝\`、开始菜单/可选桌面快捷方式、卸载器注册、覆盖安装升级、
+  `PrivilegesRequired=lowest`）；`scripts/build_installer.py`（定位 ISCC.exe → 编译
+  `dist/zhizhi-<version>-setup.exe`）；`scripts/generate_icon.py` + `icon.ico/png`（Pillow
+  树状图图标，build.spec 嵌入 exe）；pillow 入 `[project] dependencies` + mypy PIL override。
+- Verification: 安装器 22.58 MB 编译成功；静默安装 → exe/开始菜单/卸载器/注册表全正确 →
+  覆盖安装升级数据保留 → 静默卸载干净且 `%LOCALAPPDATA%\知枝\data` 保留；e2e 18/18；
+  pytest 448/448 + 5 skipped；validator、Ruff、strict mypy（39）全绿。
+- Natural-language Step 10 progress: slice 1 + 2 + 3a (portable zip) + 3b (installer) done
+  (~100%); personal MVP ~98%. Residual: code signing cert (optional, env-gated) + vector
+  retrieval (Step 9 owner-unresolved).
+- Exact next action: collect role-separated QA verdict on frozen `c0cd6a9`; seal evidence;
+  then Step 10 is complete (owner may still opt into code signing).
+
 ## Step 10 slice 2 QA closure checkpoint — 2026-08-15 21:40 +08:00
 
 - Role-separated QA reviewed frozen `cee4fe2` (WORK-2026-034 Step 10 slice 2 pywebview native

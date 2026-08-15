@@ -2,6 +2,29 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步切片 3b：Inno Setup 安装器（WORK-2026-035）
+
+- 关联 ID：WORK-2026-035、WORK-2026-033/034、NFR-2026-001、REQ-2026-001。
+- 实际变化：新增 `apps/desktop/installer.iss`（固定 AppId `{8F2B3C1E-...}`、按用户安装
+  `{localappdata}\Programs\知枝\`、开始菜单 + 可选桌面快捷方式、卸载器注册、`ignoreversion
+  recursesubdirs` 覆盖安装升级、`PrivilegesRequired=lowest` 免管理员）；`scripts/build_installer.py`
+  （定位 `ISCC.exe` 后编译 `dist/zhizhi-<version>-setup.exe`）；`scripts/generate_icon.py` +
+  `apps/desktop/icon.{ico,png}`（Pillow 树状图图标）；`build.spec` 嵌入图标；pillow 入
+  `[project] dependencies`，`[[tool.mypy.overrides]] PIL ignore_missing_imports`。
+- 影响模块/接口/schema/migration/prompt：新增 installer.iss/build_installer/generate_icon/icon；
+  build.spec 增 icon；无 canonical contract/迁移/存储格式变化。
+- 兼容性：数据目录 `%LOCALAPPDATA%\知枝\data` 在安装目录之外，安装/升级/卸载均不触碰；同 AppId
+  覆盖安装幂等升级。
+- 验证与证据：红灯（installer.iss 缺失 + build_installer ModuleNotFoundError）→ 实现
+  `c0cd6a9`；安装器 22.58 MB 编译成功；静默安装→exe/开始菜单/卸载器/注册表正确→覆盖安装升级
+  数据保留→静默卸载干净且数据保留；e2e 18/18；pytest 448/448 + 5 skipped、validator/Ruff/strict
+  mypy（39）全绿。
+- 性能/安全/运维影响：安装器 ~22.6 MB；无管理员权限；代码签名 env 门控缺省跳过（未签名，
+  SmartScreen 可能提示）。
+- 回滚：回退本工作项提交即回到「便携 zip 手动解压」；安装器不影响数据目录。
+- 遗留风险与下一步：职责隔离 QA 待封存（`TR-20260815-003`）；代码签名证书（owner 未提供，可选）；
+  向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步切片 2 QA 封存（WORK-2026-034，TR-20260815-002）
 
 - 关联 ID：WORK-2026-034、WORK-2026-033、TR-20260815-002、NFR-2026-001、REQ-2026-001。
