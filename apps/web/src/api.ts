@@ -343,7 +343,7 @@ export function httpPersistApi(
       if (response.status === 404) return null;
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `load failed: ${response.status}`);
+        throw new Error(formatCode(body) || `load failed: ${response.status}`);
       }
       return graphToSnapshot((await response.json()) as CanonicalGraph);
     },
@@ -355,7 +355,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `save failed: ${response.status}`);
+        throw new Error(formatCode(body) || `save failed: ${response.status}`);
       }
     },
     async applyPatch(patch: Record<string, unknown>): Promise<{
@@ -370,7 +370,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `patch failed: ${response.status}`);
+        throw new Error(formatCode(body) || `patch failed: ${response.status}`);
       }
       return (await response.json()) as {
         status: string;
@@ -382,7 +382,7 @@ export function httpPersistApi(
       const response = await fetch(`${endpoint}/undo`, { method: "POST" });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `undo failed: ${response.status}`);
+        throw new Error(formatCode(body) || `undo failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; revision_no: number };
     },
@@ -390,7 +390,7 @@ export function httpPersistApi(
       const response = await fetch(`${endpoint}/redo`, { method: "POST" });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `redo failed: ${response.status}`);
+        throw new Error(formatCode(body) || `redo failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; revision_no: number };
     },
@@ -398,7 +398,7 @@ export function httpPersistApi(
       const response = await fetch(`${workspaceBase}/backup`, { method: "POST" });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `backup failed: ${response.status}`);
+        throw new Error(formatCode(body) || `backup failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; backup_path: string };
     },
@@ -418,7 +418,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `restore failed: ${response.status}`);
+        throw new Error(formatCode(body) || `restore failed: ${response.status}`);
       }
       return (await response.json()) as { status: string };
     },
@@ -553,7 +553,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `ai settings save failed: ${response.status}`);
+        throw new Error(formatCode(body) || `ai settings save failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; configured: boolean };
     },
@@ -591,7 +591,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `create workspace failed: ${response.status}`);
+        throw new Error(formatCode(body) || `create workspace failed: ${response.status}`);
       }
       return (await response.json()) as { id: string; name: string };
     },
@@ -605,7 +605,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `draft failed: ${response.status}`);
+        throw new Error(formatCode(body) || `draft failed: ${response.status}`);
       }
       return (await response.json()) as AiDraftResult;
     },
@@ -627,7 +627,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `draft accept failed: ${response.status}`);
+        throw new Error(formatCode(body) || `draft accept failed: ${response.status}`);
       }
       return (await response.json()) as {
         status: string;
@@ -643,7 +643,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `answer failed: ${response.status}`);
+        throw new Error(formatCode(body) || `answer failed: ${response.status}`);
       }
       return (await response.json()) as AnswerResult;
     },
@@ -655,7 +655,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `interpret failed: ${response.status}`);
+        throw new Error(formatCode(body) || `interpret failed: ${response.status}`);
       }
       return (await response.json()) as CommandResult;
     },
@@ -671,7 +671,7 @@ export function httpPersistApi(
       });
       if (!response.ok) {
         const body = await readError(response);
-        throw new Error(body.code ?? `interpret accept failed: ${response.status}`);
+        throw new Error(formatCode(body) || `interpret accept failed: ${response.status}`);
       }
       return (await response.json()) as {
         status: string;
@@ -682,12 +682,19 @@ export function httpPersistApi(
   };
 }
 
-async function readError(response: Response): Promise<{ code?: string }> {
+async function readError(response: Response): Promise<{ code?: string; rule?: unknown }> {
   try {
-    return (await response.json()) as { code?: string };
+    return (await response.json()) as { code?: string; rule?: unknown };
   } catch {
     return {};
   }
+}
+
+// Compose `code/rule` so the UI can show the precise failure (e.g.
+// draft_invalid/no_new_concepts) instead of an opaque top-level code.
+function formatCode(body: { code?: string; rule?: unknown }): string {
+  if (!body.code) return "";
+  return body.rule !== undefined && body.rule !== "" ? `${body.code}/${String(body.rule)}` : body.code;
 }
 
 // Build a confirmed user set_lock GraphPatch for a single lock dimension.

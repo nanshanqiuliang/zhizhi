@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import pytest
 from knowledge_tree_domain.ai_draft import DraftChunk, DraftConcept
-
 from knowledge_tree_infrastructure.ai_draft import build_incremental_ai_draft
 
 
@@ -52,3 +51,36 @@ def test_incremental_draft_caps_chunks() -> None:
     )
     assert extractor.calls <= 2
     assert draft.concepts
+
+
+def test_fail_soft_extractor_skips_bad_chunks() -> None:
+    from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError
+
+    from apps.api.ai_draft import fail_soft_extractor
+
+    class BadExtractor:
+        def extract(self, chunk: DraftChunk) -> tuple[DraftConcept, ...]:
+            if chunk.chunk_id == "bad":
+                raise DraftExtractionError("draft_extraction_failed", details={"rule": "x"})
+            return (DraftConcept(label="ok", confidence=0.8, evidence_ids=()),)
+
+    wrapped = fail_soft_extractor(BadExtractor())
+    good = DraftChunk(chunk_id="good", resource_id="r", text="t", start_offset=0, end_offset=1)
+    bad = DraftChunk(chunk_id="bad", resource_id="r", text="t", start_offset=0, end_offset=1)
+    assert [concept.label for concept in wrapped.extract(good)] == ["ok"]
+    assert wrapped.extract(bad) == ()
+
+
+def test_fail_soft_does_not_swallow_provider_errors() -> None:
+    from knowledge_tree_infrastructure.llm.errors import LLMProviderError
+
+    from apps.api.ai_draft import fail_soft_extractor
+
+    class Failing:
+        def extract(self, chunk: DraftChunk) -> tuple[DraftConcept, ...]:
+            raise LLMProviderError("provider_connection_failed", details={"rule": "x"})
+
+    wrapped = fail_soft_extractor(Failing())
+    chunk = DraftChunk(chunk_id="a", resource_id="r", text="t", start_offset=0, end_offset=1)
+    with pytest.raises(LLMProviderError):
+        wrapped.extract(chunk)

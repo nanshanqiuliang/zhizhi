@@ -37,10 +37,13 @@ from knowledge_tree_domain.ai_draft import (  # noqa: E402
     uuid7,
 )
 from knowledge_tree_infrastructure.ai_draft import (  # noqa: E402
+    ConceptExtractor,
+    RelationCandidateProvider,
     build_incremental_ai_draft,
     build_workspace_ai_draft,
 )
 from knowledge_tree_infrastructure.ai_draft_llm import (  # noqa: E402
+    DraftExtractionError,
     LlmConceptExtractor,
     LlmRelationProvider,
 )
@@ -68,6 +71,41 @@ LOCAL_ACTOR = {"type": "user", "id": "local-user"}
 
 _CONCEPT_MAX_TOKENS = 1024
 _RELATION_MAX_TOKENS = 8192
+_MAX_CHUNKS = 40
+
+
+def fail_soft_extractor(extractor: ConceptExtractor) -> ConceptExtractor:
+    """Wrap an LLM extractor so one malformed chunk is skipped, not fatal.
+
+    Only `DraftExtractionError` (bad model content on a single chunk) is
+    swallowed; transport/auth errors (`LLMProviderError`) still propagate so a
+    dead key or network failure surfaces as 502 instead of silently producing
+    an empty draft.
+    """
+
+    class _Wrapper:
+        def extract(self, chunk: Any) -> tuple[Any, ...]:
+            try:
+                return extractor.extract(chunk)
+            except DraftExtractionError:
+                return ()
+
+    return _Wrapper()
+
+
+def fail_soft_relation_provider(
+    provider: RelationCandidateProvider,
+) -> RelationCandidateProvider:
+    """Wrap the relation provider: a malformed relation answer yields no edges."""
+
+    class _Wrapper:
+        def provide(self, concepts: tuple[Any, ...]) -> tuple[Any, ...]:
+            try:
+                return provider.provide(concepts)
+            except DraftExtractionError:
+                return ()
+
+    return _Wrapper()
 
 
 def _profile_budget(profile: dict[str, Any]) -> Budget:
@@ -209,8 +247,9 @@ def build_deepseek_draft_generator(api_key: str | None = None) -> DraftGenerator
             text,
             resource_id=resource_id,
             anchor_id_factory=lambda: anchor_id,
-            extractor=concept_extractor,
-            relation_provider=relation_provider,
+            extractor=fail_soft_extractor(concept_extractor),
+            relation_provider=fail_soft_relation_provider(relation_provider),
+            max_chunks=_MAX_CHUNKS,
         )
         return _finalize_draft(
             graph,
@@ -243,8 +282,8 @@ def build_deepseek_workspace_draft_generator(
         draft = build_workspace_ai_draft(
             graph,
             texts,
-            extractor=concept_extractor,
-            relation_provider=relation_provider,
+            extractor=fail_soft_extractor(concept_extractor),
+            relation_provider=fail_soft_relation_provider(relation_provider),
         )
         evidence = [
             {

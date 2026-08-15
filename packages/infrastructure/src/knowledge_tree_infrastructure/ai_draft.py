@@ -125,6 +125,7 @@ def build_incremental_ai_draft(
     anchor_id_factory: Callable[[], str] | None = None,
     chunk_size: int = 1200,
     overlap: int = 200,
+    max_chunks: int | None = None,
 ) -> AiDraft:
     """Incremental draft: extract new concepts and merge them into an existing graph.
 
@@ -133,6 +134,7 @@ def build_incremental_ai_draft(
     relation provider then sees the union of existing placeholders (empty
     evidence) and new concepts, so it can propose relations across the graph
     boundary; relations with no new endpoint (existing↔existing) are dropped.
+    `max_chunks` bounds the number of LLM extraction calls (cost/latency guard).
     """
 
     chunks = chunk_text(
@@ -142,6 +144,8 @@ def build_incremental_ai_draft(
         overlap=overlap,
         chunk_id_factory=chunk_id_factory,
     )
+    if max_chunks is not None and len(chunks) > max_chunks:
+        chunks = chunks[:max_chunks]
     if anchor_id_factory is not None:
         chunks = tuple(replace(chunk, anchor_id=anchor_id_factory()) for chunk in chunks)
 
