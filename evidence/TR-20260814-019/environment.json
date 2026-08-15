@@ -1,0 +1,13 @@
+{
+  "os": "Windows",
+  "python": "3.12",
+  "uv": "locked (uv.lock)",
+  "node_pnpm": "pnpm (frozen pnpm-lock.yaml)",
+  "branch": "feature/WORK-2026-009-ai-draft-pipeline",
+  "reviewed_commit": "120e34929683d4c5bee166f30a2028a96fd7de2f",
+  "attempt001_commit": "da73951a560c67304826df196263a75e1981e38b",
+  "red_truth_parent": "f50f809",
+  "live_gate": "none (pure-domain slice)",
+  "provider": "n/a",
+  "secret_storage": "n/a"
+}

@@ -1085,6 +1085,28 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 3a QA closure checkpoint — 2026-08-15 07:30 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `da73951`
+  (WORK-2026-030 Step 9 slice 3a incremental rebuild kernel) and returned PASS
+  with 0 P0/P1 and 2 P2 + 2 P3 (label-variant raw KeyError, cross-graph cycle
+  build gap, missing revision_no KeyError, whitespace collapse).
+- Fix `120e349`: F1 concept_ids keyed by normalized label (+ variant
+  regression); F3 .get("revision_no", 0). F2 (cross-graph cycle rejected by the
+  commit gate) and F4 (one-space whitespace collapse = module-wide stable-key
+  contract) recorded as documented boundaries.
+- Superseding QA attempt 002 reviewed `120e349` and returned PASS with 0 P0/P1.
+  Correlated machine review, not owner acceptance.
+- Evidence sealed under `evidence/TR-20260814-019/`; report:
+  `docs/test-reports/TR-20260814-019_incremental-rebuild-kernel.md`.
+- Full gates green at `120e349`: pytest 425/425 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 33).
+- **Natural-language Step 9 is now ~60%** (slices 1+2+3a complete and
+  QA-verified); personal MVP approximately 88% (3a is not yet user-visible).
+- Exact next action: Step 9 slice 3b — wire the LLM extractor with
+  existing-label injection + `POST /rebuild` + Web (builds on the proven
+  build_incremental_patch kernel).
+
 ## Step 9 slice 3a implementation checkpoint — 2026-08-15 07:00 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

@@ -27,6 +27,7 @@
 | [TR-20260814-016](TR-20260814-016_ai-draft-source-anchor.md) | `3c3dfa0` | 第 8 步切片 4：来源锚点落库 + 点来源跳回原文（`accept_ai_draft` 单事务、确定性锚点 id、`POST /ai-draft/accept`、Web 跳回原文）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-027 |
 | [TR-20260814-017](TR-20260814-017_answer-with-sources.md) | `9e06ebf` | 第 9 步切片 1：带来源问答（`build_answer_context` FTS5+反向回退、`POST /answer`、DeepSeek `answer_with_sources`、Web 提问/回答/来源跳转）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-028 |
 | [TR-20260814-018](TR-20260814-018_nl-to-graphpatch.md) | `9abd339` | 第 9 步切片 2：自然语言转 GraphPatch（`build_command_patch` label→id 映射、`POST /interpret`、DeepSeek `command_interpret`、Web 指令预览/接受/拒绝）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-029 |
+| [TR-20260814-019](TR-20260814-019_incremental-rebuild-kernel.md) | `120e349` | 第 9 步切片 3a：增量重建纯领域内核（`build_incremental_patch` 去重/混合端点/证据/DAG）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-030 |
 
 > WORK-2026-007（canonical LLM contract + mock + TC-LLM-001..009）与 WORK-2026-008
 > （DeepSeek adapter + 金额预算 + 受控回退 + 受控 live smoke + 金标基线 + RB-PROV-001

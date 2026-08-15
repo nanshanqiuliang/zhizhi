@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 3a QA 封存（WORK-2026-030，TR-20260814-019）
+
+- 关联 ID：WORK-2026-030、WORK-2026-009、TR-20260814-019、NFR-2026-001、REQ-2026-006。
+- 实际变化：职责隔离 QA 对冻结 `da73951` 返回 **PASS**（0 P0/P1；2 P2 + 2 P3）；修复 `120e349` 闭合 F1（`concept_ids` 改按 `normalize_concept_label` 为键 + 变体回归）与 F3（`.get("revision_no", 0)`），F2（跨图先修环由提交门失败关闭）与 F4（空白折叠为模块级稳定键契约）记录为文档化边界；超越审查 attempt 002 返回 **PASS**（0 P0/P1）。
+- 影响模块/接口/schema/migration/prompt：仅 `knowledge_tree_domain.ai_draft` 与测试；无 canonical contract/ADR/migration/prompt 变更。
+- 兼容性：无行为变化；核心性质（去重、混合端点、证据/DAG 失败关闭、确定性、不突变输入）保持。
+- 验证与证据：attempt 001/002 报告与证据存 `evidence/TR-20260814-019/`；报告 `docs/test-reports/TR-20260814-019_incremental-rebuild-kernel.md`；全仓 pytest 425/425 + 5 skipped、Ruff/strict mypy/validator 全绿。
+- 性能/安全/运维影响：无新增；本轮纯领域、无网络。
+- 回滚：无新增代码可回滚（修复为正向变更）；回退 `120e349` 即回 attempt 001 状态。
+- 遗留风险与下一步：**第 9 步切片 1+2+3a 完成（约 60%）**；下一动作为切片 3b（LLM 抽取器既有-label 注入 + `POST /rebuild` + Web）。
+
 ## 2026-08-15 — 第 9 步切片 3a：增量重建纯领域内核（WORK-2026-030）
 
 - 关联 ID：WORK-2026-030、WORK-2026-009、WORK-2026-005、REQ-2026-006、NFR-2026-001。
@@ -11,7 +22,7 @@
 - 验证与证据：红灯（ImportError）；实现 `da73951`；incremental 3/3；全仓 pytest 424/424 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿。
 - 性能/安全/运维影响：O(V+E) 纯内存；零模型成本；无网络。
 - 回滚：回退 `da73951` 即回到无增量内核；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `da73951`）；切片 3b（LLM 抽取器既有-label 注入 + `POST /rebuild` + Web）为下一步。
+- 遗留风险与下一步：职责隔离 QA 已封存（TR-20260814-019，attempt 001 PASS + 修复 `120e349` + attempt 002 PASS）；切片 3b（LLM 抽取器既有-label 注入 + `POST /rebuild` + Web）为下一步。
 
 ## 2026-08-15 — 第 9 步切片 2 QA 封存（WORK-2026-029，TR-20260814-018）
 

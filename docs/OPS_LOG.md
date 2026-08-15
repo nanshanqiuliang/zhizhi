@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅新增纯领域函数与测试；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 424/424 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿。
 - 缓解/回滚：回退 `da73951` 即回无增量内核；本轮无真实 LLM 调用。
-- 遗留风险/Owner/期限：切片 3a 职责隔离 QA 待执行；切片 3b（LLM 接线 + 端点 + Web）待做。
+- 遗留风险/Owner/期限：切片 3a 职责隔离 QA 已封存（TR-20260814-019，attempt 001 PASS + 修复 `120e349` + attempt 002 PASS，correlated_review）；切片 3b（LLM 接线 + 端点 + Web）待做。
 
 ## 2026-08-15 — 第 9 步切片 2：自然语言转 GraphPatch（WORK-2026-029）运维记录
 

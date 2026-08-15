@@ -1,0 +1,19 @@
+# Commands executed for TR-20260814-019 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/contract/test_ai_draft_incremental.py -q   # 3 -> 4 passed
+uv run python -m pytest -q                                               # 424 -> 425 passed + 5 skipped
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+
+# --- role-separated QA attempt 001 (da73951) ---
+uv run python -m pytest tests/contract/test_ai_draft_incremental.py -q   # 3 passed
+uv run python -m pytest -q                                               # 424 passed, 5 skipped
+# ... ruff/mypy/validator + adversarial scratch worktree (dedupe/edge/evidence/validation/contract/determinism + mutations)
+
+# --- role-separated QA attempt 002 (superseding, 120e349) ---
+uv run python -m pytest tests/contract/test_ai_draft_incremental.py -q   # 4 passed
+uv run python -m pytest -q                                               # 425 passed, 5 skipped
+# ... F1/F3 closure + label-variant behavioral probe + cross-graph cycle boundary
