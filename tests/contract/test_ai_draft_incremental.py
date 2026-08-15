@@ -72,9 +72,7 @@ def test_incremental_patch_dedupes_existing_and_resolves_mixed_endpoints() -> No
             DraftConcept(label="极限", confidence=0.8, evidence_ids=()),  # existing
             DraftConcept(label="导数", confidence=0.8, evidence_ids=(EVIDENCE,)),  # new
         ),
-        relations=(
-            DraftRelation("极限", "导数", "prerequisite_of", 0.7, (EVIDENCE,)),
-        ),
+        relations=(DraftRelation("极限", "导数", "prerequisite_of", 0.7, (EVIDENCE,)),),
     )
     patch = build_incremental_patch(
         _existing_graph(),

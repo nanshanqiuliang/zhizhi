@@ -524,3 +524,160 @@ def build_draft_patch(
         "confirmed": False,
         "operations": operations,
     }
+
+
+def build_incremental_patch(
+    existing_graph: JsonObject,
+    draft: AiDraft,
+    *,
+    workspace_id: str,
+    course_id: str,
+    base_revision_no: int,
+    reason: str,
+    actor_id: str = "ai-draft-pipeline",
+    view_id: str | None = None,
+    id_factory: Callable[[], str] = uuid7,
+) -> JsonObject:
+    """Merge a new-material draft into an existing graph as a proposed patch.
+
+    Draft concepts whose normalized label matches an existing concept are mapped
+    to that existing id (never re-created or re-laid-out); only genuinely new
+    concepts get `create_concept` + `set_layout_item`. Edge endpoints resolve to
+    existing or new ids with the correct `expected_*_revision_no`. New AI
+    concepts and `prerequisite_of` edges must carry evidence (fail closed).
+    """
+
+    validate_draft(draft)
+    if not reason.strip():
+        raise DraftError("draft_invalid", details={"rule": "reason_required"})
+
+    existing_by_key: dict[str, JsonObject] = {}
+    for concept in existing_graph.get("concepts", []):
+        if not isinstance(concept, dict) or not isinstance(concept.get("label"), str):
+            continue
+        key = normalize_concept_label(concept["label"])
+        if key in existing_by_key:
+            raise DraftError(
+                "draft_invalid", details={"rule": "duplicate_existing_label", "key": key}
+            )
+        existing_by_key[key] = concept
+
+    concept_ids: dict[str, str] = {}
+    new_concepts: list[DraftConcept] = []
+    for concept in draft.concepts:
+        key = normalize_concept_label(concept.label)
+        existing = existing_by_key.get(key)
+        if existing is not None:
+            concept_ids[concept.label] = str(existing["id"])
+        else:
+            if not concept.evidence_ids:
+                raise DraftError(
+                    "draft_evidence_required",
+                    details={"rule": "ai_concept_evidence", "label": concept.label},
+                )
+            concept_ids[concept.label] = id_factory()
+            new_concepts.append(concept)
+
+    view = view_id if view_id is not None else id_factory()
+    layout = assign_draft_layout(draft.concepts, draft.relations, view_id=view)
+    layout_by_label = {label: (x, y) for label, x, y in layout}
+
+    operations: list[JsonObject] = []
+    for concept in new_concepts:
+        operations.append(
+            {
+                "op_id": id_factory(),
+                "op": "create_concept",
+                "concept": {
+                    "id": concept_ids[concept.label],
+                    "course_id": course_id,
+                    "label": concept.label,
+                    "origin": "ai",
+                    "review_state": "proposed",
+                    "confidence": concept.confidence,
+                    "evidence_ids": list(_unique_sorted(concept.evidence_ids)),
+                    "locks": {
+                        "content": False,
+                        "relations": False,
+                        "position": False,
+                        "annotations": False,
+                    },
+                    "annotations": [],
+                    "revision_no": 0,
+                },
+            }
+        )
+
+    for relation in draft.relations:
+        source_key = normalize_concept_label(relation.source_label)
+        target_key = normalize_concept_label(relation.target_label)
+        if relation.edge_type == "prerequisite_of" and not relation.evidence_ids:
+            raise DraftError(
+                "draft_evidence_required",
+                details={
+                    "rule": "ai_prerequisite_evidence",
+                    "source": relation.source_label,
+                    "target": relation.target_label,
+                },
+            )
+        operations.append(
+            {
+                "op_id": id_factory(),
+                "op": "create_edge",
+                "expected_source_revision_no": int(
+                    existing_by_key[source_key]["revision_no"]
+                    if source_key in existing_by_key
+                    else 0
+                ),
+                "expected_target_revision_no": int(
+                    existing_by_key[target_key]["revision_no"]
+                    if target_key in existing_by_key
+                    else 0
+                ),
+                "edge": {
+                    "id": id_factory(),
+                    "course_id": course_id,
+                    "source_concept_id": concept_ids[relation.source_label],
+                    "target_concept_id": concept_ids[relation.target_label],
+                    "edge_type": relation.edge_type,
+                    "origin": "ai",
+                    "review_state": "proposed",
+                    "confidence": relation.confidence,
+                    "evidence_ids": list(_unique_sorted(relation.evidence_ids)),
+                    "locked": False,
+                    "revision_no": 0,
+                },
+            }
+        )
+
+    for concept in new_concepts:
+        x, y = layout_by_label[concept.label]
+        operations.append(
+            {
+                "op_id": id_factory(),
+                "op": "set_layout_item",
+                "target": {"type": "concept", "id": concept_ids[concept.label]},
+                "expected_updated_revision_no": 0,
+                "layout_item": {
+                    "view_id": view,
+                    "concept_id": concept_ids[concept.label],
+                    "x": x,
+                    "y": y,
+                    "pinned": False,
+                    "revision_no": 0,
+                },
+            }
+        )
+
+    return {
+        "schema_version": 1,
+        "patch_id": id_factory(),
+        "workspace_id": workspace_id,
+        "course_id": course_id,
+        "base_revision_no": base_revision_no,
+        "actor": {"type": "ai", "id": actor_id},
+        "reason": reason,
+        "requires_confirmation": True,
+        "confirmed": False,
+        "operations": operations,
+    }
