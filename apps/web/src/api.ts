@@ -130,6 +130,9 @@ export interface PersistApi {
   getResourceText(resourceId: string): Promise<string>;
   openResourcesDir?(): Promise<{ status: string; path: string }>;
   revealResource?(resourceId: string): Promise<{ status: string; path: string }>;
+  getAiSettings?(): Promise<{ configured: boolean; enabled: boolean }>;
+  setAiKey?(apiKey: string): Promise<{ status: string; configured: boolean }>;
+  clearAiKey?(): Promise<{ status: string; configured: boolean }>;
   generateDraft(resourceId: string): Promise<AiDraftResult>;
   acceptDraft(
     patch: Record<string, unknown>,
@@ -523,6 +526,34 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(`reveal failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; path: string };
+    },
+    async getAiSettings(): Promise<{ configured: boolean; enabled: boolean }> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/settings/ai`);
+      if (!response.ok) {
+        throw new Error(`ai settings failed: ${response.status}`);
+      }
+      return (await response.json()) as { configured: boolean; enabled: boolean };
+    },
+    async setAiKey(apiKey: string): Promise<{ status: string; configured: boolean }> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/settings/ai`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `ai settings save failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; configured: boolean };
+    },
+    async clearAiKey(): Promise<{ status: string; configured: boolean }> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/settings/ai`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error(`ai settings clear failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; configured: boolean };
     },
     async generateDraft(resourceId: string): Promise<AiDraftResult> {
       const response = await fetch(`${workspaceBase}/ai-draft`, {

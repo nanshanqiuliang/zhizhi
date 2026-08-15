@@ -196,6 +196,104 @@ a:focus-visible {
   background: #a2aba5;
 }
 
+.mode-badge.online {
+  color: #2f6b45;
+  border-color: #bfe0c6;
+  background: #eef8f0;
+}
+
+.mode-badge.online i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3fa45f;
+}
+
+.ai-settings-button {
+  padding: 5px 10px;
+  border: 1px solid #c4cfc6;
+  border-radius: 8px;
+  background: #fbfcf9;
+  color: #3c5a4a;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.ai-settings-button:hover {
+  background: #f0f5f0;
+}
+
+.ai-settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 40, 34, 0.35);
+}
+
+.ai-settings-dialog {
+  width: min(430px, 92vw);
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 44px rgba(20, 34, 26, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ai-settings-head strong {
+  font-size: 1.05rem;
+  color: #24352b;
+}
+
+.ai-settings-head span {
+  font-size: 0.78rem;
+  color: #5a6b60;
+}
+
+.ai-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #3c5a4a;
+}
+
+.ai-settings-field input {
+  padding: 9px 11px;
+  border: 1px solid #c8d3ca;
+  border-radius: 9px;
+  font-size: 0.85rem;
+}
+
+.ai-settings-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-settings-actions button {
+  padding: 7px 13px;
+  border: 1px solid #b9c8bc;
+  border-radius: 9px;
+  background: #f5f8f4;
+  color: #33503d;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ai-settings-actions button.primary {
+  background: #2f6b45;
+  border-color: #2f6b45;
+  color: #fff;
+}
+
+.ai-settings-actions button:hover:not(.primary) {
+  background: #eaf1ea;
+}
+
 .compact-boundary {
   display: none;
 }

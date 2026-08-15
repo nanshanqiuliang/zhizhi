@@ -63,10 +63,14 @@ def _profile_budget(profile: dict[str, Any]) -> Budget:
     )
 
 
-def build_deepseek_answer_generator() -> AnswerGenerator | None:
-    """Return a DeepSeek answer generator, or None when the key is not provided."""
+def build_deepseek_answer_generator(api_key: str | None = None) -> AnswerGenerator | None:
+    """Return a DeepSeek answer generator, or None when no key is provided.
 
-    key = os.environ.get("DEEPSEEK_API_KEY")
+    `api_key` may be passed explicitly (e.g. from the AI settings endpoint);
+    when None the `DEEPSEEK_API_KEY` environment variable is consulted.
+    """
+
+    key = api_key if api_key is not None else os.environ.get("DEEPSEEK_API_KEY")
     if not key:
         return None
 

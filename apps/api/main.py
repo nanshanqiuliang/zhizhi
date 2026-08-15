@@ -13,7 +13,7 @@ import os
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request
@@ -54,6 +54,8 @@ from knowledge_tree_infrastructure.workspace import (
     undo_graph,
 )
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from apps.api.ai_config import load_api_key, save_api_key
 
 JsonObject = dict[str, Any]
 _LOCAL_ACTOR = {"type": "user", "id": "local-user"}
@@ -155,6 +157,30 @@ def _http_error(error: WorkspaceError) -> HTTPException:
     return HTTPException(status_code=500, detail={"code": error.code, **error.details})
 
 
+def _build_draft_generator(api_key: str | None) -> DraftGenerator | None:
+    if not api_key:
+        return None
+    from apps.api.ai_draft import build_deepseek_draft_generator
+
+    return build_deepseek_draft_generator(api_key)
+
+
+def _build_answer_generator(api_key: str | None) -> AnswerGenerator | None:
+    if not api_key:
+        return None
+    from apps.api.answer import build_deepseek_answer_generator
+
+    return build_deepseek_answer_generator(api_key)
+
+
+def _build_command_generator(api_key: str | None) -> CommandGenerator | None:
+    if not api_key:
+        return None
+    from apps.api.command import build_deepseek_command_generator
+
+    return build_deepseek_command_generator(api_key)
+
+
 def create_app(
     *,
     data_root: Path,
@@ -177,6 +203,24 @@ def create_app(
 
     root = Path(data_root)
     app = FastAPI(title="knowledge-tree-local-api", version="0.1.0")
+
+    # AI generators are held in a mutable holder so the settings endpoint can
+    # rebuild them after the key changes. Injected generators (tests/embedding)
+    # win; otherwise build from the saved key (config file, then environment).
+    saved_key = load_api_key(root)
+    ai_state: dict[str, Any] = {
+        "draft_generator": (
+            draft_generator if draft_generator is not None else _build_draft_generator(saved_key)
+        ),
+        "answer_generator": (
+            answer_generator if answer_generator is not None else _build_answer_generator(saved_key)
+        ),
+        "command_generator": (
+            command_generator
+            if command_generator is not None
+            else _build_command_generator(saved_key)
+        ),
+    }
 
     app.add_middleware(
         CORSMiddleware,
@@ -201,6 +245,36 @@ def create_app(
     @app.get("/api/health")
     def health() -> JsonObject:
         return {"status": "ok"}
+
+    @app.get("/api/settings/ai")
+    def get_ai_settings() -> JsonObject:
+        key = load_api_key(root)
+        return {
+            "configured": bool(key),
+            "enabled": ai_state["draft_generator"] is not None,
+        }
+
+    @app.put("/api/settings/ai")
+    async def put_ai_settings(request: Request) -> JsonObject:
+        payload = await _read_json(request)
+        api_key = payload.get("api_key")
+        if not isinstance(api_key, str) or not api_key.strip():
+            raise HTTPException(
+                status_code=422, detail={"code": "ai_key_invalid", "rule": "api_key_missing"}
+            )
+        save_api_key(root, api_key.strip())
+        ai_state["draft_generator"] = _build_draft_generator(api_key.strip())
+        ai_state["answer_generator"] = _build_answer_generator(api_key.strip())
+        ai_state["command_generator"] = _build_command_generator(api_key.strip())
+        return {"status": "saved", "configured": True}
+
+    @app.delete("/api/settings/ai")
+    def delete_ai_settings() -> JsonObject:
+        save_api_key(root, None)
+        ai_state["draft_generator"] = None
+        ai_state["answer_generator"] = None
+        ai_state["command_generator"] = None
+        return {"status": "cleared", "configured": False}
 
     @app.get("/api/workspaces/{workspace_id}/graph")
     def get_graph(workspace_id: str) -> JsonObject:
@@ -520,7 +594,7 @@ def create_app(
 
     @app.post("/api/workspaces/{workspace_id}/ai-draft")
     async def post_ai_draft(workspace_id: str, request: Request) -> JsonObject:
-        if draft_generator is None:
+        if ai_state["draft_generator"] is None:
             raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
         workspace_root = _workspace_root(root, workspace_id)
         try:
@@ -537,7 +611,7 @@ def create_app(
             layout = resolve_workspace(workspace_root)
             graph = load_course_graph(layout)
             text = read_resource_text(layout, resource_id)
-            result = draft_generator(text, resource_id, graph)
+            result = cast(DraftGenerator, ai_state["draft_generator"])(text, resource_id, graph)
         except WorkspaceError as error:
             raise _http_error(error) from error
         except (DraftError, DraftExtractionError) as error:
@@ -648,7 +722,7 @@ def create_app(
 
     @app.post("/api/workspaces/{workspace_id}/answer")
     async def post_answer(workspace_id: str, request: Request) -> JsonObject:
-        if answer_generator is None:
+        if ai_state["answer_generator"] is None:
             raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
         workspace_root = _workspace_root(root, workspace_id)
         try:
@@ -676,7 +750,9 @@ def create_app(
         if not sources:
             return {"answer": "", "sources": [], "note": "no_matches"}
         try:
-            return answer_generator(question, context_obj.context, sources)
+            return cast(AnswerGenerator, ai_state["answer_generator"])(
+                question, context_obj.context, sources
+            )
         except LLMProviderError as error:
             raise HTTPException(
                 status_code=502, detail={"code": error.code, **error.details}
@@ -684,7 +760,7 @@ def create_app(
 
     @app.post("/api/workspaces/{workspace_id}/interpret")
     async def post_interpret(workspace_id: str, request: Request) -> JsonObject:
-        if command_generator is None:
+        if ai_state["command_generator"] is None:
             raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
         workspace_root = _workspace_root(root, workspace_id)
         try:
@@ -710,7 +786,7 @@ def create_app(
             for concept in graph.get("concepts", [])
         ]
         try:
-            interpreted = command_generator(command, concepts)
+            interpreted = cast(CommandGenerator, ai_state["command_generator"])(command, concepts)
         except LLMProviderError as error:
             raise HTTPException(
                 status_code=502, detail={"code": error.code, **error.details}

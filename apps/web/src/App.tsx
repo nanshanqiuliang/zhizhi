@@ -247,6 +247,9 @@ export function App({ api }: { api?: PersistApi }) {
   const [command, setCommand] = useState("");
   const [commandResult, setCommandResult] = useState<CommandResult | null>(null);
   const [commandStatus, setCommandStatus] = useState<"idle" | "interpreting" | "ready" | "applying" | "failed">("idle");
+  const [aiSettings, setAiSettings] = useState<{ configured: boolean; enabled: boolean } | null>(null);
+  const [showAiSettings, setShowAiSettings] = useState(false);
+  const [aiKeyInput, setAiKeyInput] = useState("");
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -295,6 +298,14 @@ export function App({ api }: { api?: PersistApi }) {
       })
       .catch(() => {
         if (!cancelled) setResources([]);
+      });
+    api
+      .getAiSettings?.()
+      .then((settings) => {
+        if (!cancelled) setAiSettings(settings);
+      })
+      .catch(() => {
+        if (!cancelled) setAiSettings({ configured: false, enabled: false });
       });
     return () => {
       cancelled = true;
@@ -421,6 +432,36 @@ export function App({ api }: { api?: PersistApi }) {
       setStatus("已在文件资源管理器中显示该文件");
     } catch (error) {
       setStatus(`打开文件位置失败（${(error as Error).message}）`);
+    }
+  }
+
+  async function handleSaveAiKey() {
+    if (!api?.setAiKey) return;
+    const key = aiKeyInput.trim();
+    if (!key) {
+      setStatus("请输入 DeepSeek API Key");
+      return;
+    }
+    try {
+      const result = await api.setAiKey(key);
+      setAiSettings({ configured: result.configured, enabled: true });
+      setAiKeyInput("");
+      setShowAiSettings(false);
+      setStatus("AI 已接入（DeepSeek），可以开始提问/生成草案");
+    } catch (error) {
+      setStatus(`AI 设置保存失败（${(error as Error).message}）`);
+    }
+  }
+
+  async function handleClearAiKey() {
+    if (!api?.clearAiKey) return;
+    try {
+      const result = await api.clearAiKey();
+      setAiSettings({ configured: result.configured, enabled: false });
+      setAiKeyInput("");
+      setStatus("已清除 AI Key，AI 功能未连接");
+    } catch (error) {
+      setStatus(`清除 AI Key 失败（${(error as Error).message}）`);
     }
   }
 
@@ -1023,7 +1064,16 @@ export function App({ api }: { api?: PersistApi }) {
         </div>
         <div className="mode-badges" aria-label="当前工作模式">
           <span className="mode-badge sample">示例数据</span>
-          <span className="mode-badge offline"><i aria-hidden="true" />AI 未连接</span>
+          {aiSettings?.enabled ? (
+            <span className="mode-badge online"><i aria-hidden="true" />AI 已连接</span>
+          ) : (
+            <span className="mode-badge offline"><i aria-hidden="true" />AI 未连接</span>
+          )}
+          {api?.getAiSettings && (
+            <button type="button" className="ai-settings-button" onClick={() => setShowAiSettings(true)}>
+              AI 设置
+            </button>
+          )}
         </div>
       </header>
 
@@ -1542,6 +1592,40 @@ export function App({ api }: { api?: PersistApi }) {
                     : "本地演示 · 未连接数据库"}
         </span>
       </footer>
+
+      {showAiSettings && (
+        <div className="ai-settings-overlay" role="dialog" aria-label="AI 设置" aria-modal="true">
+          <div className="ai-settings-dialog">
+            <div className="ai-settings-head">
+              <p className="overline">AI 设置</p>
+              <strong>接入 DeepSeek</strong>
+              <span>
+                {aiSettings?.enabled
+                  ? "状态：已连接（可生成草案 / 提问 / 执行指令）"
+                  : "状态：未连接（无 Key 时 AI 功能不可用）"}
+              </span>
+            </div>
+            <label className="ai-settings-field">
+              DeepSeek API Key
+              <input
+                type="password"
+                value={aiKeyInput}
+                placeholder="粘贴 sk- 开头的 API Key（仅保存在本机数据目录）"
+                onChange={(event) => setAiKeyInput(event.target.value)}
+              />
+            </label>
+            <div className="ai-settings-actions">
+              <button type="button" className="primary" onClick={() => void handleSaveAiKey()}>
+                保存并启用
+              </button>
+              <button type="button" onClick={() => void handleClearAiKey()}>
+                清除 Key
+              </button>
+              <button type="button" onClick={() => setShowAiSettings(false)}>关闭</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
