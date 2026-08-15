@@ -1085,6 +1085,26 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 3a implementation checkpoint — 2026-08-15 07:00 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-030_incremental-rebuild-kernel.md`;
+  red baseline (ImportError: build_incremental_patch); implementation `da73951`.
+- Roadmap Step 9 slice 3a (incremental rebuild pure-domain kernel):
+  `build_incremental_patch(existing_graph, draft, ...)` merges a new-material
+  AiDraft into an existing graph as a proposed patch — label-dedupe maps
+  matched concepts to existing ids (no re-create/layout), only new concepts get
+  create_concept + set_layout_item, edge endpoints resolve to existing/new ids
+  with correct revisions, new AI concepts + prerequisite_of edges require
+  evidence. Pure/offline/deterministic; no LLM/network/DB.
+- Verification: incremental 3/3; full pytest 424/424 + 5 skipped; validator
+  (incl. secret scan), Ruff, strict mypy (scripts 11 + packages/api 33) green.
+- Natural-language Step 9 progress: approximately 60% (slices 1+2+3a); personal
+  MVP approximately 88% (3a is not yet user-visible; slice 3b wires LLM/endpoint/Web).
+- Exact next action: collect role-separated QA verdict on frozen `da73951`;
+  if PASS preserve evidence, then slice 3b (LLM existing-label injection +
+  POST /rebuild + Web).
+
 ## Step 9 slice 2 QA closure checkpoint — 2026-08-15 06:30 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `b4fde38`

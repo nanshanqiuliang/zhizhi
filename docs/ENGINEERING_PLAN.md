@@ -56,6 +56,7 @@
 | WORK-2026-027 | AI 草案来源锚点落库 + 点来源跳回原文（第 8 步切片 4） | 已验证 prototype（correlated） | ai-draft + persistence + api + web + QA | WORK-2026-026、WORK-2026-005/017/019/022 已验证 | `deterministic_uuidv7`、`accept_ai_draft`（单事务 patch+锚点）、`POST /ai-draft/accept`、generator 确定性资源级锚点 + evidence、Web 跳回原文 | `b7094bc` Ready；`2fcad41` 红灯；`38df493` 实现；`3c3dfa0` QA P2 修复；accept 7/7、全仓 402/402 + 5 skipped、Web 37/37、QA `TR-20260814-016` PASS、live e2e 通过 |
 | WORK-2026-028 | 带来源问答（第 9 步切片 1） | 已验证 prototype（correlated） | retrieval + api + web + QA | WORK-2026-008/015/016/017/026/027 已验证 | `build_answer_context`（FTS5 + 反向子串回退）、`POST /answer`（注入式 generator，503）、DeepSeek `answer_with_sources`、Web 提问/回答/来源跳转 | `47d6c6f` 实现；`9e06ebf` QA P2 修复；answer 7/7、全仓 409/409 + 5 skipped、Web 38/38、QA `TR-20260814-017` PASS、live e2e 通过 |
 | WORK-2026-029 | 自然语言转 GraphPatch（第 9 步切片 2） | 已验证 prototype（correlated） | command + api + web + QA | WORK-2026-008/005/019/022/028 已验证 | `build_command_patch`（label→id 严格映射 + set_lock/create_edge）、`POST /interpret`（注入式 generator，503）、DeepSeek `command_interpret`、Web 指令预览/接受/拒绝 | `b4fde38` 实现；`9a255d2`+`9abd339` QA P2 修复；command 12/12、全仓 421/421 + 5 skipped、Web 41/41、QA `TR-20260814-018` PASS、live e2e 通过 |
+| WORK-2026-030 | 增量重建纯领域内核（第 9 步切片 3a） | 已实现（QA 待执行） | domain + QA | WORK-2026-009 切片 1、WORK-2026-005 已验证 | `build_incremental_patch`（label 去重 + 混合端点 + 证据/DAG，proposed patch） | `da73951` 实现；incremental 3/3、全仓 424/424 + 5 skipped、Web 41/41 |
 
 ## 当前受阻项
 
@@ -65,4 +66,4 @@
 
 ## 下一门
 
-`第 9 步（对话、检索和持续整理）`：切片 1（带来源问答，`47d6c6f`+`9e06ebf`，WORK-2026-028，QA PASS `TR-20260814-017`）与切片 2（自然语言转 GraphPatch，`b4fde38`+`9a255d2`+`9abd339`，WORK-2026-029，QA PASS `TR-20260814-018`）已实现并经全仓门验证。下一动作：进入切片 3（增量重建 / AI 修改历史，取最小者；向量检索受 Embedding provider 未决阻塞）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
+`第 9 步（对话、检索和持续整理）`：切片 1（带来源问答，`47d6c6f`+`9e06ebf`，WORK-2026-028，QA PASS `TR-20260814-017`）、切片 2（自然语言转 GraphPatch，`b4fde38`+`9a255d2`+`9abd339`，WORK-2026-029，QA PASS `TR-20260814-018`）与切片 3a（增量重建纯领域内核，`da73951`，WORK-2026-030）已实现。下一动作：完成切片 3a 的职责隔离 QA 后，进入切片 3b（LLM 既有-label 注入 + `POST /rebuild` + Web）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。

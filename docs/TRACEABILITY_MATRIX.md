@@ -37,6 +37,7 @@
 | REQ-2026-006 / NFR-2026-001 | AI 草案来源锚点落库 + 点来源跳回原文 | WORK-2026-027 | `deterministic_uuidv7`、`accept_ai_draft`（单事务 patch+锚点）、`POST /ai-draft/accept`、generator 确定性资源级锚点 + evidence、Web 跳回原文 | `b7094bc` Ready；`2fcad41` 红灯；`38df493` 实现；`3c3dfa0` QA P2 修复 | accept 7/7；全仓 402/402 + 5 skipped、Web 37/37；QA `TR-20260814-016` PASS；live e2e 证据指向真实锚点 | `docs/USER_MANUAL.md` 待更新 | AI draft Runbook 待建 | prototype_verified |
 | REQ-2026-006 / NFR-2026-008 | 带来源问答（第 9 步切片 1） | WORK-2026-028 | `build_answer_context`（FTS5 + 反向子串回退）、`POST /answer`（注入式 generator，503）、DeepSeek `answer_with_sources`、Web 提问/回答/来源跳转 | `47d6c6f` 实现；`9e06ebf` QA P2 修复 | answer 7/7；全仓 409/409 + 5 skipped、Web 38/38；QA `TR-20260814-017` PASS；live e2e 回答引用 `[1]` | `docs/USER_MANUAL.md` 待更新 | 问答 Runbook 待建 | prototype_verified |
 | REQ-2026-006 / NFR-2026-001 | 自然语言转 GraphPatch（第 9 步切片 2） | WORK-2026-029 | `build_command_patch`（label→id 严格映射 + set_lock/create_edge）、`POST /interpret`（注入式 generator，503）、DeepSeek `command_interpret`、Web 指令预览/接受/拒绝 | `b4fde38` 实现；`9a255d2`+`9abd339` QA P2 修复 | command 12/12；全仓 421/421 + 5 skipped、Web 41/41；QA `TR-20260814-018` PASS；live e2e 指令→提交门写入 | `docs/USER_MANUAL.md` 待更新 | 指令 Runbook 待建 | prototype_verified |
+| REQ-2026-006 / NFR-2026-001 | 增量重建纯领域内核（第 9 步切片 3a） | WORK-2026-030 | `build_incremental_patch`（label 去重 + 混合端点 + 证据/DAG，proposed patch） | `da73951` 实现 | incremental 3/3；全仓 424/424 + 5 skipped；QA 待执行 | `docs/USER_MANUAL.md` 待更新 | 增量重建 Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

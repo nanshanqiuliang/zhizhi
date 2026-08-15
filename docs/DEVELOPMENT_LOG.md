@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 3a：增量重建纯领域内核（WORK-2026-030）
+
+- 关联 ID：WORK-2026-030、WORK-2026-009、WORK-2026-005、REQ-2026-006、NFR-2026-001。
+- 实际变化：新增 `knowledge_tree_domain.ai_draft.build_incremental_patch(existing_graph, draft, ...)`——把新资料草案并入既有图的纯领域函数：label（规范化）去重映射到既有概念 id（不重建/不重排），仅新概念 `create_concept` + `set_layout_item`，`create_edge` 端点解析既有/新 id（`expected_*_revision_no` 取对应 revision），新 AI 概念与 `prerequisite_of` 边证据必需；DAG/端点/证据失败关闭。纯函数、离线、确定性，无 LLM/网络/落库。
+- 影响模块/接口/schema/migration/prompt：扩展 `knowledge_tree_domain.ai_draft`；无 canonical contract/ADR/migration/prompt 变更（复用 GraphPatch v1）。
+- 兼容性：仅新增纯领域函数；不改变既有 `build_draft_patch`/`AiDraft`/提交门行为。
+- 验证与证据：红灯（ImportError）；实现 `da73951`；incremental 3/3；全仓 pytest 424/424 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿。
+- 性能/安全/运维影响：O(V+E) 纯内存；零模型成本；无网络。
+- 回滚：回退 `da73951` 即回到无增量内核；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `da73951`）；切片 3b（LLM 抽取器既有-label 注入 + `POST /rebuild` + Web）为下一步。
+
 ## 2026-08-15 — 第 9 步切片 2 QA 封存（WORK-2026-029，TR-20260814-018）
 
 - 关联 ID：WORK-2026-029、WORK-2026-008/005/019/022/028、TR-20260814-018、NFR-2026-001/006/007/008、REQ-2026-006。
