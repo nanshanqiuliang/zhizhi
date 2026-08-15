@@ -259,6 +259,7 @@ def test_ai_draft_workspace_mode_no_resources_returns_422(tmp_path: Path) -> Non
         response = ws_client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={})
         assert response.status_code == 422
         assert response.json()["code"] == "draft_invalid"
+        assert response.json()["rule"] == "no_resources"
 
 
 def test_ai_draft_invalid_resource_id_type_422(client: TestClient) -> None:
