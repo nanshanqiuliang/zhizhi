@@ -90,6 +90,51 @@ def test_build_command_patch_rejects_unknown_label() -> None:
         build_command_patch(_graph(), ops, id_factory=_counter(), reason="x")
 
 
+def test_build_command_patch_rejects_empty_or_non_string_label() -> None:
+    for target in ("", 123, None):
+        ops = [{"op": "set_lock", "target": target, "dimension": "content", "value": True}]
+        with pytest.raises(CommandError):
+            build_command_patch(_graph(), ops, id_factory=_counter(), reason="x")
+
+
+def test_build_command_patch_rejects_unknown_op() -> None:
+    ops = [{"op": "delete_concept", "target": "极限"}]
+    with pytest.raises(CommandError):
+        build_command_patch(_graph(), ops, id_factory=_counter(), reason="x")
+
+
+def test_build_command_patch_rejects_invalid_dimension() -> None:
+    ops = [{"op": "set_lock", "target": "极限", "dimension": "note", "value": True}]
+    with pytest.raises(CommandError):
+        build_command_patch(_graph(), ops, id_factory=_counter(), reason="x")
+
+
+def test_build_command_patch_rejects_invalid_edge_type() -> None:
+    ops = [{"op": "create_edge", "source": "极限", "target": "连续", "edge_type": "depends_on"}]
+    with pytest.raises(CommandError):
+        build_command_patch(_graph(), ops, id_factory=_counter(), reason="x")
+
+
+def test_build_command_patch_rejects_non_dict_operation() -> None:
+    ops: list[Any] = ["not-a-dict"]
+    with pytest.raises(CommandError):
+        build_command_patch(_graph(), ops, id_factory=_counter(), reason="x")
+
+
+def test_build_command_patch_binds_non_zero_revision() -> None:
+    graph = _graph()
+    for concept in graph["concepts"]:
+        concept["revision_no"] = 3
+    graph["revision_no"] = 3
+    patch = build_command_patch(graph, _ops(), id_factory=_counter(), reason="x")
+    set_lock = next(op for op in patch["operations"] if op["op"] == "set_lock")
+    assert set_lock["expected_updated_revision_no"] == 3
+    create_edge = next(op for op in patch["operations"] if op["op"] == "create_edge")
+    assert create_edge["expected_source_revision_no"] == 3
+    assert create_edge["expected_target_revision_no"] == 3
+    assert patch["base_revision_no"] == 3
+
+
 def _fake_generator(command: str, concepts: list[JsonObject]) -> JsonObject:
     return {"summary": f"命令：{command}", "operations": _ops()}
 

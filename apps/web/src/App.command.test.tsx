@@ -76,4 +76,59 @@ describe("natural-language command", () => {
     const panel = screen.getByRole("region", { name: /指令预览/ });
     expect(within(panel).getByText(/锁定极限的内容/)).toBeInTheDocument();
   });
+
+  it("accept flips confirmed and reject never applies", async () => {
+    const api = mockApi();
+    render(<App api={api} />);
+
+    fireEvent.change(screen.getByRole("textbox", { name: /向知识树下达指令/ }), {
+      target: { value: "锁定极限的内容" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /执行/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: /指令预览/ })).toBeInTheDocument();
+    });
+
+    // Reject: no patch is applied.
+    fireEvent.click(screen.getByRole("button", { name: "拒绝" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("region", { name: /指令预览/ })).not.toBeInTheDocument();
+    });
+    expect(api.applyPatch).not.toHaveBeenCalled();
+
+    // Interpret again and accept: applyPatch is called with confirmed=true.
+    fireEvent.change(screen.getByRole("textbox", { name: /向知识树下达指令/ }), {
+      target: { value: "锁定极限的内容" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /执行/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: /指令预览/ })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /接受并写入/ }));
+    await waitFor(() => {
+      expect(api.applyPatch).toHaveBeenCalledTimes(1);
+    });
+    const applied = (api.applyPatch as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(applied.confirmed).toBe(true);
+  });
+
+  it("surfaces AI not connected when interpret fails closed", async () => {
+    const api = mockApi({
+      interpretCommand: vi.fn(async () => {
+        throw new Error("ai_not_available");
+      }),
+    });
+    render(<App api={api} />);
+
+    fireEvent.change(screen.getByRole("textbox", { name: /向知识树下达指令/ }), {
+      target: { value: "锁定极限的内容" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /执行/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).toContain("AI 未连接");
+    });
+  });
 });

@@ -8,6 +8,7 @@ never persists anything; it only maps labels to ids and shapes operations.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -24,6 +25,12 @@ class CommandError(ValueError):
         self.code = code
         self.details = dict(details)
         super().__init__(f"{code}: command rejected")
+
+
+def _digest(value: Any) -> str:
+    """Return a short hash for an LLM-emitted value, never the raw value."""
+    raw = value if isinstance(value, str) else repr(value)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
 
 
 def build_command_patch(
@@ -54,10 +61,14 @@ def build_command_patch(
 
     def resolve(label: Any, *, rule: str) -> JsonObject:
         if not isinstance(label, str) or not label:
-            raise CommandError("command_label_unknown", details={"rule": rule, "label": label})
+            raise CommandError(
+                "command_label_unknown", details={"rule": rule, "label_hash": _digest(label)}
+            )
         concept = by_label.get(label.casefold())
         if concept is None:
-            raise CommandError("command_label_unknown", details={"rule": rule, "label": label})
+            raise CommandError(
+                "command_label_unknown", details={"rule": rule, "label_hash": _digest(label)}
+            )
         return concept
 
     ops: list[JsonObject] = []
@@ -71,7 +82,8 @@ def build_command_patch(
             value = operation.get("value")
             if dimension not in _DIMENSIONS or not isinstance(value, bool):
                 raise CommandError(
-                    "command_invalid", details={"rule": "set_lock_shape", "dimension": dimension}
+                    "command_invalid",
+                    details={"rule": "set_lock_shape", "dimension_hash": _digest(dimension)},
                 )
             ops.append(
                 {
@@ -89,7 +101,8 @@ def build_command_patch(
             edge_type = operation.get("edge_type")
             if edge_type not in _EDGE_TYPES:
                 raise CommandError(
-                    "command_invalid", details={"rule": "edge_type_invalid", "edge_type": edge_type}
+                    "command_invalid",
+                    details={"rule": "edge_type_invalid", "edge_type_hash": _digest(edge_type)},
                 )
             ops.append(
                 {
