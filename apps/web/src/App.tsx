@@ -266,6 +266,9 @@ export function App({
   const [aiSettings, setAiSettings] = useState<{ configured: boolean; enabled: boolean } | null>(null);
   const [showAiSettings, setShowAiSettings] = useState(false);
   const [aiKeyInput, setAiKeyInput] = useState("");
+  const [sidebarWidth, setSidebarWidth] = useState(250);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const sidebarDrag = useRef<{ startX: number; startWidth: number } | null>(null);
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -1047,6 +1050,31 @@ export function App({
     });
   }
 
+  function startSidebarResize(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    sidebarDrag.current = { startX: event.clientX, startWidth: sidebarWidth };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // jsdom / unsupported hosts.
+    }
+  }
+
+  function moveSidebarResize(event: React.PointerEvent<HTMLDivElement>) {
+    const active = sidebarDrag.current;
+    if (!active) return;
+    if ((event.buttons & 1) === 0) {
+      sidebarDrag.current = null;
+      return;
+    }
+    const next = Math.max(170, Math.min(480, active.startWidth + (event.clientX - active.startX)));
+    setSidebarWidth(next);
+  }
+
+  function endSidebarResize() {
+    sidebarDrag.current = null;
+  }
+
   function handleWheel(event: React.WheelEvent<HTMLDivElement>) {
     event.preventDefault();
     const viewport = canvasViewport.current;
@@ -1132,22 +1160,63 @@ export function App({
         <p>示例数据 · 仅本次会话 · AI 未连接 · 来源跳转未接入 · 未连接数据库</p>
       </aside>
 
-      <div id="workspace" className="workspace">
-        <nav className="sidebar" aria-label="课程与笔记">
+      {sidebarHidden && (
+        <button
+          type="button"
+          className="show-sidebar-button"
+          aria-label="显示边栏"
+          onClick={() => setSidebarHidden(false)}
+        >
+          » 显示边栏
+        </button>
+      )}
+
+      <div
+        id="workspace"
+        className="workspace"
+        style={{
+          gridTemplateColumns: sidebarHidden
+            ? "0px minmax(430px, 1fr) 300px"
+            : `${sidebarWidth}px minmax(430px, 1fr) 300px`,
+        }}
+      >
+        <nav
+          className={`sidebar${sidebarHidden ? " hidden" : ""}`}
+          aria-label="课程与笔记"
+          style={{ width: sidebarHidden ? 0 : sidebarWidth }}
+        >
           <div className="side-heading">
             <p className="overline">我的课程</p>
-            {api?.createWorkspace && (
+            <span className="side-heading-actions">
+              {api?.createWorkspace && (
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label="添加课程"
+                  title="新建课程"
+                  onClick={() => void handleCreateCourse()}
+                >
+                  ＋
+                </button>
+              )}
               <button
                 type="button"
                 className="icon-button"
-                aria-label="添加课程"
-                title="新建课程"
-                onClick={() => void handleCreateCourse()}
+                aria-label="隐藏边栏"
+                title="隐藏边栏"
+                onClick={() => setSidebarHidden(true)}
               >
-                ＋
+                «
               </button>
-            )}
+            </span>
           </div>
+          <div
+            className="sidebar-resize"
+            aria-hidden="true"
+            onPointerDown={startSidebarResize}
+            onPointerMove={moveSidebarResize}
+            onPointerUp={endSidebarResize}
+          />
           {workspaces.length === 0 && (
             <button type="button" className="course-card active">
               <span className="course-icon">微</span>
@@ -1420,7 +1489,8 @@ export function App({
           </div>
         </section>
 
-        <section className="detail-panel" aria-label="节点详情">
+        <div className="right-column">
+          <section className="detail-panel" aria-label="节点详情">
           <div className="detail-header">
             <div>
               <p className="overline">节点详情</p>
@@ -1462,7 +1532,127 @@ export function App({
             <span className="source-icon" aria-hidden="true">↗</span>
             <div><strong>来源将在后续接入</strong><p>当前示例没有导入文档，不提供虚假的来源跳转。</p></div>
           </div>
-        </section>
+          </section>
+
+          {/* AI_OUTPUT_PLACEHOLDER */}
+          {draft && (
+          <section className="draft-panel" aria-label="AI 草案预览">
+            <header className="viewer-header">
+              <div>
+                <p className="overline">AI 草案预览</p>
+                <strong>从本地资料生成的知识树草案</strong>
+              </div>
+              <button type="button" className="viewer-close" onClick={rejectDraft}>关闭</button>
+            </header>
+            <div className="draft-body" aria-live="polite">
+              <div className="draft-columns">
+                <div className="draft-list">
+                  <p className="overline">概念（{draft.draft.concepts.length}）</p>
+                  <ul>
+                    {draft.draft.concepts.map((concept) => (
+                      <li key={concept.label}>
+                        <strong>{concept.label}</strong>
+                        <span className="draft-confidence">置信度 {Math.round(concept.confidence * 100)}%</span>
+                        <span className="draft-source">{concept.evidence_ids.length} 处来源</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="draft-list">
+                  <p className="overline">关系（{draft.draft.relations.length}）</p>
+                  <ul>
+                    {draft.draft.relations.map((relation) => (
+                      <li key={`${relation.source_label}->${relation.target_label}`}>
+                        <strong>{relation.source_label} → {relation.target_label}</strong>
+                        <span className="draft-confidence">置信度 {Math.round(relation.confidence * 100)}%</span>
+                      </li>
+                    ))}
+                    {draft.draft.relations.length === 0 && (
+                      <li className="draft-empty">未推断出先修关系</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+              <p className="draft-boundary">
+                草案仅在预览后经确认门写入；锁定的内容不会被覆盖，写入后可撤销。
+              </p>
+            </div>
+            <footer className="draft-actions">
+              {draft.evidence && draft.evidence.length > 0 && (
+                <button type="button" className="secondary-button" onClick={jumpToDraftSource}>
+                  跳回原文
+                </button>
+              )}
+              <button
+                type="button"
+                className="primary-button"
+                disabled={draftStatus === "applying"}
+                onClick={() => void acceptDraft()}
+              >
+                {draftStatus === "applying" ? "写入中…" : "接受并写入"}
+              </button>
+              <button type="button" className="secondary-button" onClick={rejectDraft}>拒绝</button>
+            </footer>
+          </section>
+          )}
+
+          {answer && (
+          <section className="draft-panel" aria-label="回答">
+            <header className="viewer-header">
+              <div>
+                <p className="overline">带来源回答</p>
+                <strong>基于本地知识片段</strong>
+              </div>
+              <button type="button" className="viewer-close" onClick={() => setAnswer(null)}>关闭</button>
+            </header>
+            <div className="answer-body" aria-live="polite">
+              <p className="answer-text">{answer.answer || "本地没有相关内容，换个关键词试试。"}</p>
+              {answer.sources.length > 0 && (
+                <nav className="answer-sources" aria-label="回答来源">
+                  <p className="overline">来源</p>
+                  <ul>
+                    {answer.sources.map((source, index) => (
+                      <li key={source.id}>
+                        <button type="button" onClick={() => jumpToAnswerSource(source.id)}>
+                          [{index + 1}] {source.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
+            </div>
+          </section>
+          )}
+
+          {commandResult && (
+          <section className="draft-panel" aria-label="指令预览">
+            <header className="viewer-header">
+              <div>
+                <p className="overline">指令预览</p>
+                <strong>拟执行的图修改</strong>
+              </div>
+              <button type="button" className="viewer-close" onClick={rejectCommand}>关闭</button>
+            </header>
+            <div className="answer-body" aria-live="polite">
+              <p className="answer-text">{commandResult.summary}</p>
+              <p className="draft-boundary">指令仅在预览后经确认门写入；锁定的内容不会被覆盖，写入后可撤销。</p>
+            </div>
+            <footer className="draft-actions">
+              <button
+                type="button"
+                className="primary-button"
+                disabled={commandStatus === "applying"}
+                onClick={() => void acceptCommand()}
+              >
+                {commandStatus === "applying" ? "写入中…" : "接受并写入"}
+              </button>
+              <button type="button" className="secondary-button" onClick={rejectCommand}>拒绝</button>
+            </footer>
+          </section>
+          )}
+
+        </div>
       </div>
 
       {viewerResource && (
@@ -1537,123 +1727,6 @@ export function App({
               </ul>
             </nav>
           )}
-        </section>
-      )}
-
-      {draft && (
-        <section className="draft-panel" aria-label="AI 草案预览">
-          <header className="viewer-header">
-            <div>
-              <p className="overline">AI 草案预览</p>
-              <strong>从本地资料生成的知识树草案</strong>
-            </div>
-            <button type="button" className="viewer-close" onClick={rejectDraft}>关闭</button>
-          </header>
-          <div className="draft-body" aria-live="polite">
-            <div className="draft-columns">
-              <div className="draft-list">
-                <p className="overline">概念（{draft.draft.concepts.length}）</p>
-                <ul>
-                  {draft.draft.concepts.map((concept) => (
-                    <li key={concept.label}>
-                      <strong>{concept.label}</strong>
-                      <span className="draft-confidence">置信度 {Math.round(concept.confidence * 100)}%</span>
-                      <span className="draft-source">{concept.evidence_ids.length} 处来源</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="draft-list">
-                <p className="overline">关系（{draft.draft.relations.length}）</p>
-                <ul>
-                  {draft.draft.relations.map((relation) => (
-                    <li key={`${relation.source_label}->${relation.target_label}`}>
-                      <strong>{relation.source_label} → {relation.target_label}</strong>
-                      <span className="draft-confidence">置信度 {Math.round(relation.confidence * 100)}%</span>
-                    </li>
-                  ))}
-                  {draft.draft.relations.length === 0 && (
-                    <li className="draft-empty">未推断出先修关系</li>
-                  )}
-                </ul>
-              </div>
-            </div>
-            <p className="draft-boundary">
-              草案仅在预览后经确认门写入；锁定的内容不会被覆盖，写入后可撤销。
-            </p>
-          </div>
-          <footer className="draft-actions">
-            {draft.evidence && draft.evidence.length > 0 && (
-              <button type="button" className="secondary-button" onClick={jumpToDraftSource}>
-                跳回原文
-              </button>
-            )}
-            <button
-              type="button"
-              className="primary-button"
-              disabled={draftStatus === "applying"}
-              onClick={() => void acceptDraft()}
-            >
-              {draftStatus === "applying" ? "写入中…" : "接受并写入"}
-            </button>
-            <button type="button" className="secondary-button" onClick={rejectDraft}>拒绝</button>
-          </footer>
-        </section>
-      )}
-
-      {answer && (
-        <section className="draft-panel" aria-label="回答">
-          <header className="viewer-header">
-            <div>
-              <p className="overline">带来源回答</p>
-              <strong>基于本地知识片段</strong>
-            </div>
-            <button type="button" className="viewer-close" onClick={() => setAnswer(null)}>关闭</button>
-          </header>
-          <div className="answer-body" aria-live="polite">
-            <p className="answer-text">{answer.answer || "本地没有相关内容，换个关键词试试。"}</p>
-            {answer.sources.length > 0 && (
-              <nav className="answer-sources" aria-label="回答来源">
-                <p className="overline">来源</p>
-                <ul>
-                  {answer.sources.map((source, index) => (
-                    <li key={source.id}>
-                      <button type="button" onClick={() => jumpToAnswerSource(source.id)}>
-                        [{index + 1}] {source.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            )}
-          </div>
-        </section>
-      )}
-
-      {commandResult && (
-        <section className="draft-panel" aria-label="指令预览">
-          <header className="viewer-header">
-            <div>
-              <p className="overline">指令预览</p>
-              <strong>拟执行的图修改</strong>
-            </div>
-            <button type="button" className="viewer-close" onClick={rejectCommand}>关闭</button>
-          </header>
-          <div className="answer-body" aria-live="polite">
-            <p className="answer-text">{commandResult.summary}</p>
-            <p className="draft-boundary">指令仅在预览后经确认门写入；锁定的内容不会被覆盖，写入后可撤销。</p>
-          </div>
-          <footer className="draft-actions">
-            <button
-              type="button"
-              className="primary-button"
-              disabled={commandStatus === "applying"}
-              onClick={() => void acceptCommand()}
-            >
-              {commandStatus === "applying" ? "写入中…" : "接受并写入"}
-            </button>
-            <button type="button" className="secondary-button" onClick={rejectCommand}>拒绝</button>
-          </footer>
         </section>
       )}
 
