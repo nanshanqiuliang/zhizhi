@@ -1,0 +1,26 @@
+# Commands executed for TR-20260814-016 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/integration/test_ai_draft_accept.py -q   # 5 passed -> 7 after fix
+uv run python -m pytest -q                                             # 400 -> 402 passed + 5 skipped
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+pnpm --filter @knowledge-tree/web test -- --run src/App.draft.test.tsx
+pnpm check && pnpm build
+
+# --- live e2e (owner key, env-only) ---
+$env:DEEPSEEK_API_KEY="<owner-key-from-user>"; uv run python -X utf8 -c "<TestClient + build_deepseek_draft_generator: import -> /ai-draft -> /ai-draft/accept; assert evidence_ids == persisted anchor>"
+
+# --- role-separated QA attempt 001 (38df493) ---
+git rev-parse HEAD   # 38df493
+uv run python -m pytest tests/integration/test_ai_draft_accept.py -q   # 5 passed
+uv run python -m pytest -q                                             # 400 passed, 5 skipped
+# ... ruff/mypy/validator/web + adversarial scratch worktree (M1-M5: atomicity/gate/idempotency/provenance/evidence)
+
+# --- role-separated QA attempt 002 (superseding, 3c3dfa0) ---
+git rev-parse HEAD   # 3c3dfa0
+uv run python -m pytest tests/integration/test_ai_draft_accept.py -q   # 7 passed
+uv run python -m pytest -q                                             # 402 passed, 5 skipped
+# ... independent evidence-validation probes (empty/non-UUIDv7/UUIDv4 anchor_id -> 422, no writes)

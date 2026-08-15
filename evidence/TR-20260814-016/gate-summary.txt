@@ -1,0 +1,27 @@
+TR-20260814-016 — AI draft source-anchor persistence + jump to source (WORK-2026-027) — gate summary
+================================================================================================
+Reviewed commit: 3c3dfa0782a8fde6c1c3dca6f84db4c1a45d1598 (feature/WORK-2026-009-ai-draft-pipeline)
+Attempt 001: 38df493 -> PASS (0 P0/P1; 3 P2)
+Post-review fix: 3c3dfa0 (P2-1 + P2-3 closed; P2-2 recorded boundary)
+Attempt 002 (superseding): PASS (0 P0/P1; correlated_review)
+
+Python
+  uv run python -m pytest tests/integration/test_ai_draft_accept.py -q -> 7 passed
+  uv run python -m pytest -q -> 402 passed, 5 skipped
+Lint / types
+  uv run ruff format --check packages scripts tests apps -> 86 files already formatted
+  uv run ruff check . -> All checks passed
+  uv run mypy scripts -> 11 files; uv run python -m mypy --strict packages/contracts-py/src
+                       packages/domain/src packages/infrastructure/src apps/api -> 30 files
+Repository
+  uv run python -m scripts.validate_repository -> PASS (skeleton, secret scan, contracts,
+                                                       review packet, mock/replay harness)
+Web
+  pnpm --filter @knowledge-tree/web test -- --run src/App.draft.test.tsx -> 5 passed
+  pnpm check -> 37 tests (9 files) + tsc + eslint (0 warnings)
+  pnpm build -> ok (chunk-size warning only)
+
+Live e2e (orchestrator, owner key, env-only; not part of QA runs)
+  import calculus.md -> POST /ai-draft (evidence with deterministic anchor id) -> POST
+  /ai-draft/accept applied; accepted concepts' evidence_ids == persisted anchor id
+  (source=ai_draft, page=0). Key never written to any file.

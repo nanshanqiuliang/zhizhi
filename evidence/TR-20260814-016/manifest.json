@@ -1,0 +1,41 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-016",
+  "created_at": "2026-08-15T04:30:00+08:00",
+  "reviewed_commit": "3c3dfa0782a8fde6c1c3dca6f84db4c1a45d1598",
+  "qa_attempt001_commit": "38df493d7513d5480f03ac80268f122285a641ab",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": "superseding",
+    "attempt001": {
+      "path": "ai-draft-source-anchor-qa-attempt-001.md",
+      "reviewed_commit": "38df493d7513d5480f03ac80268f122285a641ab",
+      "decision": "pass",
+      "findings": "0 P0/P1; 3 P2 (empty-string evidence trust, id-reuse cross-resource binding, repo regression coverage gaps)"
+    },
+    "post_review_fix": {
+      "commit": "3c3dfa0782a8fde6c1c3dca6f84db4c1a45d1598",
+      "note": "P2-1 closed (UUIDv7 evidence validation); P2-3 closed (promoted 3 regressions); P2-2 recorded as documented no-code-change boundary"
+    },
+    "attempt002": {
+      "path": "ai-draft-source-anchor-qa-attempt-002.md",
+      "reviewed_commit": "3c3dfa0782a8fde6c1c3dca6f84db4c1a45d1598",
+      "decision": "pass",
+      "findings": "0 P0/P1; P2-2 remains documented boundary"
+    }
+  },
+  "files": [
+    "ai-draft-source-anchor-qa-attempt-001.md",
+    "ai-draft-source-anchor-qa-attempt-002.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "notes": "Live DeepSeek e2e (owner key, env-only) of generate->accept with real anchor materialization was executed by the orchestrator; QA reviews were offline."
+}

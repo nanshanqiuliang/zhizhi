@@ -1085,6 +1085,34 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 8 slice 4 QA closure checkpoint — 2026-08-15 04:30 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `38df493`
+  (WORK-2026-027 slice 4) and returned PASS with 0 P0/P1 and 3 non-blocking P2
+  (empty-string evidence trust, cross-resource id-reuse boundary, repo
+  regression coverage gaps).
+- Fix `3c3dfa0`: P2-1 evidence items now validated as UUIDv7 (`_is_uuidv7`)
+  → 422 on empty/malformed; P2-3 promoted three regressions (no anchors/graph
+  on gate rejection, exact 422 codes, Web no-evidence → no jump button). P2-2
+  recorded as documented boundary (deterministic per-resource id, 1:1).
+- Superseding QA attempt 002 reviewed `3c3dfa0` and returned PASS with 0 P0/P1;
+  it independently probed empty/non-UUIDv7/UUIDv4 evidence ids → 422 with no
+  writes. Correlated machine review, not owner acceptance.
+- Evidence sealed under `evidence/TR-20260814-016/`; report:
+  `docs/test-reports/TR-20260814-016_ai-draft-source-anchor.md`.
+- Full gates green at `3c3dfa0`: pytest 402/402 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 30), Web 37/37,
+  pnpm build. Live e2e (owner key, env-only) generate→accept with real anchor
+  materialization passes.
+- **Natural-language Step 8 is now ~95%** (slices 1+2+3+4 complete and
+  QA-verified); personal MVP approximately 86%. The Step 8 completion flag
+  ("import materials → see 极限→连续→导数 draft; each node/relation carries a
+  source; written only after confirmation") is satisfied at resource level.
+- Remaining follow-ups: post-accept node→source jump + precise page/bbox
+  anchoring, then Step 9 (conversation/retrieval).
+- Exact next action: proceed to Step 9 (conversation/retrieval) or the
+  post-accept node→source jump enhancement on the next "继续推进".
+
 ## Step 8 slice 4 implementation checkpoint — 2026-08-15 04:10 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

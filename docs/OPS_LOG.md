@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅扩展 Python 模块/端点与 Web UI；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 400/400 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）全绿；Web 36/36、pnpm build 通过；live e2e（owner key env-only）生成→接受 applied，证据指向真实锚点。
 - 缓解/回滚：回退 `38df493` 即回合成来源引用；生成只读；密钥仅 env。
-- 遗留风险/Owner/期限：切片 4 职责隔离 QA 待执行；"接受后点击树节点跳原文"与精确页/bbox 定位为后续增强；`relation_validate` 思考模式延迟较高为原型边界。
+- 遗留风险/Owner/期限：切片 4 职责隔离 QA 已封存（TR-20260814-016，attempt 001 PASS + 修复 `3c3dfa0` + attempt 002 PASS，correlated_review）；"接受后点击树节点跳原文"与精确页/bbox 定位为后续增强；`relation_validate` 思考模式延迟较高为原型边界。
 
 ## 2026-08-15 — 第 8 步切片 3：AI 草案 API/Web 接入（WORK-2026-026）运维记录
 

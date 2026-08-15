@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 4 QA 封存（WORK-2026-027，TR-20260814-016）
+
+- 关联 ID：WORK-2026-027、WORK-2026-026、WORK-2026-009、TR-20260814-016、NFR-2026-001、REQ-2026-006。
+- 实际变化：职责隔离 QA 对冻结 `38df493` 返回 **PASS**（0 P0/P1；3 个非阻塞 P2）；修复 `3c3dfa0` 闭合 P2-1（evidence 用 `_is_uuidv7` 校验空/非 UUIDv7 → 422）与 P2-3（提升 3 个回归：门拒绝不写锚点、精确 422 码、Web 无证据不显示跳转按钮），P2-2（跨资源 id 复用）记录为文档化边界；超越审查 attempt 002 返回 **PASS**（0 P0/P1）。
+- 影响模块/接口/schema/migration/prompt：仅 `apps/api/main.py` 与两个测试文件；无 canonical contract/ADR/migration/prompt 变更。
+- 兼容性：无行为变化；核心性质（原子性、仅提交门写、生成只读、确定性锚点 id、evidence 指向真实锚点、无密钥）保持。
+- 验证与证据：attempt 001/002 报告与证据存 `evidence/TR-20260814-016/`；报告 `docs/test-reports/TR-20260814-016_ai-draft-source-anchor.md`；全仓 pytest 402/402 + 5 skipped、Ruff/strict mypy/validator/Web 37/37 全绿。
+- 性能/安全/运维影响：无新增。
+- 回滚：无新增代码可回滚（修复为正向变更）；回退 `3c3dfa0` 即回 attempt 001 状态。
+- 遗留风险与下一步：**第 8 步切片 1+2+3+4 完成（约 95%）**；下一动作为"接受后点击树节点跳原文 + 精确页/bbox 定位"增强，或进入第 9 步（对话/检索）。
+
 ## 2026-08-15 — 第 8 步切片 4：AI 草案来源锚点落库 + 点来源跳回原文（WORK-2026-027）
 
 - 关联 ID：WORK-2026-027、WORK-2026-026、WORK-2026-009、WORK-2026-005/017/019/022、REQ-2026-006、NFR-2026-001、TR-20260814-015。
@@ -11,7 +22,7 @@
 - 验证与证据：红灯 `2fcad41`（ImportError + Web 按钮缺失）；实现 `38df493`；accept 5/5；全仓 pytest 400/400 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）/Web 36/36/pnpm build 全绿；live e2e（owner key env-only）生成→接受 applied，接受后概念 `evidence_ids` 指向真实 `anchor` 行（`source=ai_draft`、page=0）。
 - 性能/安全/运维影响：单资源单锚点 O(1) 插入；锚点 payload 仅标识 + `source="ai_draft"`，无正文；错误 details 仅标识。
 - 回滚：回退 `38df493` 即回合成来源引用（切片 3 状态）；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `38df493`）；"接受后点击树节点 → 跳原文"（evidence→resource 反查）与精确页/bbox 级定位为后续增强；第 8 步完成后进入第 9 步（对话/检索）。
+- 遗留风险与下一步：职责隔离 QA 已封存（TR-20260814-016，attempt 001 PASS + 修复 `3c3dfa0` + attempt 002 PASS）；"接受后点击树节点 → 跳原文"（evidence→resource 反查）与精确页/bbox 级定位为后续增强；第 8 步完成后进入第 9 步（对话/检索）。
 
 ## 2026-08-15 — 第 8 步切片 3 QA 封存（WORK-2026-026，TR-20260814-015）
 
