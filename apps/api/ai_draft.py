@@ -44,7 +44,10 @@ from knowledge_tree_infrastructure.llm.vendors.deepseek import (  # noqa: E402
     DeepSeekLlmAdapter,
 )
 
-from scripts.repository_validation import load_and_validate_llm_config  # noqa: E402
+from scripts.repository_validation import (  # noqa: E402
+    RepositoryValidationError,
+    load_and_validate_llm_config,
+)
 
 JsonObject = dict[str, Any]
 
@@ -73,39 +76,45 @@ def build_deepseek_draft_generator() -> DraftGenerator | None:
     if not key:
         return None
 
-    providers, policies = load_and_validate_llm_config(_ROOT)
-    deepseek = providers.get("providers", {}).get("deepseek", {})
-    if not isinstance(deepseek, dict) or deepseek.get("enabled") is not True:
+    # Fail closed rather than crash the whole API: a broken/missing LLM config
+    # (or any wiring error) must degrade to 503 `ai_not_available`, not take the
+    # loopback sidecar down at startup.
+    try:
+        providers, policies = load_and_validate_llm_config(_ROOT)
+        deepseek = providers.get("providers", {}).get("deepseek", {})
+        if not isinstance(deepseek, dict) or deepseek.get("enabled") is not True:
+            return None
+        fast_model = deepseek.get("models", {}).get("fast", {}).get("model_id")
+        quality_model = deepseek.get("models", {}).get("quality", {}).get("model_id")
+        pricing_raw = deepseek.get("models", {}).get("fast", {}).get("pricing", {})
+        if not isinstance(fast_model, str) or not isinstance(quality_model, str):
+            return None
+        pricing = Pricing(
+            input_usd_per_mtok=float(pricing_raw.get("input_usd_per_mtok", 0.28)),
+            output_usd_per_mtok=float(pricing_raw.get("output_usd_per_mtok", 1.14)),
+        )
+        concept_adapter = DeepSeekLlmAdapter(
+            api_key=key, config=DeepSeekConfig(model_id=fast_model, pricing=pricing)
+        )
+        relation_adapter = DeepSeekLlmAdapter(
+            api_key=key, config=DeepSeekConfig(model_id=quality_model, pricing=pricing)
+        )
+        concept_profile = policies.get("task_profiles", {}).get("concept_extract", {})
+        relation_profile = policies.get("task_profiles", {}).get("relation_validate", {})
+        concept_extractor = LlmConceptExtractor(
+            generate=lambda request: concept_adapter.generate(
+                request, thinking="disabled", max_tokens=_CONCEPT_MAX_TOKENS
+            ),
+            budget=_profile_budget(concept_profile),
+        )
+        relation_provider = LlmRelationProvider(
+            generate=lambda request: relation_adapter.generate(
+                request, thinking="enabled", max_tokens=_RELATION_MAX_TOKENS
+            ),
+            budget=_profile_budget(relation_profile),
+        )
+    except (OSError, ValueError, KeyError, TypeError, RepositoryValidationError):
         return None
-    fast_model = deepseek.get("models", {}).get("fast", {}).get("model_id")
-    quality_model = deepseek.get("models", {}).get("quality", {}).get("model_id")
-    pricing_raw = deepseek.get("models", {}).get("fast", {}).get("pricing", {})
-    if not isinstance(fast_model, str) or not isinstance(quality_model, str):
-        return None
-    pricing = Pricing(
-        input_usd_per_mtok=float(pricing_raw.get("input_usd_per_mtok", 0.28)),
-        output_usd_per_mtok=float(pricing_raw.get("output_usd_per_mtok", 1.14)),
-    )
-    concept_adapter = DeepSeekLlmAdapter(
-        api_key=key, config=DeepSeekConfig(model_id=fast_model, pricing=pricing)
-    )
-    relation_adapter = DeepSeekLlmAdapter(
-        api_key=key, config=DeepSeekConfig(model_id=quality_model, pricing=pricing)
-    )
-    concept_profile = policies.get("task_profiles", {}).get("concept_extract", {})
-    relation_profile = policies.get("task_profiles", {}).get("relation_validate", {})
-    concept_extractor = LlmConceptExtractor(
-        generate=lambda request: concept_adapter.generate(
-            request, thinking="disabled", max_tokens=_CONCEPT_MAX_TOKENS
-        ),
-        budget=_profile_budget(concept_profile),
-    )
-    relation_provider = LlmRelationProvider(
-        generate=lambda request: relation_adapter.generate(
-            request, thinking="enabled", max_tokens=_RELATION_MAX_TOKENS
-        ),
-        budget=_profile_budget(relation_profile),
-    )
 
     def generate(text: str, resource_id: str, graph: JsonObject) -> JsonObject:
         draft = build_ai_draft(

@@ -1,11 +1,8 @@
-"""Red-light tests for `read_resource_text` (WORK-2026-026 slice 3).
-
-The function does not exist yet, so this file is expected to fail at
-collection until implemented.
-"""
+"""Tests for `read_resource_text` (WORK-2026-026 slice 3)."""
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -20,6 +17,11 @@ from knowledge_tree_infrastructure.workspace import (
 )
 
 WORKSPACE_ID = "00000000-0000-7000-8000-000000000001"
+
+_GOLD_PDF = (
+    Path(__file__).resolve().parents[2]
+    / "evals/calculus-v1/source/mit-ocw-res-18-001-chapter-02-derivatives.pdf"
+)
 
 
 def _workspace(tmp_path: Path):
@@ -40,20 +42,32 @@ def test_read_resource_text_markdown(tmp_path: Path) -> None:
 
 def test_read_resource_text_pdf_requires_parse(tmp_path: Path) -> None:
     layout = _workspace(tmp_path)
-    pdf = (
-        Path(__file__).resolve().parents[2]
-        / "evals/calculus-v1/source/mit-ocw-res-18-001-chapter-02-derivatives.pdf"
-    )
-    if not pdf.exists():
+    if not _GOLD_PDF.exists():
         pytest.skip("gold.pdf fixture not present")
-    content = pdf.read_bytes()
-    info = import_resource(layout, display_name="gold.pdf", content=content)
+    info = import_resource(layout, display_name="gold.pdf", content=_GOLD_PDF.read_bytes())
     with pytest.raises(WorkspaceError) as raised:
         read_resource_text(layout, info.id)
     assert raised.value.code == "parse_pending"
     parse_pdf_resource(layout, info.id)
-    text = read_resource_text(layout, info.id)
-    assert text
+    assert read_resource_text(layout, info.id)
+
+
+def test_read_resource_text_pdf_drift_detected(tmp_path: Path) -> None:
+    layout = _workspace(tmp_path)
+    if not _GOLD_PDF.exists():
+        pytest.skip("gold.pdf fixture not present")
+    info = import_resource(layout, display_name="gold.pdf", content=_GOLD_PDF.read_bytes())
+    parse_pdf_resource(layout, info.id)
+    # Simulate content drift: tamper the version's content hash so it no longer
+    # matches the segments' parse-time hash (mirrors TC-VIEW-004).
+    with sqlite3.connect(layout.db_path) as conn:
+        conn.execute(
+            "UPDATE resource_version SET content_hash=? WHERE resource_id=?",
+            ("sha256:" + "0" * 64, info.id),
+        )
+    with pytest.raises(WorkspaceError) as raised:
+        read_resource_text(layout, info.id)
+    assert raised.value.code == "source_changed"
 
 
 def test_read_resource_text_missing_resource(tmp_path: Path) -> None:

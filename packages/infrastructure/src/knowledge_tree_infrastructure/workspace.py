@@ -1168,7 +1168,7 @@ def read_resource_text(layout: WorkspaceLayout, resource_id: str) -> str:
         try:
             with _connect(layout.db_path) as conn:
                 row = conn.execute(
-                    "SELECT v.id, v.content_hash FROM resource_version v "
+                    "SELECT v.id FROM resource_version v "
                     "WHERE v.resource_id=? AND v.id = "
                     "(SELECT current_version_id FROM resource WHERE id=?)",
                     (resource_id, resource_id),
@@ -1176,9 +1176,9 @@ def read_resource_text(layout: WorkspaceLayout, resource_id: str) -> str:
                 if row is None:
                     _reject("workspace_missing", rule="resource_missing")
                 version_id = str(row[0])
-                parsed_hash = str(row[1])
                 segment_rows = conn.execute(
-                    "SELECT text FROM resource_segment WHERE resource_version_id=? ORDER BY page",
+                    "SELECT text, content_hash FROM resource_segment "
+                    "WHERE resource_version_id=? ORDER BY page",
                     (version_id,),
                 ).fetchall()
         except sqlite3.DatabaseError as error:
@@ -1187,7 +1187,10 @@ def read_resource_text(layout: WorkspaceLayout, resource_id: str) -> str:
             ) from error
         if not segment_rows:
             _reject("parse_pending", rule="resource_not_parsed")
-        _check_drift(layout, version_id, parsed_hash)
+        # Drift-check against the segments' parse-time content hash (the same
+        # wiring as `get_page_text`); comparing the version's own hash to
+        # itself would make `source_changed` unreachable.
+        _check_drift(layout, version_id, str(segment_rows[0][1]))
         return "\n\n".join(str(segment_row[0]) for segment_row in segment_rows)
     _reject("draft_unsupported_resource", rule="unsupported_mime", mime=mime)
 

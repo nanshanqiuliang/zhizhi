@@ -1,9 +1,8 @@
-"""Red-light integration tests for the AI draft endpoint (WORK-2026-026 slice 3).
+"""Integration tests for the AI draft endpoint (WORK-2026-026 slice 3).
 
-`create_app` does not yet accept `draft_generator` and the `POST .../ai-draft`
-endpoint does not exist, so these tests are expected to fail (TypeError/404)
-until implemented. A deterministic fake generator (no network) proves the
-generate → preview → accept flow without a real provider.
+A deterministic fake generator (no network) proves the generate → preview →
+accept flow, the endpoint's fail-closed behavior, and the commit-gate
+acceptance of a user-confirmed draft patch.
 """
 
 from __future__ import annotations
