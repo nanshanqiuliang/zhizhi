@@ -1,6 +1,21 @@
 # Knowledge Tree App development checkpoint
 
-Updated: 2026-08-15 (Asia/Shanghai)
+Updated: 2026-08-16 (Asia/Shanghai)
+
+## Post-delivery fixes round 3 checkpoint — 2026-08-16 00:10 +08:00 (草案生成可诊断化)
+
+- 用户反馈：桌面版「草案生成失败 draft_invalid」无法定位；大 PDF（实测 paper.pdf 88 页 27.9
+  万字符）生成必失败。根因已定位：① 界面只显示外层 code 不显示 `rule`；② 单资源模式分块约
+  232 个、无上限且任意一块 LLM 返回畸形即整次失败。
+- 修复（WORK-2026-044，`0abe9e9`）：① `api.ts` 错误消息带 `code/rule`（如
+  `draft_invalid/no_new_concepts`）；② `build_incremental_ai_draft` 增 `max_chunks`，单资源
+  与全库均限 40 块；③ `fail_soft_extractor`/`fail_soft_relation_provider` 仅吞
+  `DraftExtractionError`（单块坏内容跳过，其余继续），`LLMProviderError` 仍传播 → 502。
+- 用户方案可行性确认：课程资料→思维导图管线可行；增量累积（逐步上传）已由增量重建支持；
+  「AI 上网搜知识再画图」为未实现的新能力（受控 Web Search，第 11 步）。
+- Verification: pytest 466/466 + 5 skipped；Web 52/52；ruff/mypy/validator 全绿；桌面 e2e
+  18/18；桌面产物（exe/安装器/zip）重建含修复。
+- Exact next action: 职责隔离 QA 封存（`TR-20260815-006`）；然后 ③ 画布无限延伸（WORK-2026-045）。
 
 ## Post-delivery fixes round 2 QA closure checkpoint — 2026-08-15 23:55 +08:00
 

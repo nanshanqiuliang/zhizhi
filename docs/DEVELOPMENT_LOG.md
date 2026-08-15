@@ -2,6 +2,25 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 草案生成可诊断化与鲁棒性（WORK-2026-044）
+
+- 关联 ID：WORK-2026-044、WORK-2026-009/026/043、NFR-2026-001、REQ-2026-001。
+- 实际变化：① `apps/web/src/api.ts` 的 `readError` 携带 `rule`，`formatCode` 组装 `code/rule`
+  （14 处抛错位全部接入），草案/回答/指令失败提示显示精确子错误码；② `build_incremental_ai_draft`
+  增 `max_chunks`（单资源与全库均 40 块上限，长资料截断防爆成本/耗时）；③
+  `fail_soft_extractor`/`fail_soft_relation_provider`（apps/api/ai_draft.py）仅捕获
+  `DraftExtractionError`（单块坏内容跳过、其余保留；关系坏响应返回空），`LLMProviderError`
+  （传输/鉴权）不吞、仍 502。
+- 影响模块/接口/schema/migration/prompt：无 canonical contract/迁移；错误消息新增 rule。
+- 兼容性：单资源/全库生成语义不变；`max_chunks=None` 保持旧行为（测试/确定性路径）。
+- 验证与证据：红灯（rule 缺失 + TypeError max_chunks）→ 实现 `0abe9e9`；pytest 466/466 + 5
+  skipped（robustness 3/3：块数截断、坏块跳过、LLMProviderError 不吞）；Web 52/52；
+  ruff/mypy/validator 全绿；桌面 e2e 18/18；桌面产物重建。
+- 性能/安全/运维影响：40 块上限约束成本；错误消息只含 code/rule（无文本/推理泄露）。
+- 回滚：回退 `0abe9e9` 即回旧行为。
+- 遗留风险与下一步：职责隔离 QA 待封存（`TR-20260815-006`）；画布无限延伸（WORK-2026-045）；
+  扫描件提示/OCR、PPTX、受控 Web 搜索（第 11 步）；向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步后第二轮修复 QA 封存（WORK-2026-040..043，TR-20260815-005）
 
 - 关联 ID：WORK-2026-040..043、TR-20260815-005、NFR-2026-001、REQ-2026-001。
