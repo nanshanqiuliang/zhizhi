@@ -1,0 +1,14 @@
+{
+  "os": "Windows",
+  "python": "3.12",
+  "uv": "locked (uv.lock)",
+  "node_pnpm": "pnpm (frozen pnpm-lock.yaml)",
+  "branch": "feature/WORK-2026-009-ai-draft-pipeline",
+  "reviewed_commit": "9e06ebf04c7ddfb0badf5911cef9f4af692e5fb7",
+  "attempt001_commit": "47d6c6f06908880482e5c566a979da12a9d013cd",
+  "red_truth_parent": "red baseline (test_answer_api ImportError)",
+  "live_gate": "DEEPSEEK_API_KEY (env only)",
+  "provider": "deepseek (enabled: true, owner approved 2026-08-14)",
+  "models": {"answer_with_sources": "deepseek-v4-pro"},
+  "secret_storage": "none; key read from environment only, never written to any file"
+}

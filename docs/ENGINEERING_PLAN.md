@@ -54,7 +54,7 @@
 | WORK-2026-009 | AI 从笔记/资料自动生成知识树草案（第 8 步） | 切片 1+2 已实现（纯领域内核+离线编排；LLM 概念抽取/关系候选+live 冒烟） | AI + persistence + web + QA | WORK-2026-004/005/008/016/017/018 已验证 | 文档分块、别名合并、DAG 校验、自动布局、草案→GraphPatch、来源绑定（切片 1）；`LlmConceptExtractor`/`LlmRelationProvider` 经 canonical LLM port 真实抽取 + live 冒烟（切片 2）；批量接受/拒绝/Web（切片 3，见 WORK-2026-026） | `c9f2875` 红灯；`136f7fa` 切片 1 实现；`1394a1e` 切片 2 实现；TC-AIDRAFT-001..006 20/20 + 新 18/18、全仓 386/386 + 5 skipped、Web 32/32、live 冒烟 AI-DRAFT-LIVE-SMOKE-001（~$0.004） |
 | WORK-2026-026 | AI 草案 API 端点与 Web 接受/拒绝（第 8 步切片 3） | 已验证 prototype（correlated） | api + web + ai-draft + QA | WORK-2026-009 切片 1+2、WORK-2026-014/016/017/019/022 已验证 | `read_resource_text`、`POST /ai-draft`（注入式 generator，503 `ai_not_available`）、DeepSeek 组合根（env-only）、Web 生成/预览/接受/拒绝 | `fe19106` Ready；`b5a38e1` 红灯；`dfbcc30` 实现；`d47ce88` QA P1 修复；ai-draft API 5/5 + resource_text 4/4、全仓 395/395 + 5 skipped、Web 35/35、QA `TR-20260814-015` PASS、live e2e 通过 |
 | WORK-2026-027 | AI 草案来源锚点落库 + 点来源跳回原文（第 8 步切片 4） | 已验证 prototype（correlated） | ai-draft + persistence + api + web + QA | WORK-2026-026、WORK-2026-005/017/019/022 已验证 | `deterministic_uuidv7`、`accept_ai_draft`（单事务 patch+锚点）、`POST /ai-draft/accept`、generator 确定性资源级锚点 + evidence、Web 跳回原文 | `b7094bc` Ready；`2fcad41` 红灯；`38df493` 实现；`3c3dfa0` QA P2 修复；accept 7/7、全仓 402/402 + 5 skipped、Web 37/37、QA `TR-20260814-016` PASS、live e2e 通过 |
-| WORK-2026-028 | 带来源问答（第 9 步切片 1） | 已实现（QA 待执行） | retrieval + api + web + QA | WORK-2026-008/015/016/017/026/027 已验证 | `build_answer_context`（FTS5 + 反向子串回退）、`POST /answer`（注入式 generator，503）、DeepSeek `answer_with_sources`、Web 提问/回答/来源跳转 | `47d6c6f` 实现；answer 6/6、全仓 408/408 + 5 skipped、Web 38/38、live e2e 通过 |
+| WORK-2026-028 | 带来源问答（第 9 步切片 1） | 已验证 prototype（correlated） | retrieval + api + web + QA | WORK-2026-008/015/016/017/026/027 已验证 | `build_answer_context`（FTS5 + 反向子串回退）、`POST /answer`（注入式 generator，503）、DeepSeek `answer_with_sources`、Web 提问/回答/来源跳转 | `47d6c6f` 实现；`9e06ebf` QA P2 修复；answer 7/7、全仓 409/409 + 5 skipped、Web 38/38、QA `TR-20260814-017` PASS、live e2e 通过 |
 
 ## 当前受阻项
 
@@ -64,4 +64,4 @@
 
 ## 下一门
 
-`第 9 步（对话、检索和持续整理）`：切片 1（带来源问答，`47d6c6f`，WORK-2026-028）已实现并经全仓门验证；`build_answer_context`（FTS5 + 反向子串回退）+ `POST /answer` + Web 提问/回答/来源跳转。下一动作：完成切片 1 的职责隔离 QA 后，进入切片 2（向量检索 / 自然语言转 GraphPatch / 增量重建，取最小者）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
+`第 9 步（对话、检索和持续整理）`：切片 1（带来源问答，`47d6c6f`+`9e06ebf`，WORK-2026-028，QA PASS `TR-20260814-017`）已实现并经全仓门验证。下一动作：进入切片 2（向量检索 / 自然语言转 GraphPatch / 增量重建，取最小者）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。

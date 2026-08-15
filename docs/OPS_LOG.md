@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅新增/扩展 Python 模块、端点与 Web UI；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 408/408 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 31）全绿；Web 38/38、pnpm build 通过；live e2e（owner key env-only）「什么是极限」→ 回答引用 `[1] 极限`。
 - 缓解/回滚：回退 `47d6c6f` 即回无问答能力；不设 `DEEPSEEK_API_KEY` 则端点 503、UI「AI 未连接」；密钥仅 env。
-- 遗留风险/Owner/期限：切片 1 职责隔离 QA 待执行；向量检索、自然语言转 GraphPatch、增量重建、AI 修改历史为后续切片。
+- 遗留风险/Owner/期限：切片 1 职责隔离 QA 已封存（TR-20260814-017，attempt 001 PASS + 修复 `9e06ebf` + attempt 002 PASS，correlated_review）；向量检索、自然语言转 GraphPatch、增量重建、AI 修改历史为后续切片。
 
 ## 2026-08-15 — 第 8 步切片 4：AI 草案来源锚点落库（WORK-2026-027）运维记录
 

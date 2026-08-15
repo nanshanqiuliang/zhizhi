@@ -1085,6 +1085,29 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 1 QA closure checkpoint — 2026-08-15 05:30 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `47d6c6f`
+  (WORK-2026-028 Step 9 slice 1 sourced Q&A) and returned PASS with 0 P0/P1 and
+  3 non-blocking P2 (search-path DDL, question length-cap drift, Web
+  double-submit race).
+- Fix `9e06ebf`: A2 question cap aligned to 100 (consistent 422
+  question_too_long + 150-char regression); A3 handleAsk re-entry guard. A1
+  recorded as a documented pre-existing boundary (shared GET /search code,
+  idempotent DDL, no content mutation). Stale test docstring corrected.
+- Superseding QA attempt 002 reviewed `9e06ebf` and returned PASS with 0 P0/P1.
+  Correlated machine review, not owner acceptance.
+- Evidence sealed under `evidence/TR-20260814-017/`; report:
+  `docs/test-reports/TR-20260814-017_answer-with-sources.md`.
+- Full gates green at `9e06ebf`: pytest 409/409 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 31), Web 38/38,
+  pnpm build. Live e2e (owner key, env-only) 什么是极限 -> sourced answer.
+- **Natural-language Step 9 is now ~25%** (slice 1 complete and QA-verified);
+  personal MVP approximately 87%. Remaining Step 9: vector retrieval,
+  NL→GraphPatch, incremental rebuild, AI edit history.
+- Exact next action: pick the smallest Step 9 slice 2 (vector retrieval OR
+  NL→GraphPatch OR incremental rebuild), create a Ready work item, then red tests.
+
 ## Step 9 slice 1 implementation checkpoint — 2026-08-15 05:00 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

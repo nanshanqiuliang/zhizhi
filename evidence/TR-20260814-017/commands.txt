@@ -1,0 +1,24 @@
+# Commands executed for TR-20260814-017 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/integration/test_answer_api.py -q   # 6 passed -> 7 after fix
+uv run python -m pytest -q                                          # 408 -> 409 passed + 5 skipped
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+pnpm --filter @knowledge-tree/web test -- --run src/App.answer.test.tsx
+pnpm check && pnpm build
+
+# --- live e2e (owner key, env-only) ---
+$env:DEEPSEEK_API_KEY="<owner-key-from-user>"; uv run python -X utf8 -c "<TestClient + build_deepseek_answer_generator: POST /answer 什么是极限 -> sourced answer>"
+
+# --- role-separated QA attempt 001 (47d6c6f) ---
+uv run python -m pytest tests/integration/test_answer_api.py -q   # 6 passed
+uv run python -m pytest -q                                          # 408 passed, 5 skipped
+# ... ruff/mypy/validator/web + adversarial scratch worktree (read-only/fail-closed/secret/retrieval/web)
+
+# --- role-separated QA attempt 002 (superseding, 9e06ebf) ---
+uv run python -m pytest tests/integration/test_answer_api.py -q   # 7 passed
+uv run python -m pytest -q                                          # 409 passed, 5 skipped
+# ... A2 100-char cap + 150-char regression; A3 ask re-entry guard; A1 boundary

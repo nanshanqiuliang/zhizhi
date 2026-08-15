@@ -1,0 +1,26 @@
+TR-20260814-017 — sourced Q&A (WORK-2026-028, Step 9 slice 1) — gate summary
+=============================================================================
+Reviewed commit: 9e06ebf04c7ddfb0badf5911cef9f4af692e5fb7 (feature/WORK-2026-009-ai-draft-pipeline)
+Attempt 001: 47d6c6f -> PASS (0 P0/P1; 3 P2)
+Post-review fix: 9e06ebf (A2 + A3 closed; A1 recorded boundary)
+Attempt 002 (superseding): PASS (0 P0/P1; correlated_review)
+
+Python
+  uv run python -m pytest tests/integration/test_answer_api.py -q -> 7 passed
+  uv run python -m pytest -q -> 409 passed, 5 skipped
+Lint / types
+  uv run ruff format --check packages scripts tests apps -> 88 files already formatted
+  uv run ruff check . -> All checks passed
+  uv run mypy scripts -> 11 files; uv run python -m mypy --strict packages/contracts-py/src
+                       packages/domain/src packages/infrastructure/src apps/api -> 31 files
+Repository
+  uv run python -m scripts.validate_repository -> PASS (skeleton, secret scan, contracts,
+                                                       review packet, mock/replay harness)
+Web
+  pnpm --filter @knowledge-tree/web test -- --run src/App.answer.test.tsx -> 1 passed
+  pnpm check -> 38 tests (10 files) + tsc + eslint (0 warnings)
+  pnpm build -> ok (chunk-size warning only)
+
+Live e2e (orchestrator, owner key, env-only; not part of QA runs)
+  POST /answer {"question":"什么是极限"} -> answer "…极限是指自变量趋近某点时函数值
+  所表现出的趋势 [1]。" with source 极限. Key never written to any file.

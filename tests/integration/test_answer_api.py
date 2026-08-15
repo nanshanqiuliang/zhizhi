@@ -1,7 +1,8 @@
-"""Red-light tests for sourced Q&A (WORK-2026-028, Step 9 slice 1).
+"""Integration tests for sourced Q&A (WORK-2026-028, Step 9 slice 1).
 
-`build_answer_context` / `AnswerContext` do not exist and `POST .../answer` is
-absent, so these tests are expected to fail (ImportError/404) until implemented.
+Covers `build_answer_context` (FTS5 forward match + reverse substring fallback)
+and the `POST /answer` endpoint's fail-closed behavior with a deterministic fake
+generator (no network).
 """
 
 from __future__ import annotations
