@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅新增/扩展 Python 模块、端点与 Web UI；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 415/415 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；Web 39/39、pnpm build 通过；live e2e（owner key env-only）指令→create_edge+set_lock→接受落库。
 - 缓解/回滚：回退 `b4fde38` 即回无自然语言图修改能力；不设 `DEEPSEEK_API_KEY` 则端点 503；密钥仅 env。
-- 遗留风险/Owner/期限：切片 2 职责隔离 QA 待执行；向量检索、增量重建、AI 修改历史为后续切片。
+- 遗留风险/Owner/期限：切片 2 职责隔离 QA 已封存（TR-20260814-018，attempt 001 PASS + 修复 `9a255d2`/`9abd339` + attempt 002 PASS，correlated_review）；向量检索、增量重建、AI 修改历史为后续切片。
 
 ## 2026-08-15 — 第 9 步切片 1：带来源问答（WORK-2026-028）运维记录
 

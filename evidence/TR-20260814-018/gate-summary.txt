@@ -1,0 +1,26 @@
+TR-20260814-018 — natural-language -> GraphPatch (WORK-2026-029, Step 9 slice 2) — gate summary
+================================================================================================
+Reviewed commit: 9abd339 (feature/WORK-2026-009-ai-draft-pipeline); superseding reviewed 9a255d2
+Attempt 001: b4fde38 -> PASS (0 P0/P1; 3 P2)
+Post-review fix: 9a255d2 (P2-1/P2-2/P2-3 closed) + 9abd339 (op_hash consistency)
+Attempt 002 (superseding): PASS (0 P0/P1; correlated_review)
+
+Python
+  uv run python -m pytest tests/integration/test_command_api.py -q -> 12 passed
+  uv run python -m pytest -q -> 421 passed, 5 skipped
+Lint / types
+  uv run ruff format --check packages scripts tests apps -> 91 files already formatted
+  uv run ruff check . -> All checks passed
+  uv run mypy scripts -> 11 files; uv run python -m mypy --strict packages/contracts-py/src
+                       packages/domain/src packages/infrastructure/src apps/api -> 33 files
+Repository
+  uv run python -m scripts.validate_repository -> PASS (skeleton, secret scan, contracts,
+                                                       review packet, mock/replay harness)
+Web
+  pnpm --filter @knowledge-tree/web test -- --run src/App.command.test.tsx -> 3 passed
+  pnpm check -> 41 tests (11 files) + tsc + eslint (0 warnings)
+  pnpm build -> ok (chunk-size warning only)
+
+Live e2e (orchestrator, owner key, env-only; not part of QA runs)
+  POST /interpret "连续以极限为前提，并锁定极限的内容" -> create_edge + set_lock,
+  accepted via /graph/patches (edge + content lock persisted). Key never written to any file.

@@ -1,0 +1,24 @@
+# Commands executed for TR-20260814-018 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/integration/test_command_api.py -q   # 6 -> 12 passed
+uv run python -m pytest -q                                          # 415 -> 421 passed + 5 skipped
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+pnpm --filter @knowledge-tree/web test -- --run src/App.command.test.tsx
+pnpm check && pnpm build
+
+# --- live e2e (owner key, env-only) ---
+$env:DEEPSEEK_API_KEY="<owner-key-from-user>"; uv run python -X utf8 -c "<TestClient + build_deepseek_command_generator: POST /interpret 连续以极限为前提，并锁定极限的内容 -> create_edge + set_lock, accept>"
+
+# --- role-separated QA attempt 001 (b4fde38) ---
+uv run python -m pytest tests/integration/test_command_api.py -q   # 6 passed
+uv run python -m pytest -q                                          # 415 passed, 5 skipped
+# ... ruff/mypy/validator/web + adversarial scratch worktree (20 requirement probes + 12 mutations)
+
+# --- role-separated QA attempt 002 (superseding, 9a255d2) ---
+uv run python -m pytest tests/integration/test_command_api.py -q   # 12 passed
+uv run python -m pytest -q                                          # 421 passed, 5 skipped
+# ... P2-1 hash emission probe; P2-2/P2-3 regression presence; core-property no-regression

@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 2 QA 封存（WORK-2026-029，TR-20260814-018）
+
+- 关联 ID：WORK-2026-029、WORK-2026-008/005/019/022/028、TR-20260814-018、NFR-2026-001/006/007/008、REQ-2026-006。
+- 实际变化：职责隔离 QA 对冻结 `b4fde38` 返回 **PASS**（0 P0/P1；3 个非阻塞 P2）；修复 `9a255d2` 闭合 P2-1（label/dimension/edge_type 改发 `*_hash`）+ P2-2（补 6 个 Python 回归）+ P2-3（补 3 个 Web 回归），`9abd339` 使 `op_unknown` 发 `op_hash` 一致性；超越审查 attempt 002 返回 **PASS**（0 P0/P1）。
+- 影响模块/接口/schema/migration/prompt：仅 `command.py` 与两个测试文件；无 canonical contract/ADR/migration/prompt 变更。
+- 兼容性：无行为变化；核心性质（label→id 失败关闭、精确 revision 绑定、proposal-only、提交门接受、解释只读、密钥 env-only）保持。
+- 验证与证据：attempt 001/002 报告与证据存 `evidence/TR-20260814-018/`；报告 `docs/test-reports/TR-20260814-018_nl-to-graphpatch.md`；全仓 pytest 421/421 + 5 skipped、Ruff/strict mypy/validator/Web 41/41 全绿。
+- 性能/安全/运维影响：无新增。
+- 回滚：无新增代码可回滚（修复为正向变更）；回退 `9abd339` 即回 attempt 001 状态。
+- 遗留风险与下一步：**第 9 步切片 1+2 完成（约 50%）**；下一动作为切片 3（向量检索 / 增量重建 / AI 修改历史，取最小者）。
+
 ## 2026-08-15 — 第 9 步切片 2：自然语言转 GraphPatch（WORK-2026-029）
 
 - 关联 ID：WORK-2026-029、WORK-2026-008/005/019/022/028、REQ-2026-006、NFR-2026-001/006/007/008。
@@ -11,7 +22,7 @@
 - 验证与证据：红灯（ModuleNotFoundError + Web 指令输入缺失）；实现 `b4fde38`；command 6/6；全仓 pytest 415/415 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）/Web 39/39/pnpm build 全绿；live e2e（owner key env-only）「连续以极限为前提，并锁定极限的内容」→ create_edge + set_lock，接受后边 + 内容锁落库。
 - 性能/安全/运维影响：单次 LLM 调用受 `command_interpret` 预算约束；命令/概念列表仅进 user 消息、不落盘/日志；错误 details 仅标识。
 - 回滚：回退 `b4fde38` 即回到无自然语言图修改能力；不设 `DEEPSEEK_API_KEY` 则端点 503；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `b4fde38`）；向量检索、增量重建、AI 修改历史为第 9 步后续切片。
+- 遗留风险与下一步：职责隔离 QA 已封存（TR-20260814-018，attempt 001 PASS + 修复 `9a255d2`/`9abd339` + attempt 002 PASS）；向量检索、增量重建、AI 修改历史为第 9 步后续切片。
 
 ## 2026-08-15 — 第 9 步切片 1 QA 封存（WORK-2026-028，TR-20260814-017）
 

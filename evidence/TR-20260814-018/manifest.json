@@ -1,0 +1,41 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-018",
+  "created_at": "2026-08-15T06:30:00+08:00",
+  "reviewed_commit": "9abd33989fa2d94b9ca9f5282a7d28816f28917d",
+  "qa_attempt001_commit": "b4fde38ba8fdbcf03bcd760a4645af778e170307",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": "superseding",
+    "attempt001": {
+      "path": "ai-command-qa-attempt-001.md",
+      "reviewed_commit": "b4fde38ba8fdbcf03bcd760a4645af778e170307",
+      "decision": "pass",
+      "findings": "0 P0/P1; 3 P2 (error-detail label echo, regression coverage gaps, web coverage gaps)"
+    },
+    "post_review_fix": {
+      "commit": "9a255d2953d2cacd864127116f0df97a3d9c69a5",
+      "note": "P2-1 hash emission; P2-2 six Python regressions; P2-3 three Web regressions; 9abd339 op_hash consistency"
+    },
+    "attempt002": {
+      "path": "ai-command-qa-attempt-002.md",
+      "reviewed_commit": "9a255d2953d2cacd864127116f0df97a3d9c69a5",
+      "decision": "pass",
+      "findings": "0 P0/P1; op_hash consistency closed in 9abd339"
+    }
+  },
+  "files": [
+    "ai-command-qa-attempt-001.md",
+    "ai-command-qa-attempt-002.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "notes": "Live DeepSeek e2e (owner key, env-only) of 连续以极限为前提，并锁定极限的内容 -> create_edge + set_lock was executed by the orchestrator; QA reviews were offline."
+}

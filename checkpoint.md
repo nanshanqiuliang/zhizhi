@@ -1085,6 +1085,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 2 QA closure checkpoint — 2026-08-15 06:30 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `b4fde38`
+  (WORK-2026-029 Step 9 slice 2 NL→GraphPatch) and returned PASS with 0 P0/P1
+  and 3 non-blocking P2 (error-detail label echo, regression coverage gaps, web
+  coverage gaps).
+- Fix `9a255d2`: P2-1 label/dimension/edge_type now emit `*_hash` (sha256[:12])
+  instead of echoing LLM text; P2-2 six Python regressions (empty/non-string
+  label, unknown op, invalid dimension/edge_type, non-dict op, non-zero revision
+  binding); P2-3 three Web regressions (accept/reject/ai_not_available).
+  `9abd339` also hashes `op_unknown`.
+- Superseding QA attempt 002 reviewed `9a255d2` (+ `9abd339`) and returned PASS
+  with 0 P0/P1. Correlated machine review, not owner acceptance.
+- Evidence sealed under `evidence/TR-20260814-018/`; report:
+  `docs/test-reports/TR-20260814-018_nl-to-graphpatch.md`.
+- Full gates green at `9abd339`: pytest 421/421 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 33), Web 41/41,
+  pnpm build. Live e2e (owner key, env-only) 连续以极限为前提，并锁定极限的内容
+  -> create_edge + set_lock applied.
+- **Natural-language Step 9 is now ~50%** (slices 1+2 complete and QA-verified);
+  personal MVP approximately 88%. Remaining Step 9: vector retrieval, incremental
+  rebuild, AI edit history.
+- Exact next action: pick the smallest Step 9 slice 3 (incremental rebuild OR AI
+  edit history; vector retrieval is blocked on the unresolved Embedding provider),
+  create a Ready work item, then red tests.
+
 ## Step 9 slice 2 implementation checkpoint — 2026-08-15 06:00 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
