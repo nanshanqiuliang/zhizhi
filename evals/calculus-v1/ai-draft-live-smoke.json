@@ -1,0 +1,45 @@
+{
+  "eval_id": "AI-DRAFT-LIVE-SMOKE-001",
+  "generated_at": "2026-08-15T02:34:02.021361+00:00",
+  "models": {
+    "concept_extract": "deepseek-v4-flash",
+    "relation_validate": "deepseek-v4-pro"
+  },
+  "chunks": 1,
+  "concepts": [
+    "极限",
+    "连续",
+    "导数",
+    "可导"
+  ],
+  "relations": [
+    [
+      "极限",
+      "连续",
+      "prerequisite_of"
+    ],
+    [
+      "极限",
+      "导数",
+      "prerequisite_of"
+    ],
+    [
+      "极限",
+      "可导",
+      "prerequisite_of"
+    ],
+    [
+      "连续",
+      "导数",
+      "prerequisite_of"
+    ]
+  ],
+  "preview_status": "requires_confirmation",
+  "patch_operations": 12,
+  "usage": {
+    "input_tokens": 427,
+    "output_tokens": 3435,
+    "estimated_cost_usd": 0.00403546
+  },
+  "latency_ms": 57532.0
+}
