@@ -1,6 +1,34 @@
 # Knowledge Tree App development checkpoint
 
-Updated: 2026-08-14 (Asia/Shanghai)
+Updated: 2026-08-15 (Asia/Shanghai)
+
+## Step 10 handoff — next-session entry point
+
+- Natural-language position: Steps 0–9 complete and QA-sealed (TR-20260814-001..021);
+  personal MVP ~90%. Step 10 (Windows desktop packaging) is the next milestone.
+- Last reliable point: `1c087f3` on `feature/WORK-2026-009-ai-draft-pipeline`
+  (Step 9 final QA closure). Working tree clean.
+- Step 10 scope (roadmap): Tauri shell + local sidecar lifecycle + path
+  permissions + installer/upgrade/backup + end-to-end test; completion flag
+  "new machine can install; full flow works" = personal MVP done.
+- **Environment gaps / prerequisites to resolve BEFORE Step 10 coding:**
+  1. Rust toolchain (rustc/cargo) is NOT installed on this machine — required
+     for any Rust/Tauri manifest (`apps/desktop` currently has only README.md;
+     Rust gates remain "not applicable" per AGENTS.md until a Cargo manifest
+     exists).
+  2. Decide Tauri vs pure bundler path (e.g. local webview wrapper / portable
+     launcher) — the repo baseline prefers Tauri; owner choice.
+- **Owner decisions still open (non-blocking for Step 10 prep):**
+  - Vector retrieval Embedding provider (unresolved; Step 9 sole open item).
+  - Owner risk acceptance (WORK-2026-010 auth boundary) before final acceptance.
+  - Repository ownership/license/branch protection (WORK-2026-003).
+- **Governance gap (recorded, not a defect):** `main` still at `9e15cb4`
+  (skeleton); the feature branch leads by 166 commits; CI has never run on
+  main. Recommend: before release, merge the verified chain to main and run CI
+  once; `main` must not be treated as current-state authority.
+- Exact next action (next session): resolve Rust toolchain (or choose bundler
+  path), then create Ready Step 10 work item (Tauri/sidecar lifecycle) with
+  failing end-to-end red tests; start from the smallest slice.
 
 ## Original objective
 
