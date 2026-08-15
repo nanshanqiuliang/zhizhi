@@ -404,6 +404,26 @@ export function App({ api }: { api?: PersistApi }) {
     }
   }
 
+  async function handleOpenDir() {
+    if (!api?.openResourcesDir) return;
+    try {
+      await api.openResourcesDir();
+      setStatus("已在文件资源管理器中打开资料目录");
+    } catch (error) {
+      setStatus(`打开资料目录失败（${(error as Error).message}）`);
+    }
+  }
+
+  async function handleReveal(resource: ResourceInfo) {
+    if (!api?.revealResource) return;
+    try {
+      await api.revealResource(resource.id);
+      setStatus("已在文件资源管理器中显示该文件");
+    } catch (error) {
+      setStatus(`打开文件位置失败（${(error as Error).message}）`);
+    }
+  }
+
   async function openViewer(resource: ResourceInfo) {
     if (!api) return;
     setViewerResource(resource);
@@ -1098,6 +1118,15 @@ export function App({ api }: { api?: PersistApi }) {
                 onChange={handleImport}
               />
             </label>
+            {api?.openResourcesDir && (
+              <button
+                type="button"
+                className="import-control open-dir-control"
+                onClick={() => void handleOpenDir()}
+              >
+                打开资料目录
+              </button>
+            )}
             {importStatus === "failed" && <p className="import-note">导入失败，请检查文件类型与大小</p>}
             {importStatus === "importing" && <p className="import-note">导入中…</p>}
             {draftStatus === "generating" && <p className="import-note">AI 生成草案中…</p>}
@@ -1129,6 +1158,16 @@ export function App({ api }: { api?: PersistApi }) {
                       onClick={() => void handleGenerateDraft(resource)}
                     >
                       生成草案
+                    </button>
+                  )}
+                  {api?.revealResource && (
+                    <button
+                      type="button"
+                      className="resource-reveal"
+                      title="在文件资源管理器中显示该文件"
+                      onClick={() => void handleReveal(resource)}
+                    >
+                      在文件夹中显示
                     </button>
                   )}
                 </li>

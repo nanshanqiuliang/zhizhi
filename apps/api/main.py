@@ -9,6 +9,8 @@ live in `packages/domain` and `packages/contracts-py`, and storage lives in
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -100,6 +102,19 @@ def _recovery_layout(workspace_root: Path) -> WorkspaceLayout:
         ):
             return create_workspace(workspace_root)
         raise
+
+
+def _reveal_in_explorer(path: Path, *, select: bool) -> None:
+    """Open the folder containing `path` in Explorer (no-op off Windows).
+
+    `select=True` highlights the file (`explorer /select,`), `select=False`
+    opens the directory itself. Used by the local-only reveal endpoints.
+    """
+
+    if os.name != "nt":
+        return
+    args = ["explorer", "/select,", str(path)] if select else ["explorer", str(path)]
+    subprocess.Popen(args)
 
 
 def _http_error(error: WorkspaceError) -> HTTPException:
@@ -420,6 +435,35 @@ def create_app(
             mime = get_resource_mime(layout, resource_id)
             file_path = get_resource_file_path(layout, resource_id)
             return FileResponse(file_path, media_type=mime, filename=Path(resource_id).name)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/resources/open-dir")
+    def post_resources_open_dir(workspace_id: str) -> JsonObject:
+        """Open this workspace's `resources/` directory in the file explorer."""
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            resources_dir = layout.root / "resources"
+            if not resources_dir.is_dir():
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "file_not_found", "rule": "resources_dir_absent"},
+                )
+            _reveal_in_explorer(resources_dir, select=False)
+            return {"status": "revealed", "path": str(resources_dir)}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/resources/{resource_id}/reveal")
+    def post_resource_reveal(workspace_id: str, resource_id: str) -> JsonObject:
+        """Reveal a resource's stored file in the file explorer (selected)."""
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            file_path = get_resource_file_path(layout, resource_id)
+            _reveal_in_explorer(file_path, select=True)
+            return {"status": "revealed", "path": str(file_path)}
         except WorkspaceError as error:
             raise _http_error(error) from error
 

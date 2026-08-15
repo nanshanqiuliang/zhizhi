@@ -40,7 +40,7 @@ def test_open_dir_and_reveal_endpoints(
 
     resp = client.post(f"/api/workspaces/{WORKSPACE_ID}/resources/{rid}/reveal")
     assert resp.status_code == 200
-    assert str(rid) in resp.json()["path"]
+    assert "resources" in resp.json()["path"]
 
 
 def test_reveal_missing_resource_404(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -128,6 +128,8 @@ export interface PersistApi {
   listAnchors(resourceId: string): Promise<AnchorRef[]>;
   getFileUrl(resourceId: string): string;
   getResourceText(resourceId: string): Promise<string>;
+  openResourcesDir?(): Promise<{ status: string; path: string }>;
+  revealResource?(resourceId: string): Promise<{ status: string; path: string }>;
   generateDraft(resourceId: string): Promise<AiDraftResult>;
   acceptDraft(
     patch: Record<string, unknown>,
@@ -505,6 +507,22 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(`resource text failed: ${response.status}`);
       }
       return await response.text();
+    },
+    async openResourcesDir(): Promise<{ status: string; path: string }> {
+      const response = await fetch(`${workspaceBase}/resources/open-dir`, { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`open dir failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; path: string };
+    },
+    async revealResource(resourceId: string): Promise<{ status: string; path: string }> {
+      const response = await fetch(`${workspaceBase}/resources/${resourceId}/reveal`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error(`reveal failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; path: string };
     },
     async generateDraft(resourceId: string): Promise<AiDraftResult> {
       const response = await fetch(`${workspaceBase}/ai-draft`, {
