@@ -8,6 +8,7 @@ dependencies = [
   "jsonschema[format]>=4.25,<5",
   "pypdf>=6.10,<7",
   "python-multipart>=0.0.32",
+  "pywebview>=5,<7",
   "pyyaml>=6.0,<7",
   "uvicorn[standard]>=0.52.3",
 ]

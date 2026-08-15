@@ -187,7 +187,7 @@ def main() -> None:
         results.append((name, bool(ok), detail))
 
     proc_a = spawn(
-        ["--no-browser", "--data-root", str(data_root), "--port", str(port)], log_dir / "a.log"
+        ["--no-window", "--data-root", str(data_root), "--port", str(port)], log_dir / "a.log"
     )
     try:
         check("health", wait_health(port), "sidecar became healthy")
@@ -234,7 +234,7 @@ def main() -> None:
         )
 
         proc_b = spawn(
-            ["--no-browser", "--data-root", str(data_root), "--port", str(free_port())],
+            ["--no-window", "--data-root", str(data_root), "--port", str(free_port())],
             log_dir / "b.log",
         )
         rc_b = proc_b.wait(timeout=30)
@@ -250,7 +250,7 @@ def main() -> None:
     check("port-released", not port_in_use(port), "loopback port released after terminate")
 
     proc_c = spawn(
-        ["--no-browser", "--data-root", str(data_root), "--port", str(port)], log_dir / "c.log"
+        ["--no-window", "--data-root", str(data_root), "--port", str(port)], log_dir / "c.log"
     )
     try:
         check("stale-lock-takeover", wait_health(port), "new instance took over stale lock")
@@ -261,6 +261,24 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             proc_c.kill()
     check("port-released-again", not port_in_use(port), "port released again")
+
+    # Window-mode smoke: the frozen exe should open a native WebView2 window and
+    # enter its GUI loop without crashing. We cannot assert the window visually,
+    # but we assert the process stays alive and keeps serving the sidecar.
+    w_data = Path(tempfile.mkdtemp(prefix="kt-e2e-win-"))
+    w_port = free_port()
+    proc_w = spawn(["--data-root", str(w_data), "--port", str(w_port)], log_dir / "w.log")
+    try:
+        check("window-health", wait_health(w_port), "windowed exe serves sidecar")
+        time.sleep(2)
+        check("window-process-alive", proc_w.poll() is None, "windowed exe running (GUI loop)")
+    finally:
+        proc_w.terminate()
+        try:
+            proc_w.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            proc_w.kill()
+    check("window-port-released", not port_in_use(w_port), "windowed exe port released")
 
     for name, ok, detail in results:
         print(f"{'PASS' if ok else 'FAIL'}  {name}: {detail}")

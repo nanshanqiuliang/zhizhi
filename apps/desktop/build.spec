@@ -21,6 +21,8 @@ source_roots = [
 
 # uvicorn loads loop/protocol/lifespan modules via importlib; the launcher pins
 # asyncio + h11, but keep the auto fallbacks importable in the frozen bundle.
+# pywebview selects its Windows backend dynamically, so list it and the
+# pythonnet loader explicitly (hook-webview/hook-clr collect their data/binaries).
 hiddenimports = [
     "uvicorn.logging",
     "uvicorn.loops.auto",
@@ -29,6 +31,10 @@ hiddenimports = [
     "uvicorn.protocols.http.h11_impl",
     "uvicorn.protocols.websockets.auto",
     "uvicorn.lifespan.on",
+    "clr",
+    "clr_loader",
+    "webview.platforms.winforms",
+    "webview.platforms.edgechromium",
 ]
 
 datas = [
@@ -60,7 +66,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

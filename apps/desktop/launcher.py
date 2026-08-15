@@ -1,11 +1,13 @@
-"""Desktop launcher for the local sidecar (WORK-2026-033 slice 1).
+"""Desktop launcher for the local sidecar (WORK-2026-033 slice 1 / 034 slice 2).
 
-Starts the FastAPI sidecar on loopback, waits for health, opens the built Web UI
-in the system browser, and shuts down cleanly. In a PyInstaller-frozen build the
-Web UI and LLM config are bundled under `sys._MEIPASS`; in source runs they are
-resolved from the repository root.
+Starts the FastAPI sidecar on loopback, waits for health, then opens the UI in
+one of three modes: a native pywebview window (default), the system browser
+(`--browser`), or headless (`--no-window`, for CI/e2e). Closing the native window
+shuts the sidecar down gracefully. In a PyInstaller-frozen build the Web UI and
+LLM config are bundled under `sys._MEIPASS`; in source runs they resolve from the
+repository root.
 
-Run: `python -m apps.desktop.launcher [--data-root DIR] [--port N] [--no-browser]`
+Run: `python -m apps.desktop.launcher [--data-root DIR] [--port N] [--no-window|--browser]`
 """
 
 from __future__ import annotations
@@ -23,7 +25,8 @@ from pathlib import Path
 
 import uvicorn
 
-from apps.api._runtime import ensure_source_paths, runtime_root
+from apps.api._runtime import ensure_source_paths, is_frozen, runtime_root
+from apps.desktop.shell import open_window
 from apps.desktop.version import __version__
 
 ensure_source_paths()
@@ -85,6 +88,15 @@ def _is_running_with_retry(port: int, *, attempts: int = 4, delay_s: float = 0.5
     return False
 
 
+def _setup_frozen_logging(data_root: Path) -> None:
+    """A windowed frozen build has no console; capture diagnostics to a log file."""
+    if not is_frozen():
+        return
+    stream = (data_root / "zhizhi.log").open("a", encoding="utf-8", buffering=1)  # noqa: SIM115
+    sys.stdout = stream
+    sys.stderr = stream
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Knowledge Tree desktop launcher")
     parser.add_argument(
@@ -95,8 +107,18 @@ def main() -> None:
     )
     parser.add_argument("--port", type=int, default=8000, help="loopback port")
     parser.add_argument("--web-dist", type=Path, default=None, help="built Web UI directory")
-    parser.add_argument("--no-browser", action="store_true", help="do not open a browser")
+    parser.add_argument("--no-window", action="store_true", help="headless: no window/browser")
+    parser.add_argument(
+        "--browser", action="store_true", help="open system browser instead of window"
+    )
     args = parser.parse_args()
+
+    if args.no_window:
+        mode = "headless"
+    elif args.browser:
+        mode = "browser"
+    else:
+        mode = "window"
 
     data_root = args.data_root
     try:
@@ -104,6 +126,7 @@ def main() -> None:
     except OSError as error:
         print(f"无法创建数据目录 {data_root}：{error}", file=sys.stderr)
         raise SystemExit(1) from error
+    _setup_frozen_logging(data_root)
 
     # Single-instance guard: an exclusive lock file in the data root that
     # records this instance's port. A second launch health-checks that port and
@@ -137,15 +160,13 @@ def main() -> None:
     os.close(lock_fd)
 
     try:
-        _run(
-            data_root=data_root, port=args.port, web_dist=args.web_dist, no_browser=args.no_browser
-        )
+        _run(data_root=data_root, port=args.port, web_dist=args.web_dist, mode=mode)
     finally:
         with suppress(OSError):
             lock_path.unlink()
 
 
-def _run(*, data_root: Path, port: int, web_dist: Path | None, no_browser: bool) -> None:
+def _run(*, data_root: Path, port: int, web_dist: Path | None, mode: str) -> None:
     if web_dist is None:
         web_dist = runtime_root() / "web_dist"
     if not web_dist.is_dir():
@@ -180,12 +201,16 @@ def _run(*, data_root: Path, port: int, web_dist: Path | None, no_browser: bool)
 
     url = f"http://127.0.0.1:{port}/"
     print(f"{_APP_NAME} {__version__} 已启动：{url}（数据目录：{data_root}）")
-    if not no_browser:
-        webbrowser.open(url)
 
     try:
-        while thread.is_alive():
-            thread.join(timeout=0.5)
+        if mode == "window":
+            # Blocks until the user closes the native window, then shut down.
+            open_window(url)
+        else:
+            if mode == "browser":
+                webbrowser.open(url)
+            while thread.is_alive():
+                thread.join(timeout=0.5)
     except KeyboardInterrupt:
         pass
     finally:
