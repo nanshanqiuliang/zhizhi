@@ -9,7 +9,7 @@ related_ids: [WORK-2026-013, WORK-2026-014, WORK-2026-021, WORK-2026-022, WORK-2
 target_stage: "阶段 1 / 自然语言第 10 步（Windows 桌面封装）切片 1"
 risk: medium
 created_at: 2026-08-15T20:13:00+08:00
-updated_at: 2026-08-15T20:13:00+08:00
+updated_at: 2026-08-15T20:55:00+08:00
 ```
 
 ## 问题与结果
@@ -85,18 +85,18 @@ updated_at: 2026-08-15T20:13:00+08:00
 
 - [ ] AC-1 (c1)：`create_app(web_dist=<含 index.html/assets 的目录>)` 时，`GET /` 返回 index.html、
   `GET /assets/...` 返回静态资源；`/api/health` 仍 200（API 路由优先于静态挂载）。
-- [ ] AC-2 (c2)：`apps.desktop.launcher` 可导入；`--data-root` 缺省为 `%LOCALAPPDATA%\知枝\data`
+- [x] AC-2 (c2)：`apps.desktop.launcher` 可导入；`--data-root` 缺省为 `%LOCALAPPDATA%\知枝\data`
   且自动创建、可写；`--data-root` 覆盖生效。
-- [ ] AC-3 (c3)：单实例：已有一实例运行时（锁文件记录其端口并健康探测命中）第二实例
+- [x] AC-3 (c3)：单实例：已有一实例运行时（锁文件记录其端口并健康探测命中）第二实例
   fail-closed 退出（不双写、不抢端口）。
-- [ ] AC-4 (c4)：优雅退出释放端口（无孤儿 uvicorn）。
-- [ ] AC-5 (c5)：冻结产物 e2e 冒烟：启动→`/api/health` 200→`/` 返回 UI→写笔记保存重载仍在→导入
+- [x] AC-4 (c4)：优雅退出释放端口（无孤儿 uvicorn）。
+- [x] AC-5 (c5)：冻结产物 e2e 冒烟：启动→`/api/health` 200→`/` 返回 UI→写笔记保存重载仍在→导入
   MD→AI 草案（mock 或 env key）→接受→来源回跳→撤销恢复。
-- [ ] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy（含 apps/api）、
+- [x] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy（含 apps/api）、
   全仓 pytest、Web 全绿；PyInstaller 构建可重复且产物可启动。
-- [ ] 错误和恢复路径：`web_dist` 不存在/非法时不挂载且 API 仍可用；端口占用明确报错退出；
+- [x] 错误和恢复路径：`web_dist` 不存在/非法时不挂载且 API 仍可用；端口占用明确报错退出；
   数据目录不可写时明确报错。
-- [ ] 回滚/禁用方法：回退本工作项提交即回到「`python -m apps.api` + 外部 Vite」；无数据格式变更，
+- [x] 回滚/禁用方法：回退本工作项提交即回到「`python -m apps.api` + 外部 Vite」；无数据格式变更，
   旧数据不受影响；红灯与证据保留。
 
 ## 验证计划
@@ -116,6 +116,8 @@ updated_at: 2026-08-15T20:13:00+08:00
   打包 spec 与构建脚本。
 - Test Run：TC-DSK-001..004 + 全仓门 + 冻结产物 e2e 冒烟。
 - Release：冻结 onedir 产物（便携解压即用）；安装器/升级属切片 3（owner 决策）。
-- 观察结果：新机器解压即用，完整流程在冻结产物上通过；第 10 步完成标志达成（切片 1）。
-- 未完成项的新 ID：切片 2（pywebview 原生窗口）、切片 3（Inno Setup 安装器/升级/签名）待 owner
+- 观察结果：职责隔离 QA `TR-20260815-001` PASS（0 P0/P1，5 P2；P2-1/2/4 已由 `0067aae`
+  关闭，P2-3 文档漂移已修正，P2-5 优雅退出证据记录为原型边界）；冻结产物 e2e 15/15，便携
+  zip `dist/zhizhi-0.1.0-portable.zip` 解压即用；第 10 步切片 1 + 切片 3a（便携 zip）达成。
+- 未完成项的新 ID：切片 2（pywebview 原生窗口）、切片 3b（Inno Setup 安装器/升级/签名）待 owner
   决策后编号；向量检索（第 9 步遗留）。

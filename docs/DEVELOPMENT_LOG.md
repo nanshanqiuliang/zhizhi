@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步切片 1 QA 封存（WORK-2026-033，TR-20260815-001）
+
+- 关联 ID：WORK-2026-033、WORK-2026-013/014/021/022/026/027、TR-20260815-001、NFR-2026-001、REQ-2026-001。
+- 实际变化：职责隔离 QA 对冻结 `fa8be62` 返回 **PASS**（0 P0/P1；5 个非阻塞 P2）。QA 执行全部门（pytest 442/442 + 5 skipped、ruff、strict mypy 37 文件、validator 含 secret scan、Web 41/41、pnpm build）与冻结 e2e 15/15；另在分离 worktree 实际重跑红灯 `8edf336`（2 failed 与声明一致）并以伪 key 探针证明冻结 `config/llm` 从 `_MEIPASS` 解析（422 而非 503，零网络）。
+- 影响模块/接口/schema/migration/prompt：无新代码（封存证据）；后续 `0067aae` 关闭 P2-1（单实例启动窗口竞态，健康探测重试）、P2-2（桌面构建 `VITE_LOCAL_API=""` 同源相对基址）、P2-4（无 UI 警告）；`a0e60dc` 增便携 zip（`package_desktop.py`，版本 0.1.0）。
+- 兼容性：数据目录默认 `%LOCALAPPDATA%\知枝\data`；`--data-root` 可指向旧 `knowledge-tree-data`；冻结与源码运行行为一致。
+- 验证与证据：`evidence/TR-20260815-001/`；报告 `docs/test-reports/TR-20260815-001_desktop-packaging-slice1.md`；修复后 e2e 15/15、Web 42/42、全仓门全绿。
+- 性能/安全/运维影响：仅 127.0.0.1；单实例 fail-closed；密钥 env-only；无网络开放。
+- 回滚：回退 `39117a1`..`0067aae` 即回到「python -m apps.api + 外部 Vite」；无数据格式变更。
+- 遗留风险与下一步：P2-5（优雅退出证据为硬杀）记录为原型边界；切片 2（pywebview 原生窗口）与切片 3b（Inno Setup 安装器）待 owner 决策；向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步切片 1：桌面封装（PyInstaller 冻结 + 自托管 UI + 生命周期，WORK-2026-033）
 
 - 关联 ID：WORK-2026-033、WORK-2026-013/014/021/022/026/027、NFR-2026-001、REQ-2026-001。

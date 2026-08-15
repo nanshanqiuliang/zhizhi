@@ -2,6 +2,26 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Step 10 slice 1 QA closure checkpoint — 2026-08-15 20:55 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) reviewed frozen `fa8be62` (WORK-2026-033 Step 10
+  slice 1) and returned **PASS** with 0 P0/P1 and 5 non-blocking P2.
+- QA executed the full gates (pytest 442/442 + 5 skipped, ruff, strict mypy 37 files,
+  validator incl. secret scan, Web 41/41, pnpm build) and the frozen e2e 15/15; it also
+  re-ran the red baseline at `8edf336` in a detached worktree (2 failed, as claimed) and
+  proved frozen `config/llm` resolution with a fake-key probe (422, not 503).
+- P2-1 (single-instance startup race), P2-2 (`--port != 8000` cross-origin), P2-4 (no-UI
+  silent) closed by `0067aae`; P2-3 (doc drift) corrected with this sync; P2-5 (graceful-exit
+  evidence is a hard kill) recorded as a prototype boundary.
+- Evidence sealed under `evidence/TR-20260815-001/`; report:
+  `docs/test-reports/TR-20260815-001_desktop-packaging-slice1.md`.
+- Portable zip packaging (`scripts/package_desktop.py`, version `0.1.0`) added in `a0e60dc`;
+  extracted-zip smoke (fresh dir + fresh data root) passed.
+- **Natural-language Step 10 progress**: slice 1 (freeze + self-host + lifecycle + data dir)
+  + slice 3a (portable zip) done (~60%); personal MVP ~90%. Remaining: slice 2 (pywebview
+  native window) and slice 3b (Inno Setup installer) pending owner decision.
+- Exact next action: owner decides slice 2 shell + slice 3b installer; then Ready + red tests.
+
 ## Step 10 slice 1 implementation checkpoint — 2026-08-15 20:35 +08:00
 
 - Active branch: `feature/WORK-2026-033-desktop-packaging`.

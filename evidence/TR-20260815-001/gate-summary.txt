@@ -1,0 +1,16 @@
+# Gate summary for TR-20260815-001 (WORK-2026-033 slice 1)
+
+reviewed_commit: fa8be626c72be4a3854ea98427cb11a4681c6cbe
+decision: PASS (0 P0 / 0 P1 / 5 P2)
+
+- focused (test_desktop_serve + test_desktop_launcher): 8 passed
+- full pytest: 442 passed, 5 skipped (live-LLM gate)
+- ruff check .: clean
+- ruff format --check: 104 files formatted
+- mypy scripts: 14 source files, no issues
+- mypy --strict (contracts/domain/infrastructure + apps/api + apps/desktop): 37 source files, no issues
+- scripts.validate_repository: PASS (incl. secret scan)
+- web check (tsc + eslint): 41/41 tests
+- pnpm peers check: no issues
+- pnpm --filter web build: built (only >500kB chunk warning)
+- scripts.desktop_e2e (frozen dist/zhizhi/zhizhi.exe): 15/15 PASS

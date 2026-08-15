@@ -1,0 +1,10 @@
+{
+  "os": "Windows",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "pyinstaller": "6.22.0",
+  "branch": "feature/WORK-2026-033-desktop-packaging",
+  "reviewed_commit": "fa8be626c72be4a3854ea98427cb11a4681c6cbe"
+}

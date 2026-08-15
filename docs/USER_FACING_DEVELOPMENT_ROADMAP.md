@@ -125,7 +125,7 @@
 
 完成标志：新机器可安装；从写笔记/导入资料到人工编辑、AI 草案、来源回跳、撤销恢复的完整流程通过。
 
-当前状态：**切片 1 已完成（约 50%）**。本地 sidecar 已用 PyInstaller 冻结为便携可执行文件（`dist/zhizhi/zhizhi.exe`，解压即用）：启动时同源自托管 Web UI、数据目录默认 `%LOCALAPPDATA%\知枝\data`、单实例、健康后打开浏览器、退出释放端口；冻结产物 e2e 冒烟 15/15（写笔记/导入/撤销/AI 无 key 安全降级）。切片 2（pywebview 原生窗口）与切片 3（Inno Setup 安装器/升级/签名）待 owner 决策。完成第 0–10 步即达到“个人可用 MVP”。
+当前状态：**切片 1 已完成并经职责隔离 QA 封存（约 60%）**。本地 sidecar 已用 PyInstaller 冻结为便携可执行文件（`dist/zhizhi/zhizhi.exe` + `dist/zhizhi-0.1.0-portable.zip`，解压即用）：同源自托管 Web UI、数据目录默认 `%LOCALAPPDATA%\知枝\data`、单实例、健康后打开浏览器、退出释放端口；冻结产物 e2e 15/15（写笔记/导入/撤销/AI 无 key 安全降级），QA `TR-20260815-001` PASS。切片 2（pywebview 原生窗口）与切片 3b（Inno Setup 安装器/升级/签名）待 owner 决策。完成第 0–10 步即达到“个人可用 MVP”。
 
 ### 第 11 步：Beta 加固与扩展
 
@@ -139,7 +139,7 @@
 
 ## 当前进度快照
 
-- 当前自然语言步骤：**第 10 步——封装为 Windows App（切片 1 已完成，切片 2/3 待 owner 决策）**。
+- 当前自然语言步骤：**第 10 步——封装为 Windows App（切片 1 已完成并经 QA 封存，切片 2/3b 待 owner 决策）**。
 - 第 2 步进度：**已完成底层 prototype（100%）**；持久化撤销属于第 4/6 步，不冒充已上线功能。
 - 第 3 步进度：**100%（developer demo 已验证）**。
 - 第 4 步进度：**100%**——SQLite 持久化内核（`TR-20260814-005`）+ FastAPI sidecar 与 Web 自动保存（`TR-20260814-006`）+ FTS5 基础搜索（`TR-20260814-007`）均通过职责隔离 QA。
