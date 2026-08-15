@@ -568,14 +568,14 @@ def build_incremental_patch(
         key = normalize_concept_label(concept.label)
         existing = existing_by_key.get(key)
         if existing is not None:
-            concept_ids[concept.label] = str(existing["id"])
+            concept_ids[key] = str(existing["id"])
         else:
             if not concept.evidence_ids:
                 raise DraftError(
                     "draft_evidence_required",
                     details={"rule": "ai_concept_evidence", "label": concept.label},
                 )
-            concept_ids[concept.label] = id_factory()
+            concept_ids[key] = id_factory()
             new_concepts.append(concept)
 
     view = view_id if view_id is not None else id_factory()
@@ -584,12 +584,13 @@ def build_incremental_patch(
 
     operations: list[JsonObject] = []
     for concept in new_concepts:
+        key = normalize_concept_label(concept.label)
         operations.append(
             {
                 "op_id": id_factory(),
                 "op": "create_concept",
                 "concept": {
-                    "id": concept_ids[concept.label],
+                    "id": concept_ids[key],
                     "course_id": course_id,
                     "label": concept.label,
                     "origin": "ai",
@@ -625,20 +626,20 @@ def build_incremental_patch(
                 "op_id": id_factory(),
                 "op": "create_edge",
                 "expected_source_revision_no": int(
-                    existing_by_key[source_key]["revision_no"]
+                    existing_by_key[source_key].get("revision_no", 0)
                     if source_key in existing_by_key
                     else 0
                 ),
                 "expected_target_revision_no": int(
-                    existing_by_key[target_key]["revision_no"]
+                    existing_by_key[target_key].get("revision_no", 0)
                     if target_key in existing_by_key
                     else 0
                 ),
                 "edge": {
                     "id": id_factory(),
                     "course_id": course_id,
-                    "source_concept_id": concept_ids[relation.source_label],
-                    "target_concept_id": concept_ids[relation.target_label],
+                    "source_concept_id": concept_ids[source_key],
+                    "target_concept_id": concept_ids[target_key],
                     "edge_type": relation.edge_type,
                     "origin": "ai",
                     "review_state": "proposed",
@@ -651,16 +652,17 @@ def build_incremental_patch(
         )
 
     for concept in new_concepts:
+        key = normalize_concept_label(concept.label)
         x, y = layout_by_label[concept.label]
         operations.append(
             {
                 "op_id": id_factory(),
                 "op": "set_layout_item",
-                "target": {"type": "concept", "id": concept_ids[concept.label]},
+                "target": {"type": "concept", "id": concept_ids[key]},
                 "expected_updated_revision_no": 0,
                 "layout_item": {
                     "view_id": view,
-                    "concept_id": concept_ids[concept.label],
+                    "concept_id": concept_ids[key],
                     "x": x,
                     "y": y,
                     "pinned": False,

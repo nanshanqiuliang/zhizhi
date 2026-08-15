@@ -129,3 +129,26 @@ def test_incremental_patch_preview_requires_confirmation() -> None:
     preview = preview_graph_patch(_existing_graph(), patch, trusted_actor=AI_ACTOR)
     assert preview.status == "requires_confirmation"
     assert len(preview.snapshot["concepts"]) == 2
+
+
+def test_incremental_patch_resolves_label_variants_in_relations() -> None:
+    # A relation label that normalizes equal to a concept label but differs
+    # textually (trailing space) must resolve to the concept id, not KeyError.
+    draft = AiDraft(
+        concepts=(
+            DraftConcept(label="极限", confidence=1.0, evidence_ids=()),  # existing
+            DraftConcept(label="导数 ", confidence=0.8, evidence_ids=(EVIDENCE,)),  # new
+        ),
+        relations=(DraftRelation("导数", "极限", "related_to", 0.6, ()),),
+    )
+    patch = build_incremental_patch(
+        _existing_graph(),
+        draft,
+        workspace_id=WORKSPACE_ID,
+        course_id=COURSE_ID,
+        base_revision_no=2,
+        reason="x",
+        id_factory=_counter(),
+    )
+    edges = [op for op in patch["operations"] if op["op"] == "create_edge"]
+    assert edges[0]["edge"]["target_concept_id"] == LIMIT_ID
