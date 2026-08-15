@@ -1,0 +1,13 @@
+{
+  "os": "Windows",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "pyinstaller": "6.22.0",
+  "pywebview": "6.2.1",
+  "pythonnet": "3.1.0",
+  "webview2_runtime": "151.0.4129.86",
+  "branch": "feature/WORK-2026-034-pywebview-shell",
+  "reviewed_commit": "cee4fe241d5c0ae8d7ed10f42c006c356c1f468d"
+}

@@ -1,0 +1,13 @@
+# Gate commands executed for TR-20260815-002 (WORK-2026-034 slice 2)
+
+```text
+uv run python -m pytest tests/unit/test_desktop_shell.py tests/unit/test_desktop_launcher.py tests/integration/test_desktop_serve.py -q
+uv run python -m pytest -q
+uv run ruff check .
+uv run ruff format --check packages scripts tests apps
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+uv run python -m scripts.validate_repository
+uv sync --locked --group dev
+uv run python scripts/desktop_e2e.py
+```

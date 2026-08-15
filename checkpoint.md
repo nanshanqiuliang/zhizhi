@@ -2,6 +2,21 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Step 10 slice 2 QA closure checkpoint — 2026-08-15 21:40 +08:00
+
+- Role-separated QA reviewed frozen `cee4fe2` (WORK-2026-034 Step 10 slice 2 pywebview native
+  window) and returned **PASS** with 0 P0/P1/P2 and 3 informational P3.
+- QA executed all gates (pytest 445/445 + 5 skipped, ruff, strict mypy 39, validator, locked sync)
+  and the frozen e2e 18/18; it independently re-verified graceful close (WM_CLOSE → exit 0, port
+  released, lock removed) and confirmed the WebView2 window navigates the same-origin UI.
+- P3-1 (doc dependency placement), P3-2 (AC evidence) and P3-3 (windowed traceback modal) closed
+  by `dd86465`.
+- Evidence sealed under `evidence/TR-20260815-002/`; report:
+  `docs/test-reports/TR-20260815-002_desktop-pywebview-shell.md`.
+- **Natural-language Step 10 progress**: slice 1 + 2 + portable zip all QA-sealed (~90%); personal
+  MVP ~92%. Remaining: slice 3b (Inno Setup installer) pending owner decision.
+- Exact next action: owner decides slice 3b (Inno Setup installer) or close Step 10.
+
 ## Step 10 slice 2 implementation checkpoint — 2026-08-15 21:20 +08:00
 
 - Active branch: `feature/WORK-2026-034-pywebview-shell`.

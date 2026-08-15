@@ -2,6 +2,24 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步切片 2 QA 封存（WORK-2026-034，TR-20260815-002）
+
+- 关联 ID：WORK-2026-034、WORK-2026-033、TR-20260815-002、NFR-2026-001、REQ-2026-001。
+- 实际变化：职责隔离 QA 对冻结 `cee4fe2` 返回 **PASS**（0 P0/P1/P2；3 个 informational P3）。
+  QA 执行全部门（pytest 445/445 + 5 skipped、ruff、strict mypy 39、validator、locked sync）与
+  冻结 e2e 18/18；独立复验 WM_CLOSE 优雅关窗（exit 0、端口释放、锁删除、uvicorn 干净 shutdown）
+  并确认 WebView2 窗口导航同源 UI。
+- 影响模块/接口/schema/migration/prompt：无新代码（封存证据）；后续 `dd86465` 关闭 P3-1（文档
+  依赖位置）、P3-2（AC 证据）、P3-3（`disable_windowed_traceback=True`，窗口态崩溃改写入日志而
+  非弹模态框挂起）。
+- 兼容性：无行为变化；`--no-window` headless 与默认原生窗口行为不变。
+- 验证与证据：`evidence/TR-20260815-002/`；报告 `docs/test-reports/TR-20260815-002_desktop-pywebview-shell.md`；
+  修复后重建 + e2e 18/18。
+- 性能/安全/运维影响：无新增；仍仅 127.0.0.1；窗口态崩溃不再挂起（利于 CI/无人值守）。
+- 回滚：无新增代码可回滚；回退 `dd86465` 即回 P3 修复前。
+- 遗留风险与下一步：切片 3b（Inno Setup 安装器/升级/签名）待 owner 决策；向量检索仍为第 9 步
+  owner 未决项。
+
 ## 2026-08-15 — 第 10 步切片 2：pywebview 原生窗口（WORK-2026-034）
 
 - 关联 ID：WORK-2026-034、WORK-2026-033、NFR-2026-001、REQ-2026-001。
