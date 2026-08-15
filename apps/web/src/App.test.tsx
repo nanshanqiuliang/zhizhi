@@ -60,9 +60,9 @@ describe("knowledge tree workspace", () => {
 
     const node = nodeButton("极限");
     const before = node.getAttribute("style");
-    fireEvent.pointerDown(node, { pointerId: 1, clientX: 100, clientY: 100 });
-    fireEvent.pointerMove(node, { pointerId: 1, clientX: 190, clientY: 150 });
-    fireEvent.pointerUp(node, { pointerId: 1, clientX: 190, clientY: 150 });
+    fireEvent.pointerDown(node, { pointerId: 1, clientX: 100, clientY: 100, buttons: 1 });
+    fireEvent.pointerMove(node, { pointerId: 1, clientX: 190, clientY: 150, buttons: 1 });
+    fireEvent.pointerUp(node, { pointerId: 1, clientX: 190, clientY: 150, buttons: 1 });
     expect(node.getAttribute("style")).not.toBe(before);
 
     fireEvent.click(screen.getByRole("button", { name: "锁定位置" }));
@@ -73,6 +73,23 @@ describe("knowledge tree workspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "重新载入示例" }));
     expect(screen.getAllByRole("button", { name: /概念：/ })).toHaveLength(8);
     expect(screen.getByRole("status")).toHaveTextContent("示例已重新载入");
+  });
+
+  it("only drags a node while the left mouse button is held", () => {
+    render(<App />);
+
+    const node = nodeButton("极限");
+    const before = node.getAttribute("style");
+
+    // Press with the left button held and move: the node must move.
+    fireEvent.pointerDown(node, { pointerId: 1, clientX: 100, clientY: 100, buttons: 1 });
+    fireEvent.pointerMove(node, { pointerId: 1, clientX: 160, clientY: 130, buttons: 1 });
+    const moved = node.getAttribute("style");
+    expect(moved).not.toBe(before);
+
+    // Release the button (buttons no longer includes 1): further moves must NOT drag.
+    fireEvent.pointerMove(node, { pointerId: 1, clientX: 240, clientY: 190, buttons: 0 });
+    expect(node.getAttribute("style")).toBe(moved);
   });
 
   it("keeps toolbar and detail controls accessible", () => {
