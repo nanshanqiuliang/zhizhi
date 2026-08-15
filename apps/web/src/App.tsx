@@ -13,7 +13,7 @@ import type {
   SearchResultItem,
   WorkspaceSnapshot,
 } from "./api";
-import { buildSetLockPatch } from "./api";
+import { DEFAULT_WORKSPACE_ID, buildSetLockPatch } from "./api";
 import { renderMarkdown } from "./markdown";
 import { PdfRenderer } from "./PdfRenderer";
 
@@ -213,7 +213,23 @@ function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | 
   );
 }
 
-export function App({ api }: { api?: PersistApi }) {
+export function App({
+  api: apiProp,
+  apiFactory,
+}: {
+  api?: PersistApi;
+  apiFactory?: (workspaceId: string) => PersistApi;
+}) {
+  const [workspaceId, setWorkspaceId] = useState(DEFAULT_WORKSPACE_ID);
+  const [workspaces, setWorkspaces] = useState<
+    Array<{ id: string; name: string; concept_count: number; updated_at: number | string }>
+  >([]);
+  // `api` targets the current workspace: a passed-in api (tests) is used as-is,
+  // otherwise it is rebuilt from the factory whenever the workspace changes.
+  const api = useMemo(
+    () => apiProp ?? (apiFactory ? apiFactory(workspaceId) : undefined),
+    [apiProp, apiFactory, workspaceId],
+  );
   const [present, setPresent] = useState<WorkspaceSnapshot>(() => createSampleWorkspace());
   const [past, setPast] = useState<WorkspaceSnapshot[]>([]);
   const [future, setFuture] = useState<WorkspaceSnapshot[]>([]);
@@ -306,6 +322,14 @@ export function App({ api }: { api?: PersistApi }) {
       })
       .catch(() => {
         if (!cancelled) setAiSettings({ configured: false, enabled: false });
+      });
+    api
+      .listWorkspaces?.()
+      .then((items) => {
+        if (!cancelled) setWorkspaces(items);
+      })
+      .catch(() => {
+        if (!cancelled) setWorkspaces([]);
       });
     return () => {
       cancelled = true;
@@ -462,6 +486,19 @@ export function App({ api }: { api?: PersistApi }) {
       setStatus("已清除 AI Key，AI 功能未连接");
     } catch (error) {
       setStatus(`清除 AI Key 失败（${(error as Error).message}）`);
+    }
+  }
+
+  async function handleCreateCourse() {
+    if (!api?.createWorkspace) return;
+    try {
+      const created = await api.createWorkspace("新课程");
+      const items = (await api.listWorkspaces?.()) ?? [];
+      setWorkspaces(items);
+      setWorkspaceId(created.id);
+      setStatus(`已创建课程「${created.name}」，请在画布中添加概念`);
+    } catch (error) {
+      setStatus(`创建课程失败（${(error as Error).message}）`);
     }
   }
 
@@ -1086,29 +1123,60 @@ export function App({ api }: { api?: PersistApi }) {
         <nav className="sidebar" aria-label="课程与笔记">
           <div className="side-heading">
             <p className="overline">我的课程</p>
-            <button type="button" className="icon-button" aria-label="添加课程" disabled>＋</button>
-          </div>
-          <button type="button" className="course-card active">
-            <span className="course-icon">微</span>
-            <span><strong>微积分</strong><small>8 个概念 · 3 篇笔记</small></span>
-          </button>
-          <button type="button" className="course-card muted" disabled>
-            <span className="course-icon ghost">＋</span>
-            <span><strong>新建课程</strong><small>后续版本开放</small></span>
-          </button>
-
-          <div className="notes-heading">
-            <p className="overline">相关笔记</p>
-            <span>{sampleNotes.length}</span>
-          </div>
-          <div className="note-list">
-            {sampleNotes.map((note, index) => (
-              <button type="button" className="note-link" key={note.title} onClick={() => selectNode(note.nodeId)}>
-                <span className="note-index">0{index + 1}</span>
-                <span><strong>{note.title}</strong><small>{note.detail}</small></span>
+            {api?.createWorkspace && (
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="添加课程"
+                title="新建课程"
+                onClick={() => void handleCreateCourse()}
+              >
+                ＋
               </button>
-            ))}
+            )}
           </div>
+          {workspaces.length === 0 && (
+            <button type="button" className="course-card active">
+              <span className="course-icon">微</span>
+              <span><strong>微积分</strong><small>示例课程</small></span>
+            </button>
+          )}
+          {workspaces.map((ws) => (
+            <button
+              type="button"
+              key={ws.id}
+              className={`course-card${ws.id === workspaceId ? " active" : ""}`}
+              onClick={() => setWorkspaceId(ws.id)}
+            >
+              <span className="course-icon">{ws.name.slice(0, 1) || "课"}</span>
+              <span>
+                <strong>{ws.name}</strong>
+                <small>{ws.concept_count} 个概念</small>
+              </span>
+            </button>
+          ))}
+
+          {workspaceId === DEFAULT_WORKSPACE_ID && (
+            <>
+              <div className="notes-heading">
+                <p className="overline">相关笔记</p>
+                <span>{sampleNotes.length}</span>
+              </div>
+              <div className="note-list">
+                {sampleNotes.map((note, index) => (
+                  <button
+                    type="button"
+                    className="note-link"
+                    key={note.title}
+                    onClick={() => selectNode(note.nodeId)}
+                  >
+                    <span className="note-index">0{index + 1}</span>
+                    <span><strong>{note.title}</strong><small>{note.detail}</small></span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <div className="answer-section" aria-label="问答">
             <p className="overline">向本地知识提问</p>
             <div className="answer-form">

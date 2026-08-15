@@ -133,6 +133,10 @@ export interface PersistApi {
   getAiSettings?(): Promise<{ configured: boolean; enabled: boolean }>;
   setAiKey?(apiKey: string): Promise<{ status: string; configured: boolean }>;
   clearAiKey?(): Promise<{ status: string; configured: boolean }>;
+  listWorkspaces?(): Promise<
+    Array<{ id: string; name: string; concept_count: number; updated_at: number | string }>
+  >;
+  createWorkspace?(name: string): Promise<{ id: string; name: string }>;
   generateDraft(resourceId: string): Promise<AiDraftResult>;
   acceptDraft(
     patch: Record<string, unknown>,
@@ -160,6 +164,10 @@ export interface PersistApi {
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
 const COURSE_ID = "00000000-0000-7000-8000-000000000002";
+
+// The first/sample course workspace; `httpPersistApi` targets it by default and
+// the UI rebuilds its api for other workspaces.
+export const DEFAULT_WORKSPACE_ID = WORKSPACE_ID;
 
 // Deterministic per-session internal id -> canonical UUIDv7 mapping so repeated
 // saves of the same node do not drift.
@@ -323,8 +331,11 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
   };
 }
 
-export function httpPersistApi(baseUrl: string): PersistApi {
-  const workspaceBase = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}`;
+export function httpPersistApi(
+  baseUrl: string,
+  workspaceId: string = WORKSPACE_ID,
+): PersistApi {
+  const workspaceBase = `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}`;
   const endpoint = `${workspaceBase}/graph`;
   return {
     async loadGraph(): Promise<WorkspaceSnapshot | null> {
@@ -432,7 +443,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       const form = new FormData();
       form.append("file", file);
       const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources`,
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources`,
         { method: "POST", body: form },
       );
       if (!response.ok) {
@@ -442,7 +453,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
     },
     async listResources(): Promise<ResourceInfo[]> {
       const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources`,
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources`,
       );
       if (!response.ok) {
         throw new Error(`list failed: ${response.status}`);
@@ -452,7 +463,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
     },
     async parsePdf(resourceId: string): Promise<{ page_count: number }> {
       const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/parse`,
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources/${resourceId}/parse`,
         { method: "POST" },
       );
       if (!response.ok) {
@@ -462,7 +473,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
     },
     async getPageText(resourceId: string, page: number): Promise<PageText> {
       const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/pages/${page}`,
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources/${resourceId}/pages/${page}`,
       );
       if (!response.ok) {
         throw new Error(`page failed: ${response.status}`);
@@ -471,7 +482,7 @@ export function httpPersistApi(baseUrl: string): PersistApi {
     },
     async listAnchors(resourceId: string): Promise<AnchorRef[]> {
       const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/anchors`,
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources/${resourceId}/anchors`,
       );
       if (!response.ok) {
         throw new Error(`anchors failed: ${response.status}`);
@@ -500,11 +511,11 @@ export function httpPersistApi(baseUrl: string): PersistApi {
       });
     },
     getFileUrl(resourceId: string): string {
-      return `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/file`;
+      return `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources/${resourceId}/file`;
     },
     async getResourceText(resourceId: string): Promise<string> {
       const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${WORKSPACE_ID}/resources/${resourceId}/file`,
+        `${baseUrl.replace(/\/$/, "")}/api/workspaces/${workspaceId}/resources/${resourceId}/file`,
       );
       if (!response.ok) {
         throw new Error(`resource text failed: ${response.status}`);
@@ -554,6 +565,35 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(`ai settings clear failed: ${response.status}`);
       }
       return (await response.json()) as { status: string; configured: boolean };
+    },
+    async listWorkspaces(): Promise<
+      Array<{ id: string; name: string; concept_count: number; updated_at: number | string }>
+    > {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/workspaces`);
+      if (!response.ok) {
+        throw new Error(`list workspaces failed: ${response.status}`);
+      }
+      const body = (await response.json()) as {
+        workspaces: Array<{
+          id: string;
+          name: string;
+          concept_count: number;
+          updated_at: number | string;
+        }>;
+      };
+      return body.workspaces;
+    },
+    async createWorkspace(name: string): Promise<{ id: string; name: string }> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/workspaces`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `create workspace failed: ${response.status}`);
+      }
+      return (await response.json()) as { id: string; name: string };
     },
     async generateDraft(resourceId: string): Promise<AiDraftResult> {
       const response = await fetch(`${workspaceBase}/ai-draft`, {

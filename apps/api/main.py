@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
@@ -117,6 +118,90 @@ def _reveal_in_explorer(path: Path, *, select: bool) -> None:
         return
     args = ["explorer", "/select,", str(path)] if select else ["explorer", str(path)]
     subprocess.Popen(args)
+
+
+def _fresh_course_graph(workspace_id: str, name: str) -> JsonObject:
+    """A minimal valid CourseGraph with a single root concept (new course)."""
+
+    concept_id = str(uuid7())
+    course_id = str(uuid7())
+    return {
+        "schema_version": 1,
+        "workspace_id": workspace_id,
+        "course_id": course_id,
+        "revision_no": 0,
+        "concepts": [
+            {
+                "id": concept_id,
+                "course_id": course_id,
+                "label": name,
+                "origin": "user",
+                "review_state": "accepted",
+                "confidence": None,
+                "evidence_ids": [],
+                "locks": {
+                    "content": False,
+                    "relations": False,
+                    "position": False,
+                    "annotations": False,
+                },
+                "annotations": [],
+                "revision_no": 0,
+            }
+        ],
+        "edges": [],
+        "layout_items": [
+            {
+                "view_id": workspace_id,
+                "concept_id": concept_id,
+                "x": 250,
+                "y": 180,
+                "pinned": False,
+                "revision_no": 0,
+            }
+        ],
+    }
+
+
+def _list_workspaces(root: Path) -> list[JsonObject]:
+    """Enumerate existing workspaces (UUIDv7 dirs with a saved graph)."""
+
+    workspaces: list[JsonObject] = []
+    if not root.is_dir():
+        return workspaces
+    for entry in sorted(root.iterdir()):
+        if not entry.is_dir() or not _is_uuidv7(entry.name):
+            continue
+        try:
+            layout = resolve_workspace(entry)
+            graph = load_course_graph(layout)
+        except WorkspaceError:
+            continue
+        concepts = [c for c in graph.get("concepts", []) if isinstance(c, dict)]
+        targets = {
+            edge.get("target_concept_id")
+            for edge in graph.get("edges", [])
+            if isinstance(edge, dict)
+        }
+        label: Any = None
+        for concept in concepts:
+            if concept.get("id") not in targets:
+                label = concept.get("label")
+                break
+        if label is None and concepts:
+            label = concepts[0].get("label")
+        updated_at: float | str = ""
+        with suppress(OSError):
+            updated_at = entry.joinpath("knowledge-tree.db").stat().st_mtime
+        workspaces.append(
+            {
+                "id": entry.name,
+                "name": str(label) if label else "未命名课程",
+                "concept_count": len(concepts),
+                "updated_at": updated_at,
+            }
+        )
+    return workspaces
 
 
 def _http_error(error: WorkspaceError) -> HTTPException:
@@ -245,6 +330,29 @@ def create_app(
     @app.get("/api/health")
     def health() -> JsonObject:
         return {"status": "ok"}
+
+    @app.get("/api/workspaces")
+    def get_workspaces() -> JsonObject:
+        return {"workspaces": _list_workspaces(root)}
+
+    @app.post("/api/workspaces")
+    async def post_workspace(request: Request) -> JsonObject:
+        payload = await _read_json(request)
+        name = payload.get("name")
+        if not isinstance(name, str) or not name.strip() or len(name.strip()) > 50:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "workspace_invalid", "rule": "name_invalid"},
+            )
+        workspace_id = str(uuid7())
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = create_workspace(workspace_root)
+            migrate(layout.db_path)
+            save_course_graph(layout, _fresh_course_graph(workspace_id, name.strip()))
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        return {"id": workspace_id, "name": name.strip()}
 
     @app.get("/api/settings/ai")
     def get_ai_settings() -> JsonObject:

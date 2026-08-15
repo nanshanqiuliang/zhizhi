@@ -12,9 +12,10 @@ if (!root) {
 }
 
 const apiBase = import.meta.env.VITE_LOCAL_API ?? "http://127.0.0.1:8000";
+const apiFactory = (workspaceId: string) => httpPersistApi(apiBase, workspaceId);
 
 createRoot(root).render(
   <StrictMode>
-    <App api={httpPersistApi(apiBase)} />
+    <App apiFactory={apiFactory} />
   </StrictMode>,
 );
