@@ -87,7 +87,8 @@ updated_at: 2026-08-15T20:13:00+08:00
   `GET /assets/...` 返回静态资源；`/api/health` 仍 200（API 路由优先于静态挂载）。
 - [ ] AC-2 (c2)：`apps.desktop.launcher` 可导入；`--data-root` 缺省为 `%LOCALAPPDATA%\知枝\data`
   且自动创建、可写；`--data-root` 覆盖生效。
-- [ ] AC-3 (c3)：单实例：端口被占时第二实例 fail-closed 退出（不双写、不抢端口）。
+- [ ] AC-3 (c3)：单实例：已有一实例运行时（锁文件记录其端口并健康探测命中）第二实例
+  fail-closed 退出（不双写、不抢端口）。
 - [ ] AC-4 (c4)：优雅退出释放端口（无孤儿 uvicorn）。
 - [ ] AC-5 (c5)：冻结产物 e2e 冒烟：启动→`/api/health` 200→`/` 返回 UI→写笔记保存重载仍在→导入
   MD→AI 草案（mock 或 env key）→接受→来源回跳→撤销恢复。

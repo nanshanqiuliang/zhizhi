@@ -11,6 +11,7 @@ Run: `python -m apps.desktop.launcher [--data-root DIR] [--port N] [--no-browser
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import threading
@@ -54,14 +55,23 @@ def _wait_for_health(port: int) -> bool:
     return False
 
 
-def _pid_alive(pid: int) -> bool:
-    if pid <= 0:
-        return False
+def _read_lock_port(lock_path: Path) -> int | None:
+    """Return the port recorded in a lock file, or None if absent/corrupt."""
     try:
-        os.kill(pid, 0)
+        payload = json.loads(lock_path.read_text(encoding="utf-8"))
+        port = payload.get("port")
+        return int(port) if isinstance(port, int) else None
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _is_running(port: int) -> bool:
+    """True when a sidecar on `port` answers our health check."""
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=1.5) as response:
+            return bool(response.status == 200)
     except OSError:
         return False
-    return True
 
 
 def main() -> None:
@@ -84,20 +94,23 @@ def main() -> None:
         print(f"无法创建数据目录 {data_root}：{error}", file=sys.stderr)
         raise SystemExit(1) from error
 
-    # Single-instance guard: an exclusive lock file in the data root, keyed by
-    # PID. A second launch fails closed instead of racing the first for the
-    # database and the loopback port.
+    # Single-instance guard: an exclusive lock file in the data root that
+    # records this instance's port. A second launch health-checks that port and
+    # fails closed if a sidecar is already answering, so it never races the
+    # first instance for the database or the loopback port.
     lock_path = data_root / ".lock"
     try:
         lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
-        try:
-            stale_pid = int(lock_path.read_text(encoding="utf-8").strip() or "0")
-        except (OSError, ValueError):
-            stale_pid = 0
-        if _pid_alive(stale_pid):
+        existing_port = _read_lock_port(lock_path)
+        if existing_port is None:
+            # A racing starter may not have written its port yet; give it a beat.
+            time.sleep(0.5)
+            existing_port = _read_lock_port(lock_path)
+        if existing_port is not None and _is_running(existing_port):
             print(
-                f"已有一个 {_APP_NAME} 实例在运行（PID {stale_pid}），本次启动退出。",
+                f"已有一个 {_APP_NAME} 实例在运行（http://127.0.0.1:{existing_port}/），"
+                "本次启动退出。",
                 file=sys.stderr,
             )
             raise SystemExit(1) from None
@@ -109,7 +122,7 @@ def main() -> None:
         except FileExistsError:
             print("无法获取单实例锁，本次启动退出。", file=sys.stderr)
             raise SystemExit(1) from None
-    os.write(lock_fd, str(os.getpid()).encode("utf-8"))
+    os.write(lock_fd, json.dumps({"pid": os.getpid(), "port": args.port}).encode("utf-8"))
     os.close(lock_fd)
 
     try:
