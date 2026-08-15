@@ -1,0 +1,17 @@
+﻿[PASS] P-C-001 5000 ops exactly accepted (validate_contract) — 5000 == cap
+[PASS] P-C-002 5001 ops rejected with rule=maxItems — {'contract': 'graph_patch', 'path': 'operations', 'rule': 'maxItems'}
+[PASS] P-C-003 0 ops rejected with rule=minItems — {'contract': 'graph_patch', 'path': 'operations', 'rule': 'minItems'}
+[PASS] P-C-004 duplicate op_id rejected — code=validation_failed rule=duplicate_operation_id
+[PASS] P-C-005 duplicate operation target rejected — rule=duplicate_operation_target
+[PASS] P-C-006 150 ops accepted (user regression scenario)
+[PASS] P-C-007 2500 ops accepted (realistic whole-corpus worst case)
+[PASS] P-C-008 100 ops (old cap) still accepted — backward compatible
+[PASS] P-C-009 user-origin concept with non-null confidence rejected — rule=user_confidence_must_be_null
+[PASS] P-G-001 generated Python mirror == canonical JSON; operations.maxItems == 5000 — maxItems=5000
+[PASS] P-G-002 contracts-ts graph-v1.ts artifact consistent (type-only, schema_version=1) — drift gate exit 0 recorded separately
+[PASS] P-A-001 whole-corpus 240-op draft -> 200 + requires_confirmation — 240 ops
+[PASS] P-A-002 whole-corpus with no resources -> 422 draft_invalid/no_resources — {'code': 'draft_invalid', 'rule': 'no_resources'}
+[PASS] P-A-003 no workspace generator -> 503 ai_not_available (fail-closed) — {'code': 'ai_not_available'}
+[PASS] P-A-004 single-resource mode (resource_id given) still works — 200 + requires_confirmation
+
+=== 15/15 probes passed, 0 failed ===

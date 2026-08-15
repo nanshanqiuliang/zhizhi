@@ -1,0 +1,70 @@
+# Gate commands executed for TR-20260815-007 (WORK-2026-046)
+
+```text
+# 1. Red-light truth in isolated worktree (detached @ bc08d8f, branch already checked out in main tree)
+git worktree add --detach %TEMP%\zhizhi-tr007-redlight bc08d8f
+# revert operations.maxItems 5000 -> 100 in worktree (canonical json + generated python mirror)
+#   docs/contracts/knowledge-tree-graph.v1.schema.json  L514
+#   packages/contracts-py/src/knowledge_tree_contracts/_generated_graph_v1_schema.py  L925
+uv run python -m pytest tests/contract/test_graph_contracts.py::test_graph_patch_accepts_large_operation_set -q
+#   -> FAIL: ContractValidationError: validation_failed: graph_patch at operations violates maxItems (red, rule=maxItems)
+uv run python -m pytest tests/integration/test_ai_draft_api.py::test_ai_draft_large_workspace_patch_exceeds_old_cap -q
+#   -> FAIL: 422 {"code":"draft_invalid","rule":"maxItems","contract":"graph_patch","path":"operations"} (red, rule=maxItems)
+git -C %TEMP%\zhizhi-tr007-redlight checkout -- docs/contracts/knowledge-tree-graph.v1.schema.json packages/contracts-py/src/knowledge_tree_contracts/_generated_graph_v1_schema.py
+uv run python -m pytest tests/contract/test_graph_contracts.py::test_graph_patch_accepts_large_operation_set tests/contract/test_graph_contracts.py::test_graph_patch_enforces_operation_bound -q
+#   -> 2 passed (green)
+uv run python -m pytest tests/integration/test_ai_draft_api.py::test_ai_draft_large_workspace_patch_exceeds_old_cap -q
+#   -> 1 passed (green)
+git worktree remove %TEMP%\zhizhi-tr007-redlight
+
+# 2. Full gates (main worktree @ bc08d8f, reviewed commit f8d673c)
+uv run python -m scripts.validate_repository
+#   -> PASS (repository skeleton, secret scan, graph/LLM contracts, calculus review packet, v2 mock/replay harness)
+uv run ruff format --check packages scripts tests apps
+#   -> 116 files already formatted
+uv run ruff check .
+#   -> All checks passed!  (re-run after evidence files added: still clean)
+uv run mypy scripts
+#   -> Success: no issues found in 16 source files
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+#   -> Success: no issues found in 40 source files
+uv run python -m pytest -q
+#   -> 469 passed, 5 skipped in 29.15s  (5 skips = live DeepSeek: RUN_LIVE_LLM_TESTS=1 + DEEPSEEK_API_KEY required, no key present)
+pnpm install --frozen-lockfile
+#   -> Already up to date
+pnpm peers check
+#   -> No peer dependency issues found
+pnpm check
+#   -> Test Files 14 passed (14); Tests 53 passed (53)
+pnpm build
+#   -> built in 214ms (chunk-size warning is pre-existing, unrelated)
+pnpm --filter @knowledge-tree/contracts-ts check
+#   -> exit 0 (generate.mjs --check + tsc --noEmit --pretty false, no drift)
+cd packages/contracts-ts
+node scripts/generate.mjs --check
+#   -> exit 0 (no generated_contract_drift)
+node_modules/.bin/tsc --noEmit --pretty false
+#   -> exit 0
+cd ..\..
+
+# 3. Adversarial probes (15/15 PASS)
+$env:PYTHONPATH = ".;packages/contracts-py/src;packages/domain/src;packages/infrastructure/src"
+uv run python evidence/TR-20260815-007/probes_graph_patch_cap.py
+#   -> 15/15 probes passed (P-C-001..009, P-A-001..004, P-G-001..002)
+
+# 4. Frozen exe probes (9/9 PASS)
+uv run python evidence/TR-20260815-007/probe_frozen_exe.py
+#   -> EXE-000..007 PASS: health 200; workspaces 200; ai-draft 503 ai_not_available x2 modes;
+#      120-op patch accepted+committed; 5001-op patch 422 patch_invalid/maxItems;
+#      121 concepts persisted (baseline 1 + 120); port released after terminate
+
+# 5. Desktop e2e (18/18 PASS)
+uv run python scripts/desktop_e2e.py
+#   -> 18/18 checks passed
+
+# 6. Evidence hygiene
+uv run ruff format evidence/TR-20260815-007/probes_graph_patch_cap.py evidence/TR-20260815-007/probe_frozen_exe.py
+uv run ruff check evidence/TR-20260815-007/
+uv run ruff check .        # final re-run with evidence files in tree -> clean
+uv run python -m scripts.validate_repository   # final re-run -> PASS
+```

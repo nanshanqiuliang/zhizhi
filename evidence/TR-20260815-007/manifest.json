@@ -1,0 +1,35 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260815-007",
+  "created_at": "2026-08-16T03:15:00+08:00",
+  "reviewed_commit": "f8d673c",
+  "qa_attempt001_commit": "f8d673c",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": "attempt001",
+    "attempt001": {
+      "path": "TR-20260815-007_qa-attempt-001.md",
+      "reviewed_commit": "f8d673c",
+      "decision": "pass",
+      "findings": "0 P0/P1/P2; 5 P3 observations (non-blocking)"
+    }
+  },
+  "files": [
+    "TR-20260815-007_qa-attempt-001.md",
+    "manifest.json",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt",
+    "probes_graph_patch_cap.py",
+    "probe_frozen_exe.py",
+    "probes-output.log",
+    "exe-probe-output.log"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "notes": "WORK-2026-046: GraphPatch.operations.maxItems 100->5000. Red-light rerun in isolated worktree (cap=100 -> both regression tests fail rule=maxItems; cap=5000 -> pass). Gates: pytest 469 passed + 5 skipped (live DeepSeek no key), ruff/mypy/validator/pnpm 53-53/build/desktop-e2e 18-18/contracts-ts drift clean. Probes 15/15 (contract+API+artifact). Frozen exe probes 9/9 incl. 120-op patch accepted+committed and 5001-op rejected maxItems. Live DeepSeek not executed (no key); AI path verified with injected generators + frozen-exe 503 probe."
+}

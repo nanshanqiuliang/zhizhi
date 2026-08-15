@@ -1,0 +1,21 @@
+{
+  "os": "Windows",
+  "python": "3.12.6",
+  "uv": "0.12.3",
+  "node": "24.14.1",
+  "pnpm": "11.19.0",
+  "branch": "feature/WORK-2026-046-patch-size-bound",
+  "reviewed_commit": "f8d673c",
+  "head_commit": "bc08d8f",
+  "frozen_exe": {
+    "path": "dist/zhizhi/zhizhi.exe",
+    "bytes": 8632729,
+    "last_write_time": "2026-08-16T03:01:14+08:00",
+    "fix_commit_time": "2026-08-16T03:00:26+08:00"
+  },
+  "live_llm": {
+    "DEEPSEEK_API_KEY": "not set",
+    "RUN_LIVE_LLM_TESTS": "not set",
+    "note": "5 pytest skips are the documented live DeepSeek gate; not treated as a failure"
+  }
+}

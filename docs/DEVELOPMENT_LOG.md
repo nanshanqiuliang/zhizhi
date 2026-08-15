@@ -2,6 +2,35 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — GraphPatch 单补丁操作数上限放宽（WORK-2026-046，maxitems 修复）
+
+- 关联 ID：WORK-2026-046、WORK-2026-043/044、REQ-2026-001、NFR-2026-001；QA `TR-20260815-007`。
+- 实际变化：① canonical `GraphPatch.operations.maxItems` 100→5000（
+  `docs/contracts/knowledge-tree-graph.v1.schema.json` L514）+ 重新生成
+  `_generated_graph_v1_schema.py`（`pnpm contracts:generate`，drift 门验证无漂移）；
+  schema_version 仍为 1，向后兼容（≤100 操作旧补丁/历史不变）；② 新增回归测试：契约
+  150 操作接受 / 上限+1 拒绝（rule=maxItems，上限未移除）/ API 全库模式 240 操作草案
+  200（复现用户 `paper.pdf` 的 `maxitems` 场景）；③ `docs/ai-mindmap-agent-harness.md`
+  约束 6 补充单补丁操作数上限说明；④ 桌面产物（exe/安装器/zip）重建，冻结 exe 实测
+  **120 操作补丁接受并落库**（revision_no=1）、**5001 操作补丁 422
+  `patch_invalid/maxItems`**（上限仍强制）。
+- 影响模块/接口/schema/migration/prompt：canonical 契约 + 生成产物；无迁移；无 UI/API
+  契约变化（仅大草案错误路径收窄）；生成器端 `max_chunks=40` 不变。
+- 兼容性：≤100 操作的既有补丁/历史/备份不受影响。
+- 验证与证据：红灯真值（隔离 worktree 还原 100 后，150 操作契约测试与 240 操作 API
+  测试均以 rule=maxItems 失败，与用户 exe 报错一致）→ 实现 `87f9c1a`（红灯）/
+  `f8d673c`（修复）；pytest 469/469 + 5 skipped；Web 53/53；ruff/mypy/validator/pnpm
+  （含契约 drift）全绿；e2e 18/18；QA `TR-20260815-007` PASS（0 P0/P1/P2；5 个 P3：
+  上限测试读 canonical 由 drift 门兜底、no_resources 断言补强已关闭、DoD 文档提交、
+  exe 8.2MB 实测、5000 操作单事务基准可选）。
+- 性能/安全/运维影响：单事务补丁上限 5000（数 MB JSON，本地 SQLite 顺序应用可接受）；
+  安全语义不变（草案仍不可信、预览→确认→提交门、fail-closed 不变）。
+- 回滚：回退 `f8d673c` 即回旧上限；或回退 `87f9c1a` 移除回归测试。
+- 遗留风险与下一步：5000 操作单事务基准可选（P3-5）；画布无限延伸 WORK-2026-045；
+  内置 MCP server / 受控 Web 搜索（第 11 步）已产出两份可行性文档
+  （`docs/开源方案对比_内置MCP与AI脑图.md`、`docs/程序可用性实测与开源借鉴分析.md`），
+  待 owner 定方向后立项。
+
 ## 2026-08-16 — 草案生成可诊断化与鲁棒性（WORK-2026-044）
 
 - 关联 ID：WORK-2026-044、WORK-2026-009/026/043、NFR-2026-001、REQ-2026-001。

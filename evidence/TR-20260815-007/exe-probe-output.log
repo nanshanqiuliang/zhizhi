@@ -1,0 +1,10 @@
+﻿[PASS] EXE-000 frozen exe present — zhizhi.exe 8632729 bytes
+[PASS] EXE-001 GET /api/health -> 200 — status=200 body={'status': 'ok'}
+[PASS] EXE-002 POST /api/workspaces -> 200 — status=200 body={'id': '01a006d6-443f-7080-87fe-4199be0411f9', 'name': 'QA-007-冻结探针'}
+[PASS] EXE-002b GET workspace graph (course_id for patch) — course_id=01a006d6-445a-7080-af89-e5cf407d919c baseline_concepts=1
+[PASS] EXE-003 POST /ai-draft (whole-workspace, no key) -> 503 ai_not_available — status=503 body={'code': 'ai_not_available'}
+[PASS] EXE-003b POST /ai-draft (single-resource, no key) -> 503 ai_not_available — status=503 body={'code': 'ai_not_available'}
+[PASS] EXE-004 120-op patch accepted (cap=5000 embedded, old cap was 100) — status=200 body={'status': 'applied', 'change_id': '00000000-0000-7000-8000-000000102078', 'revision_no': 1}
+[PASS] EXE-005 5001-op patch rejected 422 rule=maxItems (bound enforced) — status=422 body={'code': 'patch_invalid', 'contract': 'graph_patch', 'path': 'operations', 'rule': 'maxItems'}
+[PASS] EXE-006 120 concepts persisted after commit — concepts=121 (baseline 1 + 120) revision_no=1
+[PASS] EXE-007 process terminated and port released — port=54377 in_use=False

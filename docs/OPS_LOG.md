@@ -12,6 +12,24 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-046：GraphPatch 操作数上限放宽 + 桌面产物重发（maxitems 修复）
+
+- 关联 ID：WORK-2026-046、WORK-2026-043/044、TR-20260815-007。
+- 环境/版本/build/config：commit `f8d673c`（feature/WORK-2026-046-patch-size-bound）；
+  local-dev Windows x64。桌面产物重建：`dist/zhizhi/zhizhi.exe`（8,632,729 字节）、
+  `dist/zhizhi-0.1.0-setup.exe`（19.3MB）、`dist/zhizhi-0.1.0-portable.zip`（22.5MB）。
+- 变更或症状：冻结 exe 对长资料全库思维导图报 `maxitems`（用户反馈）→ 契约
+  `GraphPatch.operations.maxItems` 100→5000。冻结 exe 实测：120 操作补丁接受并落库、
+  5001 操作 422 `patch_invalid/maxItems`（上限仍强制）；无 key 时 `/ai-draft` 两模式
+  均 503 `ai_not_available`（fail-closed 不变）。
+- 影响：用户需安装新产物（安装器覆盖升级或替换便携包）后修复生效；数据目录
+  （`%LOCALAPPDATA%\知枝\data`）不受影响、无需迁移。
+- 证据：QA `TR-20260815-007` PASS（correlated_review，0 P0/P1/P2）；pytest 469/469
+  + 5 skipped、Web 53/53、e2e 18/18。
+- 缓解/回滚：回退 `f8d673c` 即回旧上限；旧数据兼容（schema_version 不变）。
+- 遗留风险/Owner/期限：live DeepSeek 全库生成需 owner key 复测 `paper.pdf`；5000 操作
+  单事务基准可选（P3-5）；MCP 内置 server 方向待 owner 定。
+
 ## 2026-08-15 — 第 9 步收尾：AI 修改历史（WORK-2026-032）运维记录
 
 - 关联 ID：WORK-2026-032、WORK-2026-011/019/022/026/027/029。

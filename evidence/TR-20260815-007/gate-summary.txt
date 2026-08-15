@@ -1,0 +1,26 @@
+# Gate summary for TR-20260815-007 (WORK-2026-046)
+
+reviewed_commit: f8d673c
+decision: PASS (0 P0 / 0 P1 / 0 P2 / 5 P3 observations)
+
+Red-light truth (isolated worktree, cap reverted to 100):
+- test_graph_patch_accepts_large_operation_set -> FAIL rule=maxItems (red)
+- test_ai_draft_large_workspace_patch_exceeds_old_cap -> FAIL 422 draft_invalid/maxItems (red)
+- restored cap=5000 -> contract 2 passed + API 1 passed (green)
+
+Gates:
+- full pytest: 469 passed, 5 skipped (live-LLM gate, no key)
+- ruff check .: clean; ruff format --check: 116 files (re-run clean with evidence files)
+- mypy scripts: 16 files; mypy --strict: 40 files
+- scripts.validate_repository: PASS (incl. secret scan; re-run PASS)
+- pnpm install --frozen-lockfile / peers check: OK; pnpm check: 53/53 (14 files); pnpm build: OK
+- contracts-ts drift: generate.mjs --check + tsc exit 0 (no drift)
+- desktop e2e (frozen exe): 18/18
+
+Adversarial probes: 15/15 (9 contract + 4 API + 2 artifact consistency)
+Frozen exe probes: 9/9 (health 200; workspaces 200; ai-draft no-key 503 x2 modes;
+120-op patch accepted+committed; 5001-op patch rejected 422 maxItems; port released)
+
+Findings: 0 P0/P1/P2; 5 P3 observations (enforcement-test drift sensitivity,
+no_resources test rule pinning, uncommitted DoD doc sync, exe size 8.2MB vs ~18MB
+brief, 5000-op commit benchmark not measured)
