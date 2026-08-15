@@ -858,6 +858,13 @@ export function App({ api }: { api?: PersistApi }) {
       startPanY: 0,
       before: present,
     };
+    // Capture the pointer so pointerup is delivered even when the cursor
+    // leaves the button; drag ends reliably instead of sticking.
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // jsdom / unsupported hosts: drag still works via moveDrag.
+    }
   }
 
   function startPan(event: React.PointerEvent<HTMLDivElement>) {
@@ -875,11 +882,23 @@ export function App({ api }: { api?: PersistApi }) {
       startPanY: camera.y,
       before: present,
     };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // jsdom / unsupported hosts: pan still works via moveDrag.
+    }
   }
 
   function moveDrag(event: React.PointerEvent<HTMLElement>) {
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId) return;
+    // Drag only while the left mouse button is held. If a pointerup was missed
+    // (e.g. released outside the window), a button-less move ends the drag
+    // instead of letting it stick until the next click.
+    if ((event.buttons & 1) === 0) {
+      endDrag(event);
+      return;
+    }
     if (active.mode === "pan") {
       setCamera((prev) => ({
         ...prev,
@@ -1184,6 +1203,7 @@ export function App({ api }: { api?: PersistApi }) {
               onPointerDown={startPan}
               onPointerMove={moveDrag}
               onPointerUp={endDrag}
+              onPointerCancel={endDrag}
             >
               <div className="canvas-grid" aria-hidden="true" />
               <svg className="edge-layer" viewBox="0 0 1000 650" aria-hidden="true">
