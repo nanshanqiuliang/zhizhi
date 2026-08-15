@@ -126,7 +126,9 @@ def build_command_patch(
                 }
             )
         else:
-            raise CommandError("command_invalid", details={"rule": "op_unknown", "op": op})
+            raise CommandError(
+                "command_invalid", details={"rule": "op_unknown", "op_hash": _digest(op)}
+            )
 
     return {
         "schema_version": 1,
