@@ -230,3 +230,41 @@ def test_anchor_accepts_remaining_selector_boundaries(selector: JsonObject) -> N
     anchor["selectors"] = [selector]
 
     validate_contract("anchor", anchor)
+
+
+def test_graph_patch_accepts_large_operation_set() -> None:
+    """WORK-2026-046: one mind-map draft exceeds the old 100-op cap.
+
+    A whole-corpus generation (max 40 chunks) produces create_concept +
+    set_layout_item (+create_edge) per concept, so >100 operations is the normal
+    case for a dense source such as paper.pdf, not an error.
+    """
+
+    patch = valid_patch()
+    patch["operations"] = [deepcopy(patch["operations"][0]) for _ in range(150)]
+
+    validate_contract("graph_patch", patch)
+
+
+def test_graph_patch_enforces_operation_bound() -> None:
+    """WORK-2026-046: the bound is raised from 100, not removed.
+
+    A patch with one more operation than the canonical cap must still fail
+    closed with the stable `maxItems` rule.
+    """
+
+    root = (
+        Path(__file__).resolve().parents[2] / "docs/contracts/knowledge-tree-graph.v1.schema.json"
+    )
+    schema = json.loads(root.read_text(encoding="utf-8"))
+    bound = schema["$defs"]["GraphPatch"]["properties"]["operations"]["maxItems"]
+    assert isinstance(bound, int) and bound >= 101
+
+    patch = valid_patch()
+    patch["operations"] = [deepcopy(patch["operations"][0]) for _ in range(bound + 1)]
+
+    with pytest.raises(ContractValidationError) as raised:
+        validate_contract("graph_patch", patch)
+
+    assert raised.value.code == "validation_failed"
+    assert raised.value.details["rule"] == "maxItems"

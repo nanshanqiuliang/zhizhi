@@ -300,3 +300,99 @@ def test_ai_draft_missing_resource_returns_404(client: TestClient) -> None:
         json={"resource_id": "00000000-0000-7000-8000-000000000999"},
     )
     assert response.status_code == 404
+
+
+def test_ai_draft_large_workspace_patch_exceeds_old_cap(tmp_path: Path) -> None:
+    """WORK-2026-046: a whole-corpus mind map exceeds the old 100-op cap.
+
+    Regression for the user's `maxitems` failure on paper.pdf: 120 concepts
+    produce 240 operations (create_concept + set_layout_item each), which the
+    GraphPatch v1 contract rejected before the cap was raised to 5000.
+    """
+
+    def large_workspace(texts: list[tuple[str, str]], graph: JsonObject) -> JsonObject:
+        assert texts
+        course_id = str(graph["course_id"])
+        workspace_id = str(graph["workspace_id"])
+        concepts: list[JsonObject] = []
+        operations: list[JsonObject] = []
+        for index in range(120):
+            concept_id = f"00000000-0000-7000-8000-{5000 + index:012d}"
+            concepts.append(
+                {
+                    "label": f"概念{index:03d}",
+                    "aliases": [],
+                    "confidence": None,
+                    "evidence_ids": [EVIDENCE],
+                }
+            )
+            operations.append(
+                {
+                    "op_id": f"00000000-0000-7000-8000-{6000 + index * 2:012d}",
+                    "op": "create_concept",
+                    "concept": {
+                        "id": concept_id,
+                        "course_id": course_id,
+                        "label": f"概念{index:03d}",
+                        "origin": "user",
+                        "review_state": "accepted",
+                        "confidence": None,
+                        "evidence_ids": [EVIDENCE],
+                        "locks": {
+                            "content": False,
+                            "relations": False,
+                            "position": False,
+                            "annotations": False,
+                        },
+                        "annotations": [],
+                        "revision_no": 0,
+                    },
+                }
+            )
+            operations.append(
+                {
+                    "op_id": f"00000000-0000-7000-8000-{6001 + index * 2:012d}",
+                    "op": "set_layout_item",
+                    "target": {"type": "concept", "id": concept_id},
+                    "expected_updated_revision_no": 0,
+                    "layout_item": {
+                        "view_id": workspace_id,
+                        "concept_id": concept_id,
+                        "x": float(index % 20) * 120.0,
+                        "y": float(index // 20) * 120.0,
+                        "pinned": False,
+                        "revision_no": 0,
+                    },
+                }
+            )
+        patch = {
+            "schema_version": 1,
+            "patch_id": "00000000-0000-7000-8000-000000004000",
+            "workspace_id": workspace_id,
+            "course_id": course_id,
+            "base_revision_no": int(graph["revision_no"]),
+            "actor": {"type": "user", "id": "local-user"},
+            "reason": "AI 草案：全库思维导图（120 概念，240 操作）",
+            "requires_confirmation": True,
+            "confirmed": False,
+            "operations": operations,
+        }
+        return {"draft": {"concepts": concepts, "relations": []}, "patch": patch}
+
+    app = create_app(
+        data_root=tmp_path,
+        allowed_origins=[ALLOWED_ORIGIN],
+        workspace_draft_generator=large_workspace,
+    )
+    with TestClient(app) as ws_client:
+        ws_client.put(f"/api/workspaces/{WORKSPACE_ID}/graph", json=_empty_graph())
+        ws_client.post(
+            f"/api/workspaces/{WORKSPACE_ID}/resources",
+            files={"file": ("notes.md", b"# limit\n\ncontinuity", "text/markdown")},
+        )
+        response = ws_client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={})
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert len(body["patch"]["operations"]) == 240
+        assert body["patch"]["requires_confirmation"] is True
+        assert body["patch"]["confirmed"] is False
