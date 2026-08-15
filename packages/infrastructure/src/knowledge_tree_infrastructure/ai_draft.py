@@ -8,9 +8,9 @@ end-to-end "resource text -> AiDraft -> GraphPatch" path with zero network.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import replace
-from typing import Protocol
+from typing import Any, Protocol
 
 from knowledge_tree_domain.ai_draft import (
     AiDraft,
@@ -19,6 +19,7 @@ from knowledge_tree_domain.ai_draft import (
     DraftRelation,
     chunk_text,
     merge_concept_candidates,
+    normalize_concept_label,
     uuid7,
 )
 
@@ -110,3 +111,65 @@ def build_ai_draft(
     concepts = merge_concept_candidates(candidates)
     relations = relation_resolver.provide(concepts)
     return AiDraft(concepts=concepts, relations=relations)
+
+
+def build_incremental_ai_draft(
+    existing_graph: Mapping[str, Any],
+    text: str,
+    *,
+    resource_id: str,
+    extractor: ConceptExtractor,
+    relation_provider: RelationCandidateProvider,
+    chunk_id_factory: Callable[[], str] = uuid7,
+    anchor_id_factory: Callable[[], str] | None = None,
+    chunk_size: int = 1200,
+    overlap: int = 200,
+) -> AiDraft:
+    """Incremental draft: extract new concepts and merge them into an existing graph.
+
+    New candidates are extracted from the text and merged; any candidate whose
+    normalized label matches an existing concept is dropped (no re-create). The
+    relation provider then sees the union of existing placeholders (empty
+    evidence) and new concepts, so it can propose relations across the graph
+    boundary; relations with no new endpoint (existing↔existing) are dropped.
+    """
+
+    chunks = chunk_text(
+        text,
+        resource_id=resource_id,
+        chunk_size=chunk_size,
+        overlap=overlap,
+        chunk_id_factory=chunk_id_factory,
+    )
+    if anchor_id_factory is not None:
+        chunks = tuple(replace(chunk, anchor_id=anchor_id_factory()) for chunk in chunks)
+
+    candidates: list[DraftConcept] = []
+    for chunk in chunks:
+        candidates.extend(extractor.extract(chunk))
+    merged = merge_concept_candidates(candidates)
+
+    existing_keys = {
+        normalize_concept_label(str(concept["label"]))
+        for concept in existing_graph.get("concepts", [])
+        if isinstance(concept, dict) and isinstance(concept.get("label"), str)
+    }
+    existing_placeholders = tuple(
+        DraftConcept(label=str(concept["label"]), aliases=(), confidence=1.0, evidence_ids=())
+        for concept in existing_graph.get("concepts", [])
+        if isinstance(concept, dict) and isinstance(concept.get("label"), str)
+    )
+    new_only = tuple(
+        concept for concept in merged if normalize_concept_label(concept.label) not in existing_keys
+    )
+    all_concepts = existing_placeholders + new_only
+
+    relations = relation_provider.provide(all_concepts)
+    new_keys = {normalize_concept_label(concept.label) for concept in new_only}
+    relations = tuple(
+        relation
+        for relation in relations
+        if normalize_concept_label(relation.source_label) in new_keys
+        or normalize_concept_label(relation.target_label) in new_keys
+    )
+    return AiDraft(concepts=all_concepts, relations=relations)

@@ -32,11 +32,12 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from knowledge_tree_domain.ai_draft import (  # noqa: E402
-    build_draft_patch,
+    build_incremental_patch,
     deterministic_uuidv7,
+    normalize_concept_label,
     uuid7,
 )
-from knowledge_tree_infrastructure.ai_draft import build_ai_draft  # noqa: E402
+from knowledge_tree_infrastructure.ai_draft import build_incremental_ai_draft  # noqa: E402
 from knowledge_tree_infrastructure.ai_draft_llm import (  # noqa: E402
     LlmConceptExtractor,
     LlmRelationProvider,
@@ -125,14 +126,16 @@ def build_deepseek_draft_generator() -> DraftGenerator | None:
         # the same evidence id, so the accepted concepts/relations point at one
         # durable `anchor` row (idempotent across repeated drafts).
         anchor_id = deterministic_uuidv7(resource_id)
-        draft = build_ai_draft(
+        draft = build_incremental_ai_draft(
+            graph,
             text,
             resource_id=resource_id,
             anchor_id_factory=lambda: anchor_id,
             extractor=concept_extractor,
             relation_provider=relation_provider,
         )
-        patch = build_draft_patch(
+        patch = build_incremental_patch(
+            graph,
             draft,
             workspace_id=str(graph["workspace_id"]),
             course_id=str(graph["course_id"]),
@@ -157,6 +160,16 @@ def build_deepseek_draft_generator() -> DraftGenerator | None:
                 operation["edge"]["confidence"] = None
         patch["actor"] = dict(LOCAL_ACTOR)
         patch["confirmed"] = False
+        existing_keys = {
+            normalize_concept_label(str(concept["label"]))
+            for concept in graph.get("concepts", [])
+            if isinstance(concept, dict) and isinstance(concept.get("label"), str)
+        }
+        new_concepts = [
+            concept
+            for concept in draft.concepts
+            if normalize_concept_label(concept.label) not in existing_keys
+        ]
         return {
             "draft": {
                 "concepts": [
@@ -166,7 +179,7 @@ def build_deepseek_draft_generator() -> DraftGenerator | None:
                         "confidence": concept.confidence,
                         "evidence_ids": list(concept.evidence_ids),
                     }
-                    for concept in draft.concepts
+                    for concept in new_concepts
                 ],
                 "relations": [
                     {

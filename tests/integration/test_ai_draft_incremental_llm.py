@@ -10,7 +10,6 @@ from typing import Any
 
 from knowledge_tree_domain import preview_graph_patch
 from knowledge_tree_domain.ai_draft import (
-    AiDraft,
     build_incremental_patch,
     normalize_concept_label,
 )
