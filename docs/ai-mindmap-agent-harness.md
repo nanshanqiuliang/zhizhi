@@ -25,7 +25,10 @@
    `draft_extraction_failed`（不回显推理文本）；配置损坏 → 降级 503；无资料 → 422
    `no_resources`；PDF 未解析由端点自动解析后读取（幂等）。
 6. **预算上限**：按 task profile 的 `max_attempts`/`max_output_tokens`/`max_cost_usd` 执行；
-   全库模式总块数上限 `max_chunks`（40），超出截断（防爆预算）。
+   全库模式总块数上限 `max_chunks`（40），超出截断（防爆预算）。单补丁操作数上限由契约
+   `GraphPatch.operations.maxItems`（**5000**，WORK-2026-046）约束：一次生成（≤40 块）的
+   现实最坏约 2.5k 操作（概念×2 + 关系），留 2 倍余量；越界草案仍 fail-closed
+   `draft_invalid/maxItems`，上限不因放宽而移除。
 7. **成本与安全**：仅调用已批准 provider（DeepSeek，`enabled: true`）；Key 只存本机
    `data_root/ai.json`、不回显、不入库不入日志。
 
