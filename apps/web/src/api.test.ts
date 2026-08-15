@@ -28,4 +28,21 @@ describe("persist api URL contract", () => {
       `${BASE}/api/workspaces/${WORKSPACE_ID}/history`,
     ]);
   });
+
+  it("uses a relative API base for same-origin desktop serving", async () => {
+    const fetchMock = vi.fn<
+      (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+    >(async () => new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const api = httpPersistApi("");
+
+    await api.loadGraph();
+    await api.backupGraph();
+
+    const urls = fetchMock.mock.calls.map((call) => String(call[0]));
+    expect(urls).toEqual([
+      `/api/workspaces/${WORKSPACE_ID}/graph`,
+      `/api/workspaces/${WORKSPACE_ID}/backup`,
+    ]);
+  });
 });

@@ -75,6 +75,16 @@ def _is_running(port: int) -> bool:
         return False
 
 
+def _is_running_with_retry(port: int, *, attempts: int = 4, delay_s: float = 0.5) -> bool:
+    """Probe `port` a few times so a racing starter that has written its lock but
+    not yet bound its socket is not mistaken for a stale/crashed instance."""
+    for _ in range(attempts):
+        if _is_running(port):
+            return True
+        time.sleep(delay_s)
+    return False
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Knowledge Tree desktop launcher")
     parser.add_argument(
@@ -108,7 +118,7 @@ def main() -> None:
             # A racing starter may not have written its port yet; give it a beat.
             time.sleep(0.5)
             existing_port = _read_lock_port(lock_path)
-        if existing_port is not None and _is_running(existing_port):
+        if existing_port is not None and _is_running_with_retry(existing_port):
             print(
                 f"已有一个 {_APP_NAME} 实例在运行（http://127.0.0.1:{existing_port}/），"
                 "本次启动退出。",
@@ -138,6 +148,11 @@ def main() -> None:
 def _run(*, data_root: Path, port: int, web_dist: Path | None, no_browser: bool) -> None:
     if web_dist is None:
         web_dist = runtime_root() / "web_dist"
+    if not web_dist.is_dir():
+        print(
+            f"警告：未找到 Web UI 目录 {web_dist}，本次只提供 API 服务（无界面）。",
+            file=sys.stderr,
+        )
 
     app = create_app(
         data_root=data_root,
