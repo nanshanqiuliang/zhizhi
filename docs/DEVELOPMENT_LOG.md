@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 1：带来源问答（WORK-2026-028）
+
+- 关联 ID：WORK-2026-028、WORK-2026-008、WORK-2026-015、REQ-2026-006、NFR-2026-006/007/008。
+- 实际变化：新增 `workspace.AnswerContext` + `build_answer_context`（FTS5 正向命中 + `_reverse_match_concepts` 反向子串回退，使自然语言问题如「什么是极限」能命中「极限」概念；产出 `[n] label：snippet` 引用上下文 + 概念来源）；新增 `apps/api/answer.py` `build_deepseek_answer_generator()`（仅 `DEEPSEEK_API_KEY` env 存在时构造，`answer_with_sources` profile thinking enabled，config 失败关闭返回 None）；`apps/api/main.py` `POST /api/workspaces/{id}/answer`（注入式 `answer_generator`，无 generator 503 `ai_not_available`，空/超长 question 422，无命中 200 `{note:"no_matches"}`）；Web `askQuestion` + 提问框 + 带来源回答面板（来源可点回概念节点）。
+- 影响模块/接口/schema/migration/prompt：扩展 workspace（`AnswerContext`/`build_answer_context`）、apps/api（answer 组合根 + 端点）、apps/web；无 canonical contract/ADR/migration/prompt 变更（复用 `answer_with_sources` profile）。
+- 兼容性：回答只读、不改图、不写库；来源为 FTS5 检索命中（明确不冒充逐句 grounding）；密钥仅 env。
+- 验证与证据：红灯（ImportError + Web 提问框缺失）；实现 `47d6c6f`；answer 6/6；全仓 pytest 408/408 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 31）/Web 38/38/pnpm build 全绿；live e2e（owner key env-only）「什么是极限」→ 回答并引用 `[1] 极限`。
+- 性能/安全/运维影响：FTS5 O(命中) + 单次 LLM 调用受 `answer_with_sources` 预算约束；问题/上下文仅进 user 消息、不落盘/日志；错误 details 仅标识。
+- 回滚：回退 `47d6c6f` 即回到无问答能力；不设 `DEEPSEEK_API_KEY` 则端点 503；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `47d6c6f`）；向量检索、自然语言转 GraphPatch、增量重建、AI 修改历史为第 9 步后续切片。
+
 ## 2026-08-15 — 第 8 步切片 4 QA 封存（WORK-2026-027，TR-20260814-016）
 
 - 关联 ID：WORK-2026-027、WORK-2026-026、WORK-2026-009、TR-20260814-016、NFR-2026-001、REQ-2026-006。

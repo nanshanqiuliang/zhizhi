@@ -1085,6 +1085,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 1 implementation checkpoint — 2026-08-15 05:00 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-028_answer-with-sources.md`;
+  red baseline (ImportError + missing question box); implementation `47d6c6f`.
+- Roadmap Step 9 (conversation/retrieval) has begun with sourced Q&A:
+  `build_answer_context` (FTS5 forward match + reverse substring fallback so a
+  question like 什么是极限 matches the 极限 label; citation-numbered context +
+  concept sources), `POST /api/workspaces/{id}/answer` (injected
+  answer_generator, 503 ai_not_available, 422 on empty/overlong question,
+  200 {note:"no_matches"} on no hits), DeepSeek `answer_with_sources` wiring
+  (env-only key), and Web question box + sourced-answer panel with
+  click-to-jump sources.
+- Safety: read-only (no DB writes); sources are FTS5 retrieval hits (not model
+  invention); question/context only in the user message; key env-only.
+- Verification: answer tests 6/6; full pytest 408/408 + 5 skipped; validator
+  (incl. secret scan), Ruff, strict mypy (scripts 11 + packages/api 31), Web
+  38/38, pnpm build all green.
+- Live e2e (owner key, env-only): 什么是极限 -> answer "…极限是指自变量趋近某点时
+  函数值所表现出的趋势 [1]。" citing source 极限.
+- Natural-language Step 9 progress: approximately 25% (slice 1); personal MVP
+  approximately 87%.
+- Exact next action: collect role-separated QA verdict on frozen `47d6c6f`;
+  if PASS preserve evidence, then Step 9 slice 2 (vector retrieval, NL→GraphPatch,
+  incremental rebuild — pick the smallest).
+
 ## Step 8 slice 4 QA closure checkpoint — 2026-08-15 04:30 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `38df493`

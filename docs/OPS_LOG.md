@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核 + 离线编排（切片 1）、真实 DeepSeek 概念抽取/关系候选（切片 2）、草案 API 端点 + Web 生成/预览/接受/拒绝（切片 3）、来源锚点落库 + 点来源跳回原文（切片 4）均已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案只经提交门落库；接受时来源引用单事务物化为真实锚点。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线（切片 1–4）与带来源问答（第 9 步切片 1）已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案只经提交门落库；问答/草案生成只读。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 9 步切片 1：带来源问答（WORK-2026-028）运维记录
+
+- 关联 ID：WORK-2026-028、WORK-2026-008、WORK-2026-015。
+- 环境/版本/build/config：commit `47d6c6f`（feature/WORK-2026-009-ai-draft-pipeline）；local-dev Windows x64。
+- 变更或症状：新增 `build_answer_context`（FTS5 + 反向子串回退）、`POST /api/workspaces/{id}/answer`（注入式 generator，无 Key 503）、`apps/api/answer.py`（DeepSeek `answer_with_sources` 组合根，env-only）、Web 提问框 + 带来源回答面板；回答只读、不写库；无部署/常驻服务变化。
+- 影响：无部署或常驻服务变化；仅新增/扩展 Python 模块、端点与 Web UI；`config/llm` 与 Provider 门控不变。
+- 证据：pytest 408/408 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 31）全绿；Web 38/38、pnpm build 通过；live e2e（owner key env-only）「什么是极限」→ 回答引用 `[1] 极限`。
+- 缓解/回滚：回退 `47d6c6f` 即回无问答能力；不设 `DEEPSEEK_API_KEY` 则端点 503、UI「AI 未连接」；密钥仅 env。
+- 遗留风险/Owner/期限：切片 1 职责隔离 QA 待执行；向量检索、自然语言转 GraphPatch、增量重建、AI 修改历史为后续切片。
 
 ## 2026-08-15 — 第 8 步切片 4：AI 草案来源锚点落库（WORK-2026-027）运维记录
 
