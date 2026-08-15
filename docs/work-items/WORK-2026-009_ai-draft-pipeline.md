@@ -83,4 +83,4 @@ updated_at: 2026-08-15T02:40:00+08:00
 - Test Run：TC-AIDRAFT-001..007 38/38；全仓 pytest 386/386 + 5 skipped；validator/Ruff/strict mypy（packages 26 + scripts 11）/Web 32/32/pnpm build 全绿；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001` 通过；职责隔离 QA 对 `1394a1e` PASS（0 P0/P1，3 P2 边界），`TR-20260814-014`（`evidence/TR-20260814-014/` + `docs/test-reports/TR-20260814-014_ai-draft-llm-extraction.md`）。
 - Release：无托管发布；真实 DeepSeek 抽取已 live 验证但仅限显式构造 adapter（live 双门控）；`config/llm` 与 Provider 门控不变。
 - 观察结果：草案流水线纯领域内核确定性可测、无网络、零模型成本（切片 1）；LLM 抽取/关系候选离线契约可测、live 冒烟费用 < $0.01（切片 2）；草案 patch 经 `preview_graph_patch` 以 ai actor 预览通过，`requires_confirmation=true`，绝不直写库。
-- 未完成项的新 ID：草案 API 端点与 Web 批量接受/拒绝（第 8 步切片 3，复用 `POST graph/patches` 提交门）。
+- 未完成项的新 ID：草案 API 端点与 Web 生成/预览/接受/拒绝（第 8 步切片 3，见 `WORK-2026-026_ai-draft-api-web.md`，实现 `dfbcc30`）；来源锚点真实落库与「点来源跳回原文」（后续切片）。

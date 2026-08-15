@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核与离线编排（切片 1）以及真实 DeepSeek 概念抽取/关系候选（切片 2，含 live 冒烟）已实现。真实调用仍仅显式构造 adapter（live 双门控）；草案只经提交门以 `requires_confirmation` 落库。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核 + 离线编排（切片 1）、真实 DeepSeek 概念抽取/关系候选（切片 2）、草案 API 端点 + Web 生成/预览/接受/拒绝（切片 3）均已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案只经提交门以 `requires_confirmation` 落库，接受后以 user/origin 写入。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 8 步切片 3：AI 草案 API/Web 接入（WORK-2026-026）运维记录
+
+- 关联 ID：WORK-2026-026、WORK-2026-009、WORK-2026-007/008、OPS-2026-003。
+- 环境/版本/build/config：commit `dfbcc30`（feature/WORK-2026-009-ai-draft-pipeline）；local-dev Windows x64。
+- 变更或症状：新增 `read_resource_text`、`POST /api/workspaces/{id}/ai-draft`（注入式 generator，无 Key 503 `ai_not_available`）、`apps/api/ai_draft.py`（DeepSeek 组合根，`DEEPSEEK_API_KEY` env-only）与 Web 生成/预览/接受/拒绝 UI；接受仍只经既有 `POST graph/patches` 提交门（锁定/revision/确认门）；无部署/常驻服务变化（沿用 `python -m apps.api` 启动，仅新增可选 generator 接线）。
+- 影响：无部署或常驻服务变化；仅新增/扩展 Python 模块、端点、Web UI 与测试；`config/llm` 与 Provider 门控不变。
+- 证据：pytest 394/394 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）全绿；Web 35/35、pnpm build 通过；live e2e（owner key env-only）导入→生成→接受闭环通过。
+- 缓解/回滚：回退 `dfbcc30` 即回无 AI 草案 UI；不设 `DEEPSEEK_API_KEY` 则端点 503、UI「AI 未连接」；密钥仅 env。
+- 遗留风险/Owner/期限：切片 3 职责隔离 QA 待执行；来源锚点真实落库 + 点来源跳回原文为后续切片；`relation_validate` 思考模式延迟较高为原型边界。
 
 ## 2026-08-15 — 第 8 步切片 2：LLM 概念抽取/关系候选 live 冒烟（WORK-2026-009）运维记录
 

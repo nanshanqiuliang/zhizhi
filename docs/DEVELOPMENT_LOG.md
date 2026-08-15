@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 3：AI 草案 API 端点与 Web 接受/拒绝（WORK-2026-026）
+
+- 关联 ID：WORK-2026-026、WORK-2026-009、WORK-2026-005/008/014/016/017/019/022、REQ-2026-006、NFR-2026-001/006/007/008、TR-20260814-014。
+- 实际变化：新增 `workspace.read_resource_text`（MD/TXT 读原文、PDF 已解析按页拼接、未知 mime `draft_unsupported_resource`）；`apps/api/main.py` 新增 `POST /api/workspaces/{id}/ai-draft`（注入式 `draft_generator`，无 generator 503 `ai_not_available`，返回前以本地 user `preview_graph_patch` 校验必须为 `requires_confirmation` 失败关闭）；新增 `apps/api/ai_draft.py` `build_deepseek_draft_generator()`（仅 `DEEPSEEK_API_KEY` env 存在时构造，读 `config/llm` + task profile 预算，`build_ai_draft` + `build_draft_patch` 后把概念/边重新作者化为 `origin=user`/`review_state=accepted`/`confidence=null`，保留 evidence + reason，patch actor=user/confirmed=false）；`apps/api/__main__.py` 启动注入 generator；Web `api.ts` `generateDraft` + `App.tsx`「生成草案」按钮、草案预览面板（概念/关系/置信度/来源）、接受（confirmed=true → 提交门）/拒绝、`ai_not_available` →「AI 未连接」。
+- 影响模块/接口/schema/migration/prompt：扩展 workspace（`read_resource_text`）、apps/api（端点 + ai_draft 组合根）、apps/web（api.ts/App/styles）；无 canonical contract/ADR/migration/prompt 变更；`config/llm` 语义不变。
+- 兼容性：草案绝不直写库；接受仅经既有 `POST graph/patches` 提交门（锁定/revision/确认门）；无 Key 时端点 503、UI「AI 未连接」。
+- 验证与证据：红灯 `b5a38e1`（ImportError/TypeError/404 + Web 按钮缺失）；实现 `dfbcc30`；ai-draft API 6/6 + read_resource_text 3/3；全仓 pytest 394/394 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）/Web 35/35/pnpm build 全绿；live e2e（owner key env-only）：导入 calculus.md → 抽取 极限/连续/导数 + 3 prerequisite_of → 接受经提交门写入（user/accepted/evidence 保留）。
+- 性能/安全/运维影响：生成受 task profile 金额/attempt/回退预算约束；密钥仅 env；错误 details 仅标识；live 调用仅显式构造 generator（`DEEPSEEK_API_KEY` 存在时）。
+- 回滚：回退 `dfbcc30` 即回到无 AI 草案 UI；不设置 `DEEPSEEK_API_KEY` 则端点 503；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `dfbcc30`）；来源锚点真实落库与「点来源跳回原文」为后续切片（草案 evidence 现为合成 UUIDv7 来源引用）；第 8 步完成后进入第 9 步（对话/检索）或来源跳转增强。
+
 ## 2026-08-15 — 第 8 步切片 2 QA 封存（WORK-2026-009，TR-20260814-014）
 
 - 关联 ID：WORK-2026-009、WORK-2026-007/008、TR-20260814-014、NFR-2026-006/007/008、REQ-2026-006。

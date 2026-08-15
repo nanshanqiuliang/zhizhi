@@ -1085,6 +1085,38 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 8 slice 3 implementation checkpoint — 2026-08-15 03:15 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-026_ai-draft-api-web.md` (Ready
+  `fe19106`); red baseline `b5a38e1`; implementation `dfbcc30`.
+- User-visible AI draft loop implemented: `read_resource_text` (MD/TXT raw,
+  PDF parsed pages), `POST /api/workspaces/{id}/ai-draft` with injected
+  `draft_generator` (503 `ai_not_available` without opt-in), DeepSeek generator
+  wiring in `apps/api/ai_draft.py` (`DEEPSEEK_API_KEY` env-only), and Web
+  generate/preview/accept/reject UI.
+- Key design decision (documented): the persistent commit gate only accepts
+  user-authored confirmed patches (`actor_origin_mismatch`), so the generator
+  re-authors accepted concepts/edges as `origin=user`/`review_state=accepted`/
+  `confidence=null` while preserving `evidence_ids` (source) + reason; AI
+  confidence is shown in the draft preview payload only. The endpoint previews
+  the returned patch under the local user and fails closed unless it is a
+  proposed (unconfirmed) patch.
+- Verification: ai-draft API 6/6 + read_resource_text 3/3; full pytest 394/394
+  + 5 skipped; validator (incl. secret scan), Ruff, mypy (scripts 11 + strict
+  packages/api 30), Web 35/35, pnpm build all green.
+- Live e2e (owner key, env-only): import calculus.md -> `/ai-draft` extracted
+  极限/连续/导数 + 3 prerequisite_of (preview requires_confirmation, actor user,
+  confirmed false) -> accept applied through the commit gate; graph holds
+  user-origin/accepted concepts with evidence_ids.
+- Natural-language Step 8 progress: approximately 90% (slice 1+2+3 done);
+  personal MVP approximately 85%. Remaining: role-separated QA, then source
+  anchor persistence + "jump to source" (later slice).
+- Exact next action: collect role-separated QA verdict on frozen `dfbcc30`;
+  if PASS preserve evidence and update docs, then the next milestone is
+  natural-language Step 9 (conversation/retrieval) or source-jump anchor
+  persistence.
+
 ## Step 8 slice 2 QA closure checkpoint — 2026-08-15 02:50 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) reviewed frozen `1394a1e` (WORK-2026-009

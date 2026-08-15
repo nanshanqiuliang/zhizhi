@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-当前仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了本地优先的个人知识树 prototype：可编辑“知枝”知识树、自动保存到本地 SQLite、全文搜索、安全导入 Markdown/TXT/PDF、PDF 页文本与 PDF.js 渲染视图、锚点目录跳转与 bbox 区域高亮、内容漂移保护，以及人工编辑安全感（第 6 步已完成）：内容/位置锁定（锁定项在整图保存时不被覆盖）、跨会话撤销/重做（覆盖所有编辑）、冲突预览、崩溃恢复与版本历史。`TR-20260814-002..013` 已通过职责隔离 QA（第 2–6 步完成）。第 7 步（安全接入真实 AI）已完成（100%）：canonical LLM contract、mock、DeepSeek OpenAI Chat Completions adapter、金额预算、受控回退、真实 live smoke 5/5、微积分金标基线（EVAL-LLM-001）、RB-PROV-001 演练与隔离审查（修复全部 blocking）均完成；workspace owner 已于 2026-08-14 批准 DeepSeek deployment `enabled: true`。第 8 步（AI 自动生成知识树草案）切片 1+2 已实现：纯领域草案内核（分块/别名合并/DAG 校验/自动布局/草案→GraphPatch）与离线编排，以及真实 DeepSeek 概念抽取/关系候选（live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`，~$0.004，preview=requires_confirmation）；草案 API 端点与 Web 批量接受/拒绝（切片 3）待做。个人可用 MVP 粗略约 80%。owner 风险接受和桌面安装包仍未启用。
+当前仓库已完成微积分 30/40/50 金标 fixture、离线 AI 机器复核 v2 prototype、Anchor/GraphPatch v1 与内存回放/撤销 prototype，并交付了本地优先的个人知识树 prototype：可编辑“知枝”知识树、自动保存到本地 SQLite、全文搜索、安全导入 Markdown/TXT/PDF、PDF 页文本与 PDF.js 渲染视图、锚点目录跳转与 bbox 区域高亮、内容漂移保护，以及人工编辑安全感（第 6 步已完成）：内容/位置锁定（锁定项在整图保存时不被覆盖）、跨会话撤销/重做（覆盖所有编辑）、冲突预览、崩溃恢复与版本历史。`TR-20260814-002..013` 已通过职责隔离 QA（第 2–6 步完成）。第 7 步（安全接入真实 AI）已完成（100%）：canonical LLM contract、mock、DeepSeek OpenAI Chat Completions adapter、金额预算、受控回退、真实 live smoke 5/5、微积分金标基线（EVAL-LLM-001）、RB-PROV-001 演练与隔离审查（修复全部 blocking）均完成；workspace owner 已于 2026-08-14 批准 DeepSeek deployment `enabled: true`。第 8 步（AI 自动生成知识树草案）切片 1+2+3 已实现：纯领域草案内核与离线编排、真实 DeepSeek 概念抽取/关系候选（live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`，~$0.004）、草案 API 端点与 Web「生成草案 → 预览 → 接受/拒绝」（WORK-2026-026，`dfbcc30`；无 Key 时显示「AI 未连接」，接受经提交门写入、不覆盖锁定项）。个人可用 MVP 粗略约 85%。owner 风险接受、来源锚点真实落库与桌面安装包仍未启用。
 
 不要把当前原型当作最终 MVP。阶段事实以 [工程计划](docs/ENGINEERING_PLAN.md) 为准。
 
