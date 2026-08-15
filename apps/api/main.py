@@ -761,9 +761,7 @@ def create_app(
                 if get_resource_mime(layout, resource_id) == "application/pdf":
                     parse_pdf_resource(layout, resource_id)
                 text = read_resource_text(layout, resource_id)
-                result = cast(DraftGenerator, ai_state["draft_generator"])(
-                    text, resource_id, graph
-                )
+                result = cast(DraftGenerator, ai_state["draft_generator"])(text, resource_id, graph)
             else:
                 # Whole-workspace agent mode: read every imported resource and
                 # plan the mind map from the whole corpus.

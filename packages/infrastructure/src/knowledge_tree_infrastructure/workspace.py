@@ -1326,9 +1326,11 @@ def _safe_display_name(name: str) -> str:
     return base
 
 
-_WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL"} | {
-    f"COM{i}" for i in range(1, 10)
-} | {f"LPT{i}" for i in range(1, 10)}
+_WINDOWS_RESERVED_NAMES = (
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{i}" for i in range(1, 10)}
+    | {f"LPT{i}" for i in range(1, 10)}
+)
 _WINDOWS_INVALID_CHARS = '<>:"/\\|?*' + "".join(chr(i) for i in range(32))
 
 

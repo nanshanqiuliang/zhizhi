@@ -126,9 +126,7 @@ def _build_components(
     return concept_extractor, relation_provider
 
 
-def _finalize_draft(
-    graph: JsonObject, draft: AiDraft, evidence: list[JsonObject]
-) -> JsonObject:
+def _finalize_draft(graph: JsonObject, draft: AiDraft, evidence: list[JsonObject]) -> JsonObject:
     """Turn an AiDraft into the preview payload (patch + draft + evidence)."""
 
     patch = build_incremental_patch(

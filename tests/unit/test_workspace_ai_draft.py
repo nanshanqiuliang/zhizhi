@@ -56,9 +56,5 @@ def test_build_workspace_ai_draft_drops_existing_duplicates() -> None:
         relation_provider=HeuristicRelationProvider(),
     )
 
-    new_labels = [
-        concept.label
-        for concept in draft.concepts
-        if concept.label not in {"极限"}
-    ]
+    new_labels = [concept.label for concept in draft.concepts if concept.label not in {"极限"}]
     assert new_labels == []  # existing label is never re-created
