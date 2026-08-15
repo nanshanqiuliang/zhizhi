@@ -42,6 +42,9 @@ const DRAFT: AiDraftResult = {
     confirmed: false,
     operations: [],
   },
+  evidence: [
+    { anchor_id: "e1", resource_id: RESOURCE.id, label: "AI 草案来源" },
+  ],
 };
 
 function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
@@ -62,6 +65,11 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
     getFileUrl: vi.fn(() => "http://127.0.0.1:8000/file.pdf"),
     getResourceText: vi.fn(async () => "text content"),
     generateDraft: vi.fn(async () => DRAFT),
+    acceptDraft: vi.fn(async () => ({
+      status: "applied",
+      change_id: "00000000-0000-7000-8100-000000000099",
+      revision_no: 1,
+    })),
     applyPatch: vi.fn(async () => ({
       status: "applied",
       change_id: "00000000-0000-7000-8100-000000000099",
@@ -113,23 +121,23 @@ describe("AI draft preview", () => {
     await waitFor(() => {
       expect(screen.queryByRole("region", { name: /AI 草案预览/ })).not.toBeInTheDocument();
     });
-    expect(api.applyPatch).not.toHaveBeenCalled();
+    expect(api.acceptDraft).not.toHaveBeenCalled();
 
-    // Generate again and accept: applyPatch is called with confirmed=true.
+    // Generate again and accept: acceptDraft is called with confirmed=true.
     fireEvent.click(screen.getByRole("button", { name: /生成草案/ }));
     await waitFor(() => {
       expect(screen.getByRole("region", { name: /AI 草案预览/ })).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: /接受并写入/ }));
     await waitFor(() => {
-      expect(api.applyPatch).toHaveBeenCalledTimes(1);
+      expect(api.acceptDraft).toHaveBeenCalledTimes(1);
     });
-    const applied = (api.applyPatch as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
-      string,
-      unknown
-    >;
-    expect(applied.confirmed).toBe(true);
-    expect(applied.actor).toEqual({ type: "user", id: "local-user" });
+    const [appliedPatch, appliedEvidence] = (
+      api.acceptDraft as ReturnType<typeof vi.fn>
+    ).mock.calls[0] as [Record<string, unknown>, Array<{ anchor_id: string; resource_id: string }>];
+    expect(appliedPatch.confirmed).toBe(true);
+    expect(appliedPatch.actor).toEqual({ type: "user", id: "local-user" });
+    expect(appliedEvidence[0].resource_id).toBe(RESOURCE.id);
   });
 
   it("shows AI not connected when generateDraft fails closed", async () => {

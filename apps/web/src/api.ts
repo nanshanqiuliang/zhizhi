@@ -84,12 +84,19 @@ export type DraftRelation = {
   evidence_ids: string[];
 };
 
+export type DraftEvidence = {
+  anchor_id: string;
+  resource_id: string;
+  label: string;
+};
+
 export type AiDraftResult = {
   draft: {
     concepts: DraftConcept[];
     relations: DraftRelation[];
   };
   patch: Record<string, unknown>;
+  evidence?: DraftEvidence[];
 };
 
 export interface PersistApi {
@@ -104,6 +111,10 @@ export interface PersistApi {
   getFileUrl(resourceId: string): string;
   getResourceText(resourceId: string): Promise<string>;
   generateDraft(resourceId: string): Promise<AiDraftResult>;
+  acceptDraft(
+    patch: Record<string, unknown>,
+    evidence: DraftEvidence[],
+  ): Promise<{ status: string; change_id: string; revision_no: number }>;
   applyPatch(patch: Record<string, unknown>): Promise<{
     status: string;
     change_id: string;
@@ -481,6 +492,32 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(body.code ?? `draft failed: ${response.status}`);
       }
       return (await response.json()) as AiDraftResult;
+    },
+    async acceptDraft(
+      patch: Record<string, unknown>,
+      evidence: DraftEvidence[],
+    ): Promise<{ status: string; change_id: string; revision_no: number }> {
+      const response = await fetch(`${workspaceBase}/ai-draft/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patch,
+          evidence: evidence.map((item) => ({
+            anchor_id: item.anchor_id,
+            resource_id: item.resource_id,
+            label: item.label,
+          })),
+        }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `draft accept failed: ${response.status}`);
+      }
+      return (await response.json()) as {
+        status: string;
+        change_id: string;
+        revision_no: number;
+      };
     },
   };
 }

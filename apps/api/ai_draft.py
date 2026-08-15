@@ -31,7 +31,11 @@ for _src in ("packages/contracts-py/src", "packages/domain/src", "packages/infra
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from knowledge_tree_domain.ai_draft import build_draft_patch, uuid7  # noqa: E402
+from knowledge_tree_domain.ai_draft import (  # noqa: E402
+    build_draft_patch,
+    deterministic_uuidv7,
+    uuid7,
+)
 from knowledge_tree_infrastructure.ai_draft import build_ai_draft  # noqa: E402
 from knowledge_tree_infrastructure.ai_draft_llm import (  # noqa: E402
     LlmConceptExtractor,
@@ -117,10 +121,14 @@ def build_deepseek_draft_generator() -> DraftGenerator | None:
         return None
 
     def generate(text: str, resource_id: str, graph: JsonObject) -> JsonObject:
+        # A single deterministic resource-level anchor id: every chunk shares
+        # the same evidence id, so the accepted concepts/relations point at one
+        # durable `anchor` row (idempotent across repeated drafts).
+        anchor_id = deterministic_uuidv7(resource_id)
         draft = build_ai_draft(
             text,
             resource_id=resource_id,
-            anchor_id_factory=uuid7,
+            anchor_id_factory=lambda: anchor_id,
             extractor=concept_extractor,
             relation_provider=relation_provider,
         )
@@ -172,6 +180,9 @@ def build_deepseek_draft_generator() -> DraftGenerator | None:
                 ],
             },
             "patch": patch,
+            "evidence": [
+                {"anchor_id": anchor_id, "resource_id": resource_id, "label": "AI 草案来源"}
+            ],
         }
 
     return generate

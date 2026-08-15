@@ -24,6 +24,7 @@ from knowledge_tree_infrastructure.llm.errors import LLMProviderError
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     WorkspaceLayout,
+    accept_ai_draft,
     apply_graph_patch,
     backup_workspace,
     create_workspace,
@@ -504,6 +505,53 @@ def create_app(
                 detail={"code": "draft_invalid", "rule": "patch_not_proposed"},
             )
         return result
+
+    @app.post("/api/workspaces/{workspace_id}/ai-draft/accept")
+    async def post_ai_draft_accept(workspace_id: str, request: Request) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        patch = payload.get("patch")
+        evidence = payload.get("evidence")
+        if not isinstance(patch, dict):
+            raise HTTPException(
+                status_code=422, detail={"code": "draft_invalid", "rule": "patch_missing"}
+            )
+        if not isinstance(evidence, list):
+            raise HTTPException(
+                status_code=422, detail={"code": "draft_invalid", "rule": "evidence_missing"}
+            )
+        anchors: list[JsonObject] = []
+        for item in evidence:
+            if (
+                not isinstance(item, dict)
+                or not isinstance(item.get("anchor_id"), str)
+                or not isinstance(item.get("resource_id"), str)
+            ):
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "draft_invalid", "rule": "evidence_item_invalid"},
+                )
+            anchors.append(
+                {
+                    "id": item["anchor_id"],
+                    "resource_id": item["resource_id"],
+                    "page": 0,
+                    "label": item.get("label", "AI 草案来源"),
+                }
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            record = accept_ai_draft(layout, patch, trusted_actor=_LOCAL_ACTOR, anchors=anchors)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        return {
+            "status": "applied",
+            "change_id": record.change_id,
+            "revision_no": record.after_revision_no,
+        }
 
     return app
 

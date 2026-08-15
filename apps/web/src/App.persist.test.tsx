@@ -37,6 +37,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi & { saved: Wor
     getFileUrl: vi.fn(() => "http://127.0.0.1:8000/file.pdf"),
     getResourceText: vi.fn(async () => "text content"),
     generateDraft: vi.fn(async () => ({ draft: { concepts: [], relations: [] }, patch: {} })),
+    acceptDraft: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "00000000-0000-7000-8100-000000000099", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),

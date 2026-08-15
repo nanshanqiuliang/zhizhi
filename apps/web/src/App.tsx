@@ -484,7 +484,7 @@ export function App({ api }: { api?: PersistApi }) {
     if (!api || !draft) return;
     setDraftStatus("applying");
     try {
-      await api.applyPatch({ ...draft.patch, confirmed: true });
+      await api.acceptDraft({ ...draft.patch, confirmed: true }, draft.evidence ?? []);
       const refreshed = await api.loadGraph();
       if (refreshed) {
         setPresent(refreshed);
@@ -501,6 +501,17 @@ export function App({ api }: { api?: PersistApi }) {
       setDraftError(`写入失败（${(error as Error).message}）`);
       setStatus("草案写入失败，请检查锁定或版本冲突");
     }
+  }
+
+  function jumpToDraftSource() {
+    const evidence = draft?.evidence?.[0];
+    if (!evidence) return;
+    const resource = resources.find((item) => item.id === evidence.resource_id);
+    if (!resource) {
+      setStatus("来源资料不存在，无法定位");
+      return;
+    }
+    void openViewer(resource);
   }
 
   function rejectDraft() {
@@ -1252,6 +1263,11 @@ export function App({ api }: { api?: PersistApi }) {
             </p>
           </div>
           <footer className="draft-actions">
+            {draft.evidence && draft.evidence.length > 0 && (
+              <button type="button" className="secondary-button" onClick={jumpToDraftSource}>
+                跳回原文
+              </button>
+            )}
             <button
               type="button"
               className="primary-button"

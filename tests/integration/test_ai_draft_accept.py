@@ -6,15 +6,12 @@ absent, so these tests are expected to fail (ImportError/404) until implemented.
 
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-
-from apps.api.main import create_app
 from knowledge_tree_domain.ai_draft import deterministic_uuidv7
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
@@ -26,6 +23,8 @@ from knowledge_tree_infrastructure.workspace import (
     migrate,
     save_course_graph,
 )
+
+from apps.api.main import create_app
 from tests.contract.test_graph_contracts import COURSE_ID, WORKSPACE_ID
 
 JsonObject = dict[str, Any]
@@ -101,9 +100,7 @@ def test_deterministic_uuidv7_is_stable_and_valid() -> None:
 
 def test_accept_ai_draft_persists_anchors_and_graph(tmp_path: Path) -> None:
     layout, resource_id = _md_workspace(tmp_path)
-    anchors = [
-        {"id": EVIDENCE, "resource_id": resource_id, "page": 0, "label": "AI 草案来源"}
-    ]
+    anchors = [{"id": EVIDENCE, "resource_id": resource_id, "page": 0, "label": "AI 草案来源"}]
     accept_ai_draft(
         layout,
         _confirmed_patch(resource_id),
@@ -121,7 +118,12 @@ def test_accept_ai_draft_anchor_failure_rolls_back_graph(tmp_path: Path) -> None
     layout, resource_id = _md_workspace(tmp_path)
     anchors = [
         {"id": EVIDENCE, "resource_id": resource_id, "page": 0, "label": "a"},
-        {"id": "00000000-0000-7000-9000-000000000002", "resource_id": resource_id, "page": 0, "label": "b"},
+        {
+            "id": "00000000-0000-7000-9000-000000000002",
+            "resource_id": resource_id,
+            "page": 0,
+            "label": "b",
+        },
     ]
     with pytest.raises(WorkspaceError):
         accept_ai_draft(

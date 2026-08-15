@@ -9,6 +9,7 @@ anything: an AI draft is an untrusted draft until the user confirms it.
 
 from __future__ import annotations
 
+import hashlib
 import time
 import unicodedata
 import uuid as _uuid
@@ -79,6 +80,20 @@ def uuid7() -> str:
     now = int(time.time() * 1000)
     value = (now << 80) | (0x70 << 72) | (0x80 << 64) | (_uuid.uuid4().int & ((1 << 64) - 1))
     return str(_uuid.UUID(int=value))
+
+
+def deterministic_uuidv7(seed: str) -> str:
+    """Derive a stable UUIDv7 from a seed string (e.g. a resource id).
+
+    Used for AI-draft source anchors so the same resource always yields the
+    same anchor id, keeping repeated drafts idempotent.
+    """
+
+    digest = hashlib.sha256(seed.encode("utf-8")).digest()[:16]
+    value = bytearray(digest)
+    value[6] = (value[6] & 0x0F) | 0x70  # UUID version 7
+    value[8] = (value[8] & 0x3F) | 0x80  # RFC 4122 variant
+    return str(_uuid.UUID(bytes=bytes(value)))
 
 
 # -- chunking -----------------------------------------------------------------

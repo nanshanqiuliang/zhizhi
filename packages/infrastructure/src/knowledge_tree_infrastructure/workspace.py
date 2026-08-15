@@ -14,7 +14,7 @@ import json
 import shutil
 import sqlite3
 import time
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -364,6 +364,41 @@ def apply_graph_patch(
     return record
 
 
+def accept_ai_draft(
+    layout: WorkspaceLayout,
+    patch: Mapping[str, Any],
+    *,
+    trusted_actor: Mapping[str, str],
+    anchors: Sequence[Mapping[str, Any]],
+) -> GraphChangeRecord:
+    """Apply a confirmed AI draft patch and materialize its source anchors.
+
+    Anchors are `{id, resource_id, page, label}` and are inserted with their
+    explicit ids so the patch's `evidence_ids` reference real `anchor` rows. The
+    graph, its history record, the applied-count marker, the FTS index and the
+    anchors commit in one transaction — an anchor failure rolls the whole
+    acceptance back. Draft anchors use `page=0` as a resource-level sentinel
+    (real page anchors are `page>=1`).
+    """
+
+    history = _rebuild_history(layout)
+    initial_graph = history.snapshot
+    try:
+        next_history = history.apply_patch(patch, trusted_actor=trusted_actor)
+    except (GraphHistoryError, GraphPatchError) as error:
+        raise _convert_domain_error(error) from error
+    record = next_history.undo_records[-1]
+    _atomic_commit_graph(
+        layout,
+        graph=next_history.snapshot,
+        new_record=record,
+        initial_graph=initial_graph,
+        applied_count=len(next_history.undo_records),
+        anchors=anchors,
+    )
+    return record
+
+
 def undo_graph(layout: WorkspaceLayout) -> JsonObject:
     """Undo the most recent persisted change in strict LIFO order."""
 
@@ -482,8 +517,10 @@ def _atomic_commit_graph(
     new_record: GraphChangeRecord | None = None,
     initial_graph: Mapping[str, Any] | None = None,
     applied_count: int | None = None,
+    anchors: Sequence[Mapping[str, Any]] = (),
 ) -> None:
-    """Commit the graph, optional record/initial marker/applied count atomically."""
+    """Commit the graph, optional record/initial marker/applied count and any
+    draft source anchors atomically (all-or-nothing)."""
 
     payload = json.dumps(graph, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     try:
@@ -511,6 +548,26 @@ def _atomic_commit_graph(
                     "INSERT INTO meta(key, value) VALUES(?, ?) "
                     "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                     (_APPLIED_COUNT_KEY, str(applied_count)),
+                )
+            created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            for anchor in anchors:
+                conn.execute(
+                    "INSERT INTO anchor(id, resource_id, page, payload, created_at) "
+                    "VALUES(?, ?, ?, ?, ?) "
+                    "ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
+                    (
+                        str(anchor["id"]),
+                        str(anchor["resource_id"]),
+                        int(anchor["page"]),
+                        json.dumps(
+                            {
+                                "topic_zh": str(anchor.get("label", "AI 草案来源")),
+                                "source": "ai_draft",
+                            },
+                            ensure_ascii=False,
+                        ),
+                        created_at,
+                    ),
                 )
             _rebuild_search_index(conn, graph)
     except sqlite3.DatabaseError as error:
