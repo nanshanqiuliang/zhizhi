@@ -2,6 +2,36 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步后 5 项使用反馈修复（WORK-2026-036..039）
+
+- 关联 ID：WORK-2026-036（拖拽）、037（打开本地目录）、038（AI 设置）、039（多课程）、
+  NFR-2026-001、REQ-2026-001。
+- 实际变化：
+  1. **拖拽**（App.tsx）：`moveDrag` 增加 `(event.buttons & 1) === 0 → endDrag`（仅左键按住
+     拖拽；missed pointerup 不再粘滞）；`startDrag/startPan` 加 `setPointerCapture`；
+     canvas 加 `onPointerCancel`。
+  2. **打开本地目录**（main.py + api.ts + App.tsx）：`POST /resources/open-dir` 与
+     `/{rid}/reveal`（`explorer` 子进程，`_storage_key_within`/`get_resource_file_path` 守卫，
+     非 Windows no-op）；Web「打开资料目录」「在文件夹中显示」。
+  3. **AI 设置**：新 `apps/api/ai_config.py`（`data_root/ai.json` 存 key，env 兜底）；
+     generator 构建器加 `api_key` 参数；`create_app` 用 `load_api_key(root)` 建未注入 generator
+     并持可变 `ai_state`；`GET/PUT/DELETE /api/settings/ai`（保存/清除后重建/清空 generator）；
+     Web「AI 设置」对话框 + 动态徽标。
+  4. **多课程**：`GET/POST /api/workspaces`（枚举 UUIDv7 目录 + 根概念命名；新建 = 新 id +
+     初始图）；`httpPersistApi(baseUrl, workspaceId)`；App `apiFactory`/`workspaceId`；
+     侧边栏课程列表 + 新建/切换；非默认课程隐藏示例笔记。
+- 影响模块/接口/schema/migration/prompt：新增 `ai_config.py` 与 4 类端点（settings/workspaces/
+  resources reveal）；`create_app` 路由改读 `ai_state`；无 canonical contract/迁移。
+- 兼容性：`api` prop 兼容既有测试（单工作区）；`apiFactory` 供生产；AI key 配置优先级
+  `ai.json` → env；图内部 workspace/course id 与 URL 不必一致（MVP 边界）。
+- 验证与证据：全仓 pytest 454/454 + 5 skipped；Web 47/47；ruff/mypy（40）/validator 全绿；
+  桌面 e2e 18/18；桌面产物（exe/安装器/zip）重建。
+- 性能/安全/运维影响：key 明文存本机 `ai.json`（边界，不回显）；reveal 仅限工作区内资源路径；
+  多工作区每课独立数据。
+- 回滚：逐项回退 WORK-2026-036..039 提交。
+- 遗留风险与下一步：职责隔离 QA 待封存（`TR-20260815-004`）；课程重命名/删除、跨课程迁移、
+  key 加密（第 11 步）；向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步切片 3b QA 封存（WORK-2026-035，TR-20260815-003）
 
 - 关联 ID：WORK-2026-035、WORK-2026-033/034、TR-20260815-003、NFR-2026-001、REQ-2026-001。

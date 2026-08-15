@@ -2,6 +2,26 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Post-delivery fixes checkpoint — 2026-08-15 23:30 +08:00 (5 项使用反馈)
+
+- 用户在桌面版使用中反馈 5 个问题，均已定位并修复（每项独立 Ready → 红灯 → 实现）：
+  1. **拖拽粘滞**（WORK-2026-036，`69d0de9`）：`moveDrag` 不校验鼠标按键且无 pointer capture，
+     pointerup 丢失后拖拽残留。修复：仅左键按住（`buttons & 1`）时拖拽，松开即 `endDrag`；
+     `setPointerCapture` + `onPointerCancel`。Web 43/43（新增红灯用例）。
+  2. **打开本地目录**（WORK-2026-037，`1f01795`）：新增 `POST /resources/open-dir` 与
+     `/resources/{rid}/reveal`（explorer，路径守卫），Web「打开资料目录」「在文件夹中显示」。
+     集成 2/2。
+  3. **AI 接入设置**（WORK-2026-038，`abf2d9a`）：新增 `apps/api/ai_config.py`（`ai.json`
+     存 key，env 兜底）、`GET/PUT/DELETE /api/settings/ai`（保存后重建 generator）、Web「AI
+     设置」对话框 + 动态「AI 已连接/未连接」徽标。集成 2/2 + Web 2 用例。
+  4. **多课程/新建课程**（WORK-2026-039，`e0fc05f`）：`GET/POST /api/workspaces`（枚举 +
+     新建初始图），`httpPersistApi(baseUrl, workspaceId)` + App `apiFactory`，侧边栏课程列表/
+     新建/切换。集成 2/2 + Web 2 用例。
+  5. （拖拽为问题 4；1+3 为 AI 设置；2 为打开目录；5 为多课程——问题清单全覆盖。）
+- Verification: pytest 454/454 + 5 skipped；Web 47/47；ruff/mypy/validator 全绿；桌面 e2e 18/18；
+  桌面产物（exe/安装器/便携 zip）已重建含全部修复。
+- Exact next action: 职责隔离 QA 封存（`TR-20260815-004`），更新日志/路线图/手册。
+
 ## Step 10 slice 3b QA closure checkpoint — 2026-08-15 22:20 +08:00
 
 - Role-separated QA reviewed frozen `c0cd6a9` (WORK-2026-035 Step 10 slice 3b Inno Setup
