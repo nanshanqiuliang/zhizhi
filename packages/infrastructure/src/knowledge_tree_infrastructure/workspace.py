@@ -911,11 +911,12 @@ def import_resource(
 ) -> ResourceInfo:
     """Import a whitelisted file into the workspace and register it.
 
-    Content is stored under a generated UUIDv7 filename inside
-    `resources/`; the client-supplied name is metadata only. Identical
-    content (same SHA-256) is idempotent and returns the existing resource.
-    The file is written to disk first and the database row is committed only
-    after a successful write, so a failed write never leaves an orphan record.
+    Content is stored under `resources/` keeping the original file name and
+    extension (sanitized for Windows, with a numeric suffix on collisions);
+    the client-supplied name is also kept as metadata. Identical content
+    (same SHA-256) is idempotent and returns the existing resource. The file
+    is written to disk first and the database row is committed only after a
+    successful write, so a failed write never leaves an orphan record.
     """
 
     display_name = _safe_display_name(display_name)
@@ -925,8 +926,9 @@ def import_resource(
     if detected is None:
         _reject("import_type_rejected", rule="mime_not_in_whitelist")
     content_hash = f"sha256:{hashlib.sha256(content).hexdigest()}"
-    storage_key = f"resources/{_uuid7()}/{_uuid7()}"
-    storage_path = layout.root / storage_key
+    storage_name = _safe_storage_name(display_name)
+    storage_path = _unique_storage_path(layout.root / "resources", storage_name)
+    storage_key = f"resources/{storage_path.name}"
     try:
         storage_path.parent.mkdir(parents=True, exist_ok=True)
         storage_path.write_bytes(content)
@@ -1322,6 +1324,46 @@ def _safe_display_name(name: str) -> str:
     if not base or base in {".", ".."} or "/" in name or "\\" in name:
         _reject("import_type_rejected", rule="invalid_name")
     return base
+
+
+_WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL"} | {
+    f"COM{i}" for i in range(1, 10)
+} | {f"LPT{i}" for i in range(1, 10)}
+_WINDOWS_INVALID_CHARS = '<>:"/\\|?*' + "".join(chr(i) for i in range(32))
+
+
+def _safe_storage_name(display_name: str) -> str:
+    """Sanitize the original file name for on-disk storage (keeps stem + suffix).
+
+    Windows-invalid characters and reserved names are neutralised, but the
+    user-visible stem and extension are otherwise preserved exactly.
+    """
+
+    base = Path(display_name).name
+    stem = Path(base).stem
+    suffix = Path(base).suffix
+    clean = "".join("_" if ch in _WINDOWS_INVALID_CHARS else ch for ch in stem).strip(" .")
+    if not clean or clean.upper() in _WINDOWS_RESERVED_NAMES:
+        clean = f"file_{clean}" if clean else "file"
+    if len(clean) > 120:
+        clean = clean[:120]
+    return f"{clean}{suffix}"
+
+
+def _unique_storage_path(resources_dir: Path, name: str) -> Path:
+    """Return a non-existing storage path, appending -1/-2/... before the suffix."""
+
+    candidate = resources_dir / name
+    if not candidate.exists():
+        return candidate
+    stem = Path(name).stem
+    suffix = Path(name).suffix
+    counter = 1
+    while True:
+        candidate = resources_dir / f"{stem}-{counter}{suffix}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
 
 
 def _detect_mime(display_name: str, content: bytes) -> str | None:
