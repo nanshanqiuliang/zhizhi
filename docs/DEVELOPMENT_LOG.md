@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 2：自然语言转 GraphPatch（WORK-2026-029）
+
+- 关联 ID：WORK-2026-029、WORK-2026-008/005/019/022/028、REQ-2026-006、NFR-2026-001/006/007/008。
+- 实际变化：新增 `knowledge_tree_infrastructure.command`（`CommandError` + `build_command_patch`：label→概念 id 严格映射，支持 `set_lock`（content/position）与 `create_edge`（四类），生成 `proposed` GraphPatch（actor=user、requires_confirmation、confirmed=false、revision 绑定））；新增 `apps/api/command.py`（`build_deepseek_command_generator()`，`command_interpret` profile，config 失败关闭）；`apps/api/main.py` `POST /api/workspaces/{id}/interpret`（注入式 generator，503，空/超长/未知 label/畸形输出 422，预览必须 `requires_confirmation`）；Web `interpretCommand` + 指令输入 + 预览/接受/拒绝面板。
+- 影响模块/接口/schema/migration/prompt：新增 infrastructure `command` 与 apps/api `command` 模块；扩展 apps/api/main、apps/web；无 canonical contract/ADR/migration/prompt 变更（复用 GraphPatch v1 + `command_interpret` profile）。
+- 兼容性：解释只读、不改图；未知概念/操作/维度失败关闭；接受复用既有 `POST graph/patches` 提交门（锁定/revision/确认门）；密钥仅 env。
+- 验证与证据：红灯（ModuleNotFoundError + Web 指令输入缺失）；实现 `b4fde38`；command 6/6；全仓 pytest 415/415 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）/Web 39/39/pnpm build 全绿；live e2e（owner key env-only）「连续以极限为前提，并锁定极限的内容」→ create_edge + set_lock，接受后边 + 内容锁落库。
+- 性能/安全/运维影响：单次 LLM 调用受 `command_interpret` 预算约束；命令/概念列表仅进 user 消息、不落盘/日志；错误 details 仅标识。
+- 回滚：回退 `b4fde38` 即回到无自然语言图修改能力；不设 `DEEPSEEK_API_KEY` 则端点 503；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `b4fde38`）；向量检索、增量重建、AI 修改历史为第 9 步后续切片。
+
 ## 2026-08-15 — 第 9 步切片 1 QA 封存（WORK-2026-028，TR-20260814-017）
 
 - 关联 ID：WORK-2026-028、WORK-2026-008/015、TR-20260814-017、NFR-2026-006/007/008、REQ-2026-006。

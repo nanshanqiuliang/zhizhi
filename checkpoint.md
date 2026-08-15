@@ -1085,6 +1085,35 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 2 implementation checkpoint — 2026-08-15 06:00 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-029_nl-to-graphpatch.md`;
+  red baseline (ModuleNotFoundError + missing command input); implementation
+  `b4fde38`.
+- Roadmap Step 9 slice 2 (natural-language -> GraphPatch) implemented:
+  `build_command_patch` (label→concept-id strict mapping for set_lock +
+  create_edge; proposed patch with exact revision binding, actor=user,
+  requires_confirmation, confirmed=false), `POST /api/workspaces/{id}/interpret`
+  (injected command_generator, 503 ai_not_available, 422 on empty/overlong/
+  unknown-label/malformed output), DeepSeek `command_interpret` wiring (env-only
+  key), Web command input + preview/accept/reject (accept reuses
+  POST graph/patches).
+- Safety: /interpret read-only; unknown labels/ops/dimensions fail closed;
+  command/labels only in the user message; key env-only; acceptance enforces
+  the commit gate (locks/revision/confirmation/cycle).
+- Verification: command tests 6/6; full pytest 415/415 + 5 skipped; validator
+  (incl. secret scan), Ruff, strict mypy (scripts 11 + packages/api 33), Web
+  39/39, pnpm build all green.
+- Live e2e (owner key, env-only): 连续以极限为前提，并锁定极限的内容 ->
+  create_edge + set_lock, accepted through the commit gate (edge + content lock
+  persisted).
+- Natural-language Step 9 progress: approximately 50% (slice 1+2); personal MVP
+  approximately 88%. Remaining: vector retrieval, incremental rebuild, AI edit
+  history.
+- Exact next action: collect role-separated QA verdict on frozen `b4fde38`;
+  if PASS preserve evidence, then Step 9 slice 3 (pick smallest remaining).
+
 ## Step 9 slice 1 QA closure checkpoint — 2026-08-15 05:30 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `47d6c6f`

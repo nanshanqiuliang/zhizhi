@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线（切片 1–4）与带来源问答（第 9 步切片 1）已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案只经提交门落库；问答/草案生成只读。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线（切片 1–4）、带来源问答（第 9 步切片 1）、自然语言转 GraphPatch（第 9 步切片 2）已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案/指令只经提交门落库；问答/草案生成/指令解释只读。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 9 步切片 2：自然语言转 GraphPatch（WORK-2026-029）运维记录
+
+- 关联 ID：WORK-2026-029、WORK-2026-008、WORK-2026-028。
+- 环境/版本/build/config：commit `b4fde38`（feature/WORK-2026-009-ai-draft-pipeline）；local-dev Windows x64。
+- 变更或症状：新增 `build_command_patch`（label→概念 id 严格映射 + set_lock/create_edge）、`POST /api/workspaces/{id}/interpret`（注入式 generator，无 Key 503）、`apps/api/command.py`（DeepSeek `command_interpret` 组合根，env-only）、Web 指令输入 + 预览/接受/拒绝面板；解释只读、接受经提交门；无部署/常驻服务变化。
+- 影响：无部署或常驻服务变化；仅新增/扩展 Python 模块、端点与 Web UI；`config/llm` 与 Provider 门控不变。
+- 证据：pytest 415/415 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；Web 39/39、pnpm build 通过；live e2e（owner key env-only）指令→create_edge+set_lock→接受落库。
+- 缓解/回滚：回退 `b4fde38` 即回无自然语言图修改能力；不设 `DEEPSEEK_API_KEY` 则端点 503；密钥仅 env。
+- 遗留风险/Owner/期限：切片 2 职责隔离 QA 待执行；向量检索、增量重建、AI 修改历史为后续切片。
 
 ## 2026-08-15 — 第 9 步切片 1：带来源问答（WORK-2026-028）运维记录
 
