@@ -9,6 +9,7 @@ live in `packages/domain` and `packages/contracts-py`, and storage lives in
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -16,7 +17,10 @@ from uuid import UUID
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from knowledge_tree_domain import GraphPatchError, validate_course_graph
+from knowledge_tree_domain import GraphPatchError, preview_graph_patch, validate_course_graph
+from knowledge_tree_domain.ai_draft import DraftError
+from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError
+from knowledge_tree_infrastructure.llm.errors import LLMProviderError
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     WorkspaceLayout,
@@ -34,6 +38,7 @@ from knowledge_tree_infrastructure.workspace import (
     load_history_records,
     migrate,
     parse_pdf_resource,
+    read_resource_text,
     redo_graph,
     register_anchor,
     resolve_workspace,
@@ -47,6 +52,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 JsonObject = dict[str, Any]
 _LOCAL_ACTOR = {"type": "user", "id": "local-user"}
 _MAX_JSON_BYTES = 10 * 1024 * 1024
+
+# Injected draft generator: (resource_text, resource_id, current_graph) -> {draft, patch}.
+DraftGenerator = Callable[[str, str, JsonObject], JsonObject]
 
 
 def _is_uuidv7(value: str) -> bool:
@@ -95,6 +103,8 @@ def _http_error(error: WorkspaceError) -> HTTPException:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code in {"parse_failed", "parse_pending", "page_out_of_range", "source_changed"}:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code == "draft_unsupported_resource":
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "file_not_found":
         return HTTPException(status_code=404, detail={"code": error.code, **error.details})
     if error.code in {"backup_invalid"}:
@@ -120,8 +130,14 @@ def _http_error(error: WorkspaceError) -> HTTPException:
     return HTTPException(status_code=500, detail={"code": error.code, **error.details})
 
 
-def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
-    """Build the persistence API with an explicit data root and CORS allowlist."""
+def create_app(
+    *, data_root: Path, allowed_origins: list[str], draft_generator: DraftGenerator | None = None
+) -> FastAPI:
+    """Build the persistence API with an explicit data root and CORS allowlist.
+
+    `draft_generator` is the AI-draft composition root; when None the
+    `/ai-draft` endpoint fails closed with 503 `ai_not_available`.
+    """
 
     root = Path(data_root)
     app = FastAPI(title="knowledge-tree-local-api", version="0.1.0")
@@ -435,6 +451,59 @@ def create_app(*, data_root: Path, allowed_origins: list[str]) -> FastAPI:
             }
         except WorkspaceError as error:
             raise _http_error(error) from error
+
+    @app.post("/api/workspaces/{workspace_id}/ai-draft")
+    async def post_ai_draft(workspace_id: str, request: Request) -> JsonObject:
+        if draft_generator is None:
+            raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        resource_id = payload.get("resource_id")
+        if not isinstance(resource_id, str) or not resource_id:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "draft_invalid", "rule": "resource_id_missing"},
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = load_course_graph(layout)
+            text = read_resource_text(layout, resource_id)
+            result = draft_generator(text, resource_id, graph)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        except (DraftError, DraftExtractionError) as error:
+            raise HTTPException(
+                status_code=422, detail={"code": error.code, **error.details}
+            ) from error
+        except LLMProviderError as error:
+            raise HTTPException(
+                status_code=502, detail={"code": error.code, **error.details}
+            ) from error
+
+        patch = result.get("patch")
+        if not isinstance(patch, dict):
+            raise HTTPException(
+                status_code=500, detail={"code": "draft_invalid", "rule": "patch_missing"}
+            )
+        # Defense in depth: the returned patch must be a legal proposed
+        # (unconfirmed) user-authored patch the commit gate would preview as
+        # `requires_confirmation`; anything else fails closed before returning.
+        try:
+            preview = preview_graph_patch(graph, patch, trusted_actor=_LOCAL_ACTOR)
+        except GraphPatchError as error:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "draft_invalid", "rule": error.code, **error.details},
+            ) from error
+        if preview.status != "requires_confirmation":
+            raise HTTPException(
+                status_code=500,
+                detail={"code": "draft_invalid", "rule": "patch_not_proposed"},
+            )
+        return result
 
     return app
 

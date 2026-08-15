@@ -24,6 +24,7 @@ for _src in ("packages/contracts-py/src", "packages/domain/src", "packages/infra
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
+from apps.api.ai_draft import build_deepseek_draft_generator  # noqa: E402
 from apps.api.main import create_app  # noqa: E402  (after sys.path setup)
 
 DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
@@ -48,6 +49,7 @@ def main() -> None:
     app = create_app(
         data_root=Path(args.data_root),
         allowed_origins=[*DEFAULT_ORIGINS, *args.origin],
+        draft_generator=build_deepseek_draft_generator(),
     )
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
 

@@ -1148,6 +1148,50 @@ def get_resource_mime(layout: WorkspaceLayout, resource_id: str) -> str:
     return str(row[0])
 
 
+def read_resource_text(layout: WorkspaceLayout, resource_id: str) -> str:
+    """Return the current version's full text for AI draft generation.
+
+    Markdown/TXT resources are read as raw UTF-8 text; PDF resources require a
+    prior `parse_pdf_resource` and are returned as page texts joined in page
+    order (drift-checked). Any other mime fails closed: the draft pipeline must
+    not silently invent text for a source it cannot read.
+    """
+
+    mime = get_resource_mime(layout, resource_id)
+    if mime.startswith("text/"):
+        file_path = get_resource_file_path(layout, resource_id)
+        try:
+            return file_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            _reject("parse_failed", rule="resource_not_decodable")
+    if mime == "application/pdf":
+        try:
+            with _connect(layout.db_path) as conn:
+                row = conn.execute(
+                    "SELECT v.id, v.content_hash FROM resource_version v "
+                    "WHERE v.resource_id=? AND v.id = "
+                    "(SELECT current_version_id FROM resource WHERE id=?)",
+                    (resource_id, resource_id),
+                ).fetchone()
+                if row is None:
+                    _reject("workspace_missing", rule="resource_missing")
+                version_id = str(row[0])
+                parsed_hash = str(row[1])
+                segment_rows = conn.execute(
+                    "SELECT text FROM resource_segment WHERE resource_version_id=? ORDER BY page",
+                    (version_id,),
+                ).fetchall()
+        except sqlite3.DatabaseError as error:
+            raise WorkspaceError(
+                "workspace_corrupt", details={"rule": "resource_not_readable"}
+            ) from error
+        if not segment_rows:
+            _reject("parse_pending", rule="resource_not_parsed")
+        _check_drift(layout, version_id, parsed_hash)
+        return "\n\n".join(str(segment_row[0]) for segment_row in segment_rows)
+    _reject("draft_unsupported_resource", rule="unsupported_mime", mime=mime)
+
+
 def _safe_display_name(name: str) -> str:
     base = Path(name).name
     if not base or base in {".", ".."} or "/" in name or "\\" in name:

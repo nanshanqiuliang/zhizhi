@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
+  AiDraftResult,
   AnchorRef,
   ConceptLocks,
   ConceptNode,
@@ -235,6 +236,9 @@ export function App({ api }: { api?: PersistApi }) {
   const [anchors, setAnchors] = useState<AnchorRef[]>([]);
   const [viewerMode, setViewerMode] = useState<"text" | "render">("text");
   const [activeAnchor, setActiveAnchor] = useState<AnchorRef | null>(null);
+  const [draft, setDraft] = useState<AiDraftResult | null>(null);
+  const [draftStatus, setDraftStatus] = useState<"idle" | "generating" | "ready" | "applying" | "failed">("idle");
+  const [draftError, setDraftError] = useState<string | null>(null);
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -456,6 +460,54 @@ export function App({ api }: { api?: PersistApi }) {
       setViewerText("");
       setActiveAnchor(null);
     }
+  }
+
+  async function handleGenerateDraft(resource: ResourceInfo) {
+    if (!api) return;
+    setDraft(null);
+    setDraftError(null);
+    setDraftStatus("generating");
+    try {
+      const result = await api.generateDraft(resource.id);
+      setDraft(result);
+      setDraftStatus("ready");
+      setStatus(`已生成草案：${result.draft.concepts.length} 个概念，${result.draft.relations.length} 条关系`);
+    } catch (error) {
+      const code = (error as Error).message;
+      setDraftStatus("failed");
+      setDraftError(code === "ai_not_available" ? "AI 未连接" : `草案生成失败（${code}）`);
+      setStatus(code === "ai_not_available" ? "AI 未连接，无法生成草案" : "草案生成失败");
+    }
+  }
+
+  async function acceptDraft() {
+    if (!api || !draft) return;
+    setDraftStatus("applying");
+    try {
+      await api.applyPatch({ ...draft.patch, confirmed: true });
+      const refreshed = await api.loadGraph();
+      if (refreshed) {
+        setPresent(refreshed);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(refreshed, selectedId);
+      }
+      setDraft(null);
+      setDraftStatus("idle");
+      setStatus("已接受 AI 草案并写入知识树");
+      void refreshHistory();
+    } catch (error) {
+      setDraftStatus("failed");
+      setDraftError(`写入失败（${(error as Error).message}）`);
+      setStatus("草案写入失败，请检查锁定或版本冲突");
+    }
+  }
+
+  function rejectDraft() {
+    setDraft(null);
+    setDraftStatus("idle");
+    setDraftError(null);
+    setStatus("已丢弃 AI 草案");
   }
 
   function commit(next: WorkspaceSnapshot, message: string) {
@@ -891,6 +943,10 @@ export function App({ api }: { api?: PersistApi }) {
             </label>
             {importStatus === "failed" && <p className="import-note">导入失败，请检查文件类型与大小</p>}
             {importStatus === "importing" && <p className="import-note">导入中…</p>}
+            {draftStatus === "generating" && <p className="import-note">AI 生成草案中…</p>}
+            {draftStatus === "failed" && !draft && (
+              <p className="import-note" role="status">{draftError ?? "草案生成失败"}</p>
+            )}
             <ul className="resource-list">
               {resources.map((resource) => (
                 <li key={resource.id}>
@@ -906,6 +962,16 @@ export function App({ api }: { api?: PersistApi }) {
                       onClick={() => openViewer(resource)}
                     >
                       打开
+                    </button>
+                  )}
+                  {(resource.mime === "application/pdf" || resource.mime.startsWith("text/")) && (
+                    <button
+                      type="button"
+                      className="resource-draft"
+                      disabled={draftStatus === "generating" || draftStatus === "applying"}
+                      onClick={() => void handleGenerateDraft(resource)}
+                    >
+                      生成草案
                     </button>
                   )}
                 </li>
@@ -1140,6 +1206,62 @@ export function App({ api }: { api?: PersistApi }) {
               </ul>
             </nav>
           )}
+        </section>
+      )}
+
+      {draft && (
+        <section className="draft-panel" aria-label="AI 草案预览">
+          <header className="viewer-header">
+            <div>
+              <p className="overline">AI 草案预览</p>
+              <strong>从本地资料生成的知识树草案</strong>
+            </div>
+            <button type="button" className="viewer-close" onClick={rejectDraft}>关闭</button>
+          </header>
+          <div className="draft-body" aria-live="polite">
+            <div className="draft-columns">
+              <div className="draft-list">
+                <p className="overline">概念（{draft.draft.concepts.length}）</p>
+                <ul>
+                  {draft.draft.concepts.map((concept) => (
+                    <li key={concept.label}>
+                      <strong>{concept.label}</strong>
+                      <span className="draft-confidence">置信度 {Math.round(concept.confidence * 100)}%</span>
+                      <span className="draft-source">{concept.evidence_ids.length} 处来源</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="draft-list">
+                <p className="overline">关系（{draft.draft.relations.length}）</p>
+                <ul>
+                  {draft.draft.relations.map((relation) => (
+                    <li key={`${relation.source_label}->${relation.target_label}`}>
+                      <strong>{relation.source_label} → {relation.target_label}</strong>
+                      <span className="draft-confidence">置信度 {Math.round(relation.confidence * 100)}%</span>
+                    </li>
+                  ))}
+                  {draft.draft.relations.length === 0 && (
+                    <li className="draft-empty">未推断出先修关系</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+            <p className="draft-boundary">
+              草案仅在预览后经确认门写入；锁定的内容不会被覆盖，写入后可撤销。
+            </p>
+          </div>
+          <footer className="draft-actions">
+            <button
+              type="button"
+              className="primary-button"
+              disabled={draftStatus === "applying"}
+              onClick={() => void acceptDraft()}
+            >
+              {draftStatus === "applying" ? "写入中…" : "接受并写入"}
+            </button>
+            <button type="button" className="secondary-button" onClick={rejectDraft}>拒绝</button>
+          </footer>
         </section>
       )}
 

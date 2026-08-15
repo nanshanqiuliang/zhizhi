@@ -69,6 +69,29 @@ export type HistoryRecord = {
   after_revision_no: number;
 };
 
+export type DraftConcept = {
+  label: string;
+  aliases: string[];
+  confidence: number;
+  evidence_ids: string[];
+};
+
+export type DraftRelation = {
+  source_label: string;
+  target_label: string;
+  edge_type: string;
+  confidence: number;
+  evidence_ids: string[];
+};
+
+export type AiDraftResult = {
+  draft: {
+    concepts: DraftConcept[];
+    relations: DraftRelation[];
+  };
+  patch: Record<string, unknown>;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -80,6 +103,7 @@ export interface PersistApi {
   listAnchors(resourceId: string): Promise<AnchorRef[]>;
   getFileUrl(resourceId: string): string;
   getResourceText(resourceId: string): Promise<string>;
+  generateDraft(resourceId: string): Promise<AiDraftResult>;
   applyPatch(patch: Record<string, unknown>): Promise<{
     status: string;
     change_id: string;
@@ -445,6 +469,18 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(`resource text failed: ${response.status}`);
       }
       return await response.text();
+    },
+    async generateDraft(resourceId: string): Promise<AiDraftResult> {
+      const response = await fetch(`${workspaceBase}/ai-draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resource_id: resourceId }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `draft failed: ${response.status}`);
+      }
+      return (await response.json()) as AiDraftResult;
     },
   };
 }

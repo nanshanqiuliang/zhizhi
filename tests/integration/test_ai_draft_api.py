@@ -35,14 +35,17 @@ def _fake_generator(text: str, resource_id: str, graph: JsonObject) -> JsonObjec
     workspace_id = str(graph["workspace_id"])
     assert text and resource_id
 
-    def concept(concept_id: str, label: str, confidence: float) -> JsonObject:
+    def concept(concept_id: str, label: str) -> JsonObject:
+        # Mirrors the production generator's acceptance re-authoring: the
+        # persistent gate only accepts user-authored entities; provenance is
+        # carried by evidence_ids + the draft payload (confidence shown there).
         return {
             "id": concept_id,
             "course_id": course_id,
             "label": label,
-            "origin": "ai",
-            "review_state": "proposed",
-            "confidence": confidence,
+            "origin": "user",
+            "review_state": "accepted",
+            "confidence": None,
             "evidence_ids": [EVIDENCE],
             "locks": {
                 "content": False,
@@ -68,12 +71,12 @@ def _fake_generator(text: str, resource_id: str, graph: JsonObject) -> JsonObjec
             {
                 "op_id": f"00000000-0000-7000-8000-{base + 2:012d}",
                 "op": "create_concept",
-                "concept": concept(CONCEPT_A, "极限", 0.9),
+                "concept": concept(CONCEPT_A, "极限"),
             },
             {
                 "op_id": f"00000000-0000-7000-8000-{base + 3:012d}",
                 "op": "create_concept",
-                "concept": concept(CONCEPT_B, "连续", 0.85),
+                "concept": concept(CONCEPT_B, "连续"),
             },
             {
                 "op_id": f"00000000-0000-7000-8000-{base + 4:012d}",
@@ -86,9 +89,9 @@ def _fake_generator(text: str, resource_id: str, graph: JsonObject) -> JsonObjec
                     "source_concept_id": CONCEPT_A,
                     "target_concept_id": CONCEPT_B,
                     "edge_type": "prerequisite_of",
-                    "origin": "ai",
-                    "review_state": "proposed",
-                    "confidence": 0.7,
+                    "origin": "user",
+                    "review_state": "accepted",
+                    "confidence": None,
                     "evidence_ids": [EVIDENCE],
                     "locked": False,
                     "revision_no": 0,
@@ -199,8 +202,8 @@ def test_ai_draft_accept_applies_ai_concepts_through_commit_gate(client: TestCli
     graph = client.get(f"/api/workspaces/{WORKSPACE_ID}/graph").json()
     concepts = {concept["label"]: concept for concept in graph["concepts"]}
     assert set(concepts) == {"极限", "连续"}
-    assert concepts["极限"]["origin"] == "ai"
-    assert concepts["极限"]["review_state"] == "proposed"
+    assert concepts["极限"]["origin"] == "user"
+    assert concepts["极限"]["review_state"] == "accepted"
     assert concepts["极限"]["evidence_ids"] == [EVIDENCE]
     assert any(edge["edge_type"] == "prerequisite_of" for edge in graph["edges"])
 

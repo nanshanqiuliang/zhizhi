@@ -31,18 +31,23 @@ def _workspace(tmp_path: Path):
 
 def test_read_resource_text_markdown(tmp_path: Path) -> None:
     layout = _workspace(tmp_path)
-    info = import_resource(layout, "notes.md", b"# \xe6\x9e\x81\xe9\x99\x90\n\nlim")
+    info = import_resource(
+        layout, display_name="notes.md", content=b"# \xe6\x9e\x81\xe9\x99\x90\n\nlim"
+    )
     assert get_resource_mime(layout, info.id) == "text/markdown"
     assert read_resource_text(layout, info.id) == "# 极限\n\nlim"
 
 
 def test_read_resource_text_pdf_requires_parse(tmp_path: Path) -> None:
     layout = _workspace(tmp_path)
-    pdf = (Path(__file__).resolve().parents[2] / "evals/calculus-v1/gold.pdf")
+    pdf = (
+        Path(__file__).resolve().parents[2]
+        / "evals/calculus-v1/source/mit-ocw-res-18-001-chapter-02-derivatives.pdf"
+    )
     if not pdf.exists():
         pytest.skip("gold.pdf fixture not present")
     content = pdf.read_bytes()
-    info = import_resource(layout, "gold.pdf", content)
+    info = import_resource(layout, display_name="gold.pdf", content=content)
     with pytest.raises(WorkspaceError) as raised:
         read_resource_text(layout, info.id)
     assert raised.value.code == "parse_pending"

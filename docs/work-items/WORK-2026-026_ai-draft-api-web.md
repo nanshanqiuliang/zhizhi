@@ -33,7 +33,7 @@ updated_at: 2026-08-15T03:00:00+08:00
 
 ## 设计边界
 
-- 领域/契约不变：`build_draft_patch` 输出的概念/边 `origin=ai`、`review_state=proposed`、`requires_confirmation=true`；API 层仅把 patch 顶层 `actor` 改写为本地 user（`confirmed=false`）以便用户确认，不改概念/边 provenance。
+- 领域/契约不变：`build_draft_patch` 输出的概念/边 `origin=ai`、`review_state=proposed`、`requires_confirmation=true`；持久化提交门只接受 user 作者且 `confirmed=true` 的 patch（`actor_origin_mismatch` 拒绝 user 创建 ai-origin）。因此 API 层把待接受 patch 重新作者化为本地 user：概念/边 `origin=user`、`review_state=accepted`、`confidence=null`，**保留 `evidence_ids`（来源）与 patch `reason`（"AI 草案"）**；AI 置信度与"AI 生成"语义在 `draft` 预览载荷中呈现，不入图实体——此为记录的原型边界（持久图不保留 `origin=ai` 标记）。
 - 草案生成的证据为 per-chunk 合成 UUIDv7 anchor 引用，仅用于 `evidence_ids` 契约合规与来源展示，不落 `anchor` 表；"点来源跳转"明确不在本切片。
 - 端点只读资源文本 + 调用注入 generator；generator 为 None 时 503 失败关闭，绝不静默回退到启发式（避免把启发式结果冒充真实 AI）。
 - 接受路径复用 `POST graph/patches` 提交门：`base_revision_no` 与当前图不一致 → `revision_conflict`；锁定项覆盖 → `target_locked`；确认门 `requires_confirmation=true` + `confirmed=true`。
@@ -53,7 +53,7 @@ updated_at: 2026-08-15T03:00:00+08:00
 - [ ] AC-1 (c1)：`read_resource_text`——MD/TXT 读原文；PDF 未解析 `parse_pending`、已解析按页拼接；未知 mime `draft_unsupported_resource`；解码失败 `parse_failed`。
 - [ ] AC-2 (c2)：`POST .../ai-draft` 注入 fake generator 时返回 `{draft, patch}`，patch 经 `validate_contract` 且 `requires_confirmation=true`、`confirmed=false`、`actor=user`。
 - [ ] AC-3 (c3)：端点失败关闭——无 generator 503 `ai_not_available`；缺/非法 `resource_id` 422；资源缺失 404；PDF 未解析 422 `parse_pending`。
-- [ ] AC-4 (c4)：接受路径——把返回 patch 置 `confirmed=true` 后 `POST graph/patches` 写入 AI `origin` 概念/边（带 evidence、`review_state=proposed`），重载图可见；拒绝路径不产生任何写。
+- [ ] AC-4 (c4)：接受路径——把返回 patch 置 `confirmed=true` 后 `POST graph/patches` 写入用户已确认的概念/边（`origin=user`、`review_state=accepted`、`confidence=null`、保留 `evidence_ids`），重载图可见；拒绝路径不产生任何写。
 - [ ] AC-5 (c5)：Web——资料列表"生成草案"→ 预览概念/关系/置信度；"接受"经提交门写入并刷新；"拒绝"丢弃；`ai_not_available` 显示"AI 未连接"。
 - [ ] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy（含 apps/api）、全仓 pytest、Web 全绿。
 - [ ] 错误和恢复路径：generator 抛错（无 JSON/成环/无证据）→ 422 稳定错误码，不产出半成品；端点不写库。
