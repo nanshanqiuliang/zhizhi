@@ -1,5 +1,5 @@
 ; Inno Setup script for 知枝 (Knowledge Tree) — WORK-2026-035 slice 3b.
-; Build via scripts/build_installer.py, which passes /DAppVersion and /DSourceDir.
+; Build via scripts/build_installer.py, which passes /DAppVersion.
 
 #ifndef AppVersion
   #define AppVersion "0.1.0"
@@ -41,7 +41,7 @@ Name: "{group}\卸载 知枝"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\知枝"; Filename: "{app}\zhizhi.exe"; Tasks: desktopicon; IconFilename: "{app}\zhizhi.exe"
 
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："
+Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："; Flags: unchecked
 
 [Run]
 Filename: "{app}\zhizhi.exe"; Description: "启动 知枝"; Flags: nowait postinstall skipifsilent

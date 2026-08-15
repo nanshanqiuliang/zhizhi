@@ -75,6 +75,7 @@ TEXT_SUFFIXES = {
     "",
     ".css",
     ".html",
+    ".iss",
     ".json",
     ".jsonl",
     ".md",

@@ -6,7 +6,6 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
   "fastapi>=0.141.1",
   "jsonschema[format]>=4.25,<5",
-  "pillow>=10,<12",
   "pypdf>=6.10,<7",
   "python-multipart>=0.0.32",
   "pywebview>=5,<7",
@@ -26,6 +25,7 @@ dev = [
   "types-pyyaml>=6.0,<7",
 ]
 build = [
+  "pillow>=10,<12",
   "pyinstaller>=6,<7",
 ]
 

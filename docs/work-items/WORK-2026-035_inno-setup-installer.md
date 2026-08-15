@@ -18,7 +18,7 @@ updated_at: 2026-08-15T21:50:00+08:00
   开始菜单、卸载入口与「覆盖安装升级」。第 10 步「安装包 + 迁移/升级」还差最后一环。
 - 期望结果：Inno Setup 生成单文件安装器 `zhizhi-<version>-setup.exe`——按用户安装（无需管理员）、
   开始菜单/桌面快捷方式、注册卸载器、覆盖安装升级（数据在 `%LOCALAPPDATA%\知枝\data` 不受影响）；
-  应用与安装器带图标；代码签名作为可选（证书环境变量门控）能力。
+  应用与安装器带图标；代码签名作为可选（`installer.iss` 注释的 `SignTool` 行）能力。
 - 成功如何被观察：从失败测试启动；`installer.iss` 与 `scripts/build_installer.py` 存在；安装器
   构建产物可静默安装 → 文件/快捷方式/卸载器注册正确 → 静默卸载干净；覆盖安装后数据仍在；
   全仓门全绿。
@@ -32,11 +32,11 @@ updated_at: 2026-08-15T21:50:00+08:00
     `{localappdata}\Programs\知枝\`、开始菜单 + 可选桌面快捷方式、卸载器注册、覆盖安装时
     保留用户数据（数据目录在安装目录之外）。
   - `scripts/build_installer.py`：定位 `ISCC.exe`（Inno Setup 6）→ 用版本/路径参数编译 .iss →
-    `dist/zhizhi-<version>-setup.exe`；可选签名（`SIGNTOOL` + `SIGN_CERT` env 门控，缺省跳过）。
+    `dist/zhizhi-<version>-setup.exe`；可选签名（`installer.iss` 注释的 `SignTool` 行，无证书缺省不签名）。
   - `pyproject.toml` build 组增 `pillow`（图标生成）。
   - 测试：`tests/unit/test_installer.py`（`installer.iss` 存在 + 关键节存在）；`scripts/build_installer.py`
     构建 + 静默安装/卸载冒烟。
-- Out of scope（切片 3b）：代码签名证书的实际签发/购买（无证书，保持 env 门控、缺省跳过）；
+- Out of scope（切片 3b）：代码签名证书的实际签发/购买（无证书，`SignTool` 行保持注释、缺省不签名）；
   自动更新/增量更新（后续）；多用户/机器级安装（按用户优先）；商店发布。
 - 受影响模块/接口/数据：新增 `apps/desktop/installer.iss`、`apps/desktop/icon.*`、
   `scripts/generate_icon.py`、`scripts/build_installer.py`；`build.spec` 增 icon；无 canonical
@@ -51,7 +51,7 @@ updated_at: 2026-08-15T21:50:00+08:00
 - 升级：固定 AppId + 覆盖安装（Inno Setup 默认 `overwritealways` 语义）；数据在安装目录外，
   覆盖安装/卸载均不触碰 `%LOCALAPPDATA%\知枝\data`。
 - 权限：按用户安装到 `{localappdata}\Programs\知枝\`，无需管理员；`PrivilegesRequired=lowest`。
-- 签名：`SIGNTOOL`/`SIGN_CERT` 环境变量存在时才在 `[Setup] SignTool` 生效；缺省跳过且构建不失败。
+- 签名：`installer.iss` 中 `SignTool` 行保持注释；无证书时缺省不签名且构建不失败（后续有证书时取消注释并配置签名工具）。
 
 ## 风险影响
 
@@ -93,4 +93,4 @@ updated_at: 2026-08-15T21:50:00+08:00
 - Release：`dist/zhizhi-<version>-setup.exe`（单文件安装器）；便携 zip 仍由 `package_desktop.py` 产出。
 - 观察结果：新机器可「双击 setup.exe 安装 → 开始菜单启动 → 覆盖安装升级 → 卸载」，数据始终保留；
   第 10 步完成标志达成。
-- 未完成项的新 ID：代码签名证书（owner 未提供，env 门控）；自动更新；向量检索（第 9 步遗留）。
+- 未完成项的新 ID：代码签名证书（owner 未提供，`SignTool` 行待取消注释）；自动更新；向量检索（第 9 步遗留）。

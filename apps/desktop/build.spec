@@ -51,7 +51,16 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        # Build/dev-only packages that the app never imports at runtime; some
+        # are pulled in via optional imports (e.g. pypdf -> PIL) when present.
+        "PIL",
+        "PIL.Image",
+        "hypothesis",
+        "mypy",
+        "pytest",
+        "ruff",
+    ],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
