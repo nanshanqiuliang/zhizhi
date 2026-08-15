@@ -130,3 +130,9 @@ def test_answer_endpoint_requires_generator(tmp_path: Path) -> None:
 def test_answer_endpoint_invalid_question(client: TestClient) -> None:
     response = client.post(f"/api/workspaces/{WORKSPACE_ID}/answer", json={"question": ""})
     assert response.status_code == 422
+
+
+def test_answer_endpoint_question_too_long(client: TestClient) -> None:
+    response = client.post(f"/api/workspaces/{WORKSPACE_ID}/answer", json={"question": "极" * 150})
+    assert response.status_code == 422
+    assert response.json()["rule"] == "question_too_long"

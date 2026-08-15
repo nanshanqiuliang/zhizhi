@@ -579,7 +579,7 @@ def create_app(
             raise HTTPException(
                 status_code=422, detail={"code": "answer_invalid", "rule": "question_empty"}
             )
-        if len(question) > 500:
+        if len(question) > 100:
             raise HTTPException(
                 status_code=422, detail={"code": "answer_invalid", "rule": "question_too_long"}
             )

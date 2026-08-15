@@ -519,7 +519,7 @@ export function App({ api }: { api?: PersistApi }) {
   }
 
   async function handleAsk() {
-    if (!api || !question.trim()) return;
+    if (!api || !question.trim() || answerStatus === "asking") return;
     setAnswerStatus("asking");
     setAnswer(null);
     try {
