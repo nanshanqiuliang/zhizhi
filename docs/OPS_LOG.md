@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线（切片 1–4）、带来源问答（第 9 步切片 1）、自然语言转 GraphPatch（切片 2）、增量重建纯领域内核（切片 3a）已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案/指令只经提交门落库；问答/草案生成/指令解释/增量内核只读。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线（切片 1–4，`/ai-draft` 现为增量式）、带来源问答（第 9 步切片 1）、自然语言转 GraphPatch（切片 2）、增量重建纯领域内核 + LLM 接线（切片 3a/3b）已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案/指令只经提交门落库；问答/草案生成/指令解释/增量内核只读。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 9 步切片 3b：增量重建 LLM 接线（WORK-2026-031）运维记录
+
+- 关联 ID：WORK-2026-031、WORK-2026-030、WORK-2026-009、WORK-2026-008。
+- 环境/版本/build/config：commit `d012660`（feature/WORK-2026-009-ai-draft-pipeline）；local-dev Windows x64。
+- 变更或症状：新增 `build_incremental_ai_draft` + generator 改增量路径；`/ai-draft` 对非空图不重复创建既有概念；无部署/常驻服务变化；真实调用仅 `DEEPSEEK_API_KEY` opt-in。
+- 影响：无部署或常驻服务变化；仅扩展 Python 模块；`config/llm` 与 Provider 门控不变。
+- 证据：pytest 427/427 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；live e2e（owner key env-only）非空图增量（极限 未重建）。
+- 缓解/回滚：回退 `d012660` 即回全量草案生成；密钥仅 env。
+- 遗留风险/Owner/期限：切片 3b 职责隔离 QA 待执行；向量检索（Embedding provider 未决）、AI 修改历史为后续。
 
 ## 2026-08-15 — 第 9 步切片 3a：增量重建纯领域内核（WORK-2026-030）运维记录
 

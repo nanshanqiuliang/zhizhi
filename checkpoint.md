@@ -1085,6 +1085,31 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 3b implementation checkpoint — 2026-08-15 08:00 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-031_incremental-rebuild-llm.md`;
+  red baseline (ImportError: build_incremental_ai_draft); implementation `d012660`.
+- Roadmap Step 9 slice 3b (incremental rebuild LLM wiring): new
+  `build_incremental_ai_draft` (chunk → extract → merge → dedupe against
+  existing labels → union of existing placeholders + new → relation provider →
+  filter existing↔existing relations); `build_deepseek_draft_generator` now uses
+  `build_incremental_ai_draft` + `build_incremental_patch`, and returns
+  `draft.concepts` = only NEW concepts. `/ai-draft` is now incremental: no
+  duplicate re-creation of existing concepts; cross-graph relations reference
+  existing ids.
+- Verification: incremental LLM 2/2 + incremental kernel 4/4; full pytest 427/427
+  + 5 skipped; validator (incl. secret scan), Ruff, strict mypy (scripts 11 +
+  packages/api 33) green.
+- Live e2e (owner key, env-only): non-empty graph with 极限 -> draft new
+  concepts [导数, 连续], relations 极限→连续/极限→导数/连续→导数, create_concept
+  [导数, 连续] (极限 NOT re-created).
+- Natural-language Step 9 progress: approximately 80% (slices 1+2+3a+3b);
+  personal MVP approximately 89%. Remaining: vector retrieval (Embedding
+  provider unresolved) + AI edit history.
+- Exact next action: collect role-separated QA verdict on frozen `d012660`;
+  if PASS preserve evidence and update docs.
+
 ## Step 9 slice 3a QA closure checkpoint — 2026-08-15 07:30 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `da73951`

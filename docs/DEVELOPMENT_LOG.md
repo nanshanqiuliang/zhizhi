@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 3b：增量重建 LLM 接线（WORK-2026-031）
+
+- 关联 ID：WORK-2026-031、WORK-2026-030、WORK-2026-009、WORK-2026-026、REQ-2026-006、NFR-2026-001/006/007/008。
+- 实际变化：新增 `knowledge_tree_infrastructure.ai_draft.build_incremental_ai_draft(existing_graph, text, ...)`（分块→抽取→合并→对既有 label 去重→"既有占位 + 新概念"并集→关系提供器→过滤既有↔既有关系）；`apps/api/ai_draft.build_deepseek_draft_generator` 改用 `build_incremental_ai_draft` + `build_incremental_patch`，且 `draft.concepts` 仅返回新概念。`POST /ai-draft` 自此对非空图增量：不重复创建既有概念、跨图关系端点指向既有 id。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure `ai_draft` 与 apps/api `ai_draft`；无 canonical contract/ADR/migration/prompt 变更（复用 GraphPatch v1 + `build_incremental_patch`）。
+- 兼容性：空图退化为全量（等价原行为）；既有「生成草案」UI 自动增量；生成仍只读、仅确认后写库。
+- 验证与证据：红灯（ImportError）；实现 `d012660`；incremental LLM 2/2 + incremental kernel 4/4；全仓 pytest 427/427 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；live e2e（owner key env-only）非空图 → 新概念 [导数, 连续]、极限 未重建。
+- 性能/安全/运维影响：O(V+E) + 单次 LLM 抽取/关系调用受 task profile 预算约束；文本仅进 user 消息；密钥仅 env。
+- 回滚：回退 `d012660` 即回到全量草案生成；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `d012660`）；向量检索（Embedding provider 未决）、AI 修改历史为第 9 步剩余项。
+
 ## 2026-08-15 — 第 9 步切片 3a QA 封存（WORK-2026-030，TR-20260814-019）
 
 - 关联 ID：WORK-2026-030、WORK-2026-009、TR-20260814-019、NFR-2026-001、REQ-2026-006。
