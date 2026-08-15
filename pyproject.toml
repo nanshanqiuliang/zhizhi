@@ -6,6 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
   "fastapi>=0.141.1",
   "jsonschema[format]>=4.25,<5",
+  "pillow>=10,<12",
   "pypdf>=6.10,<7",
   "python-multipart>=0.0.32",
   "pywebview>=5,<7",
@@ -53,3 +54,7 @@ strict = true
 warn_unreachable = true
 files = ["scripts"]
 mypy_path = ["packages/contracts-py/src", "packages/domain/src", "packages/infrastructure/src"]
+
+[[tool.mypy.overrides]]
+module = "PIL.*"
+ignore_missing_imports = true
