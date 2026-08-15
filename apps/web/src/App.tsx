@@ -718,6 +718,15 @@ export function App({
     }));
   }
 
+  function selectNodeKeepCamera(nodeId: string) {
+    const node = present.nodes.find((candidate) => candidate.id === nodeId);
+    if (!node) return;
+    setSelectedId(node.id);
+    setTitleDraft(node.title);
+    setNoteDraft(node.note);
+    setStatus(`已选择“${node.title}”`);
+  }
+
   function selectNode(nodeId: string) {
     const node = present.nodes.find((candidate) => candidate.id === nodeId);
     if (!node) return;
@@ -937,7 +946,9 @@ export function App({
 
   function startDrag(event: React.PointerEvent<HTMLButtonElement>, node: ConceptNode) {
     if (event.button !== 0) return; // left button only
-    selectNode(node.id);
+    // Selecting during a drag must NOT recenter the viewport, otherwise the
+    // background visibly jumps the moment a node is grabbed.
+    selectNodeKeepCamera(node.id);
     if (node.positionLocked || node.locks?.position) {
       setStatus("位置已锁定，无法移动");
       return;
