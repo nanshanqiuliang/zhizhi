@@ -24,6 +24,7 @@ from pathlib import Path
 import uvicorn
 
 from apps.api._runtime import ensure_source_paths, runtime_root
+from apps.desktop.version import __version__
 
 ensure_source_paths()
 
@@ -163,7 +164,7 @@ def _run(*, data_root: Path, port: int, web_dist: Path | None, no_browser: bool)
         raise SystemExit(1)
 
     url = f"http://127.0.0.1:{port}/"
-    print(f"{_APP_NAME} 已启动：{url}（数据目录：{data_root}）")
+    print(f"{_APP_NAME} {__version__} 已启动：{url}（数据目录：{data_root}）")
     if not no_browser:
         webbrowser.open(url)
 
