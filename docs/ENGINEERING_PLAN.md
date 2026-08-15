@@ -59,6 +59,7 @@
 | WORK-2026-030 | 增量重建纯领域内核（第 9 步切片 3a） | 已验证 prototype（correlated） | domain + QA | WORK-2026-009 切片 1、WORK-2026-005 已验证 | `build_incremental_patch`（label 去重 + 混合端点 + 证据/DAG，proposed patch） | `da73951` 实现；`120e349` QA P2 修复；incremental 4/4、全仓 425/425 + 5 skipped、QA `TR-20260814-019` PASS |
 | WORK-2026-031 | 增量重建 LLM 接线（第 9 步切片 3b） | 已验证 prototype（correlated） | ai-draft + api + QA | WORK-2026-030、WORK-2026-009 切片 1/2、WORK-2026-026 已验证 | `build_incremental_ai_draft`（去重/跨图关系/过滤）+ generator 改增量路径 + `/ai-draft` 增量 | `d012660` 实现；`f0459f4` QA P2 测试强化；incremental LLM 5/5、全仓 430/430 + 5 skipped、QA `TR-20260814-020` PASS、live e2e 通过 |
 | WORK-2026-032 | AI 修改历史（第 9 步收尾） | 已验证 prototype（correlated） | history + api + web + QA | WORK-2026-011/019/022/026/027/029 已验证 | `GraphChangeRecord.source`（向后兼容）+ `apply_graph_patch(source)` + `/interpret/accept` + `GET /history` source + Web「AI」标记 | `954a7c8` 实现；ai_edit_history 4/4、全仓 434/434 + 5 skipped、Web 41/41、QA `TR-20260814-021` PASS |
+| WORK-2026-033 | Windows 桌面封装切片 1（PyInstaller 冻结 + 自托管 UI + 生命周期） | 实现完成（本地门全绿，待职责隔离 QA） | desktop + api + packaging | WORK-2026-013/014/021/022/026/027 已验证 | `create_app(web_dist)` 同源自托管 + `apps/api/_runtime.py`（frozen 感知）+ `apps/desktop/launcher.py`（数据目录/单实例/优雅退出）+ `build.spec`/`build_desktop.py`（onedir `zhizhi.exe`）+ `desktop_e2e.py` | `3fc46c7` Ready；`8edf336` 红灯；`39117a1` 实现；`545b404` 打包+单实例修复；e2e 15/15、全仓 436/436 + 5 skipped、Web 41/41 |
 
 ## 当前受阻项
 
@@ -68,4 +69,4 @@
 
 ## 下一门
 
-`第 9 步（对话、检索和持续整理）`：切片 1（带来源问答）、切片 2（自然语言转 GraphPatch）、切片 3a（增量重建纯领域内核）、切片 3b（增量重建 LLM 接线）与切片 4（AI 修改历史，`954a7c8`，WORK-2026-032，QA PASS `TR-20260814-021`）已实现并经全仓门验证。**第 9 步收尾完成**（约 100%）：向量检索为唯一 owner 未决项（Embedding provider 未决）。下一动作：进入第 10 步（Windows 桌面封装，Tauri 壳 + sidecar 生命周期 + 安装/升级/备份）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
+`第 10 步（封装为 Windows App）`：切片 1（PyInstaller 冻结 + 同源自托管 UI + 生命周期 + 数据目录，`545b404`，WORK-2026-033，e2e 15/15，本地门全绿）已实现，待职责隔离 QA 封存。剩余切片 2（pywebview 原生窗口）与切片 3（Inno Setup 安装器/升级/签名）待 owner 决策后编号。第 9 步向量检索仍为唯一 owner 未决项（Embedding provider）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
