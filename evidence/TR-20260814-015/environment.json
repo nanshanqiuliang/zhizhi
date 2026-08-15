@@ -1,0 +1,14 @@
+{
+  "os": "Windows",
+  "python": "3.12",
+  "uv": "locked (uv.lock)",
+  "node_pnpm": "pnpm (frozen pnpm-lock.yaml)",
+  "branch": "feature/WORK-2026-009-ai-draft-pipeline",
+  "reviewed_commit": "d47ce88a3221d2edc1d1a5ff64025d771b0ebe27",
+  "attempt001_commit": "dfbcc306d116c49d924d3ba9280e9c93e12c5ccb",
+  "red_truth_parent": "b5a38e1",
+  "live_gate": "DEEPSEEK_API_KEY (env only) + RUN_LIVE_LLM_TESTS for tests",
+  "provider": "deepseek (enabled: true, owner approved 2026-08-14)",
+  "models": {"concept_extract": "deepseek-v4-flash", "relation_validate": "deepseek-v4-pro"},
+  "secret_storage": "none; key read from environment only, never written to any file"
+}

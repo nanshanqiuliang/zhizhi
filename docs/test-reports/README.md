@@ -23,6 +23,7 @@
 | [TR-20260814-012](TR-20260814-012_recovery-history-ui.md) | `2cfa883` | 冲突预览、备份/恢复崩溃恢复、版本历史面板、URL 契约、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-021 |
 | [TR-20260814-013](TR-20260814-013_diff-based-save.md) | `7106621` | 普通编辑 patch 化保存、GraphPatch delete 契约、跨会话撤销覆盖所有编辑、QA FAIL→修复 | GO（仅 prototype；correlated） | WORK-2026-022 |
 | [TR-20260814-014](TR-20260814-014_ai-draft-llm-extraction.md) | `1394a1e` | 第 8 步切片 2：LLM 概念抽取/关系候选离线契约 + 真实 DeepSeek live 冒烟（AI-DRAFT-LIVE-SMOKE-001，~$0.004）、失败关闭/噪声丢弃/evidence 绑定、QA PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-009 |
+| [TR-20260814-015](TR-20260814-015_ai-draft-api-web.md) | `d47ce88` | 第 8 步切片 3：AI 草案 API 端点 + Web 生成/预览/接受/拒绝（`read_resource_text`、`POST /ai-draft`、DeepSeek 组合根、提交门接受）、QA FAIL→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-026 |
 
 > WORK-2026-007（canonical LLM contract + mock + TC-LLM-001..009）与 WORK-2026-008
 > （DeepSeek adapter + 金额预算 + 受控回退 + 受控 live smoke + 金标基线 + RB-PROV-001

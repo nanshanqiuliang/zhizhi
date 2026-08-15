@@ -1,0 +1,27 @@
+# Commands executed for TR-20260814-015 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/integration/test_ai_draft_api.py tests/integration/test_resource_text.py -q
+uv run python -m pytest -q
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+pnpm --filter @knowledge-tree/web test -- --run src/App.draft.test.tsx
+pnpm check && pnpm build
+
+# --- live e2e (owner key, env-only; NEVER in a file) ---
+$env:DEEPSEEK_API_KEY="<owner-key-from-user>"; uv run python -X utf8 -c "<TestClient + build_deepseek_draft_generator: import calculus.md -> POST /ai-draft -> accept via /graph/patches>"
+
+# --- role-separated QA attempt 001 (ai_qa_auditor, dfbcc30) ---
+git rev-parse HEAD                                    # dfbcc30
+uv run python -m pytest tests/integration/test_ai_draft_api.py tests/integration/test_resource_text.py -q  # 8 passed
+uv run python -m pytest -q                            # 394 passed, 5 skipped
+# ... ruff/mypy/validator/web + adversarial mutation (drift tautology proven by UPDATE resource_version SET content_hash)
+
+# --- role-separated QA attempt 002 (superseding, d47ce88) ---
+git rev-parse HEAD                                    # d47ce88
+git show dfbcc30:packages/infrastructure/src/knowledge_tree_infrastructure/workspace.py  # pre-fix tautology
+uv run python -m pytest tests/integration/test_ai_draft_api.py tests/integration/test_resource_text.py -q  # 9 passed
+uv run python -m pytest -q                            # 395 passed, 5 skipped
+# ... dynamic drift reproduction (dfbcc30 NO_RAISE vs HEAD source_changed), P2-1 broken-config -> None, ruff/mypy/validator/web

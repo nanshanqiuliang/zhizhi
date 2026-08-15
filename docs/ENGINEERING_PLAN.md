@@ -52,7 +52,7 @@
 | WORK-2026-021 | 冲突预览与备份/恢复崩溃恢复 UI | 已验证 prototype | recovery + api + web + QA | WORK-2026-019/020 已验证 | `list_backups`/`restore_backup_by_name`（路径守卫 + checksum 必需）+ `GET backups`/`POST restore` 端点（含 `_recovery_layout` db 缺失恢复）；前端错误码细化提示 + 侧边栏备份/恢复 + 版本历史面板 | `fb745bd` 实现；`2cd8270`/`8562ee7`/`2cfa883` QA 修复；backup_api 6/6、Web 27/27、全仓 249/249；`TR-20260814-012` QA FAIL→修复 |
 | WORK-2026-022 | 普通编辑 patch 化保存与跨会话撤销 | 已验证 prototype | patch + persistence + QA | WORK-2026-005/019 已验证 | GraphPatch v1 新增 delete_concept/delete_edge；后端 save 改为 diff 生成 patch 走提交门（普通编辑保留历史、跨会话撤销覆盖所有编辑） | `ab50aa2` 实现；`7106621` QA 修复；diff_save_undo 4/4、delete 单元 3/3、全仓 256/256、Web 27/27；`TR-20260814-013` QA FAIL→修复 |
 | WORK-2026-009 | AI 从笔记/资料自动生成知识树草案（第 8 步） | 切片 1+2 已实现（纯领域内核+离线编排；LLM 概念抽取/关系候选+live 冒烟） | AI + persistence + web + QA | WORK-2026-004/005/008/016/017/018 已验证 | 文档分块、别名合并、DAG 校验、自动布局、草案→GraphPatch、来源绑定（切片 1）；`LlmConceptExtractor`/`LlmRelationProvider` 经 canonical LLM port 真实抽取 + live 冒烟（切片 2）；批量接受/拒绝/Web（切片 3，见 WORK-2026-026） | `c9f2875` 红灯；`136f7fa` 切片 1 实现；`1394a1e` 切片 2 实现；TC-AIDRAFT-001..006 20/20 + 新 18/18、全仓 386/386 + 5 skipped、Web 32/32、live 冒烟 AI-DRAFT-LIVE-SMOKE-001（~$0.004） |
-| WORK-2026-026 | AI 草案 API 端点与 Web 接受/拒绝（第 8 步切片 3） | 已实现（QA 待执行） | api + web + ai-draft + QA | WORK-2026-009 切片 1+2、WORK-2026-014/016/017/019/022 已验证 | `read_resource_text`、`POST /ai-draft`（注入式 generator，503 `ai_not_available`）、DeepSeek 组合根（env-only）、Web 生成/预览/接受/拒绝 | `fe19106` Ready；`b5a38e1` 红灯；`dfbcc30` 实现；ai-draft API 6/6 + resource_text 3/3、全仓 394/394 + 5 skipped、Web 35/35、live e2e 通过 |
+| WORK-2026-026 | AI 草案 API 端点与 Web 接受/拒绝（第 8 步切片 3） | 已验证 prototype（correlated） | api + web + ai-draft + QA | WORK-2026-009 切片 1+2、WORK-2026-014/016/017/019/022 已验证 | `read_resource_text`、`POST /ai-draft`（注入式 generator，503 `ai_not_available`）、DeepSeek 组合根（env-only）、Web 生成/预览/接受/拒绝 | `fe19106` Ready；`b5a38e1` 红灯；`dfbcc30` 实现；`d47ce88` QA P1 修复；ai-draft API 5/5 + resource_text 4/4、全仓 395/395 + 5 skipped、Web 35/35、QA `TR-20260814-015` PASS、live e2e 通过 |
 
 ## 当前受阻项
 
@@ -62,4 +62,4 @@
 
 ## 下一门
 
-`第 8 步（WORK-2026-009：AI 从笔记/资料自动生成知识树草案）`：切片 1（纯领域草案内核 + 离线编排，`136f7fa`）、切片 2（真实 DeepSeek 概念抽取/关系候选 + live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`，`1394a1e`，QA PASS `TR-20260814-014`）与切片 3（草案 API 端点 + Web 生成/预览/接受/拒绝，`dfbcc30`，WORK-2026-026）已实现。下一动作：完成切片 3 的职责隔离 QA 后，进入第 9 步（对话/检索）或实现来源锚点真实落库与「点来源跳回原文」。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
+`第 8 步（WORK-2026-009：AI 从笔记/资料自动生成知识树草案）`：切片 1（纯领域草案内核 + 离线编排，`136f7fa`）、切片 2（真实 DeepSeek 概念抽取/关系候选 + live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`，`1394a1e`，QA PASS `TR-20260814-014`）与切片 3（草案 API 端点 + Web 生成/预览/接受/拒绝，`dfbcc30`+`d47ce88`，WORK-2026-026，QA PASS `TR-20260814-015`）已实现并经全仓门验证。下一动作：来源锚点真实落库与「点来源跳回原文」，或进入第 9 步（对话/检索）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。

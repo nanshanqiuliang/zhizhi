@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 3 QA 封存（WORK-2026-026，TR-20260814-015）
+
+- 关联 ID：WORK-2026-026、WORK-2026-009、TR-20260814-015、NFR-2026-001/006/007/008、REQ-2026-006。
+- 实际变化：职责隔离 QA 对冻结 `dfbcc30` 返回 **FAIL**（1 P1：`read_resource_text` PDF 漂移守卫恒真，`source_changed` 不可达 + 3 P2）；修复 `d47ce88`（取 segment parse-time `content_hash` 漂移校验 + 镜像 TC-VIEW-004 回归、`build_deepseek_draft_generator` config 加载失败关闭返回 None、过期 docstring 修正）后超越审查返回 **PASS**（0 P0/P1；P2-2 evidence 信任注记记录为无代码变更边界）。
+- 影响模块/接口/schema/migration/prompt：仅 `workspace.py`/`ai_draft.py`/两个测试文件；无 canonical contract/ADR/migration/prompt 变更。
+- 兼容性：无行为变化；核心闭环（生成只读、接受仅经提交门、503 失败关闭、密钥 env-only）保持不变。
+- 验证与证据：attempt 001/002 报告与证据存 `evidence/TR-20260814-015/`；报告 `docs/test-reports/TR-20260814-015_ai-draft-api-web.md`；全仓 pytest 395/395 + 5 skipped、Ruff/strict mypy/validator/Web 35/35 全绿。
+- 性能/安全/运维影响：无新增。
+- 回滚：无新增代码可回滚（修复为正向变更）；回退 `d47ce88` 即回 attempt 001 状态。
+- 遗留风险与下一步：第 8 步切片 1+2+3 完成（约 90%）；下一动作为来源锚点真实落库 + 「点来源跳回原文」，或进入第 9 步（对话/检索）；`relation_validate` 思考模式延迟 ~57s 为原型边界。
+
 ## 2026-08-15 — 第 8 步切片 3：AI 草案 API 端点与 Web 接受/拒绝（WORK-2026-026）
 
 - 关联 ID：WORK-2026-026、WORK-2026-009、WORK-2026-005/008/014/016/017/019/022、REQ-2026-006、NFR-2026-001/006/007/008、TR-20260814-014。
@@ -11,7 +22,7 @@
 - 验证与证据：红灯 `b5a38e1`（ImportError/TypeError/404 + Web 按钮缺失）；实现 `dfbcc30`；ai-draft API 6/6 + read_resource_text 3/3；全仓 pytest 394/394 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）/Web 35/35/pnpm build 全绿；live e2e（owner key env-only）：导入 calculus.md → 抽取 极限/连续/导数 + 3 prerequisite_of → 接受经提交门写入（user/accepted/evidence 保留）。
 - 性能/安全/运维影响：生成受 task profile 金额/attempt/回退预算约束；密钥仅 env；错误 details 仅标识；live 调用仅显式构造 generator（`DEEPSEEK_API_KEY` 存在时）。
 - 回滚：回退 `dfbcc30` 即回到无 AI 草案 UI；不设置 `DEEPSEEK_API_KEY` 则端点 503；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `dfbcc30`）；来源锚点真实落库与「点来源跳回原文」为后续切片（草案 evidence 现为合成 UUIDv7 来源引用）；第 8 步完成后进入第 9 步（对话/检索）或来源跳转增强。
+- 遗留风险与下一步：职责隔离 QA 已封存（TR-20260814-015，attempt 001 FAIL → 修复 `d47ce88` → attempt 002 PASS）；来源锚点真实落库与「点来源跳回原文」为后续切片（草案 evidence 现为合成 UUIDv7 来源引用）；第 8 步完成后进入第 9 步（对话/检索）或来源跳转增强。
 
 ## 2026-08-15 — 第 8 步切片 2 QA 封存（WORK-2026-009，TR-20260814-014）
 

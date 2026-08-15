@@ -1085,6 +1085,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 8 slice 3 QA closure checkpoint — 2026-08-15 03:45 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `dfbcc30`
+  (WORK-2026-026 slice 3) and returned FAIL with 1 P1 (read_resource_text PDF
+  drift guard tautological → `source_changed` unreachable) + 3 P2 (generator
+  startup crash on broken config, evidence-trust note, stale docstrings/counts).
+- Fix `d47ce88`: P1 drift-checks against resource_segment parse-time
+  content_hash (matching get_page_text) + a TC-VIEW-004-mirroring regression;
+  P2-1 generator fail-closed on config load; P2-3 docstrings corrected. P2-2
+  recorded as a no-code-change boundary.
+- Superseding QA attempt 002 reviewed `d47ce88` and returned PASS with 0 P0/P1;
+  it dynamically reproduced the pre-fix NO_RAISE vs post-fix `source_changed`
+  and confirmed the broken-config → None fail-closed path. Correlated machine
+  review, not owner acceptance.
+- Evidence sealed under `evidence/TR-20260814-015/`; report:
+  `docs/test-reports/TR-20260814-015_ai-draft-api-web.md`.
+- Full gates green at `d47ce88`: pytest 395/395 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 30), Web 35/35,
+  pnpm build. Live e2e (owner key, env-only) import→generate→accept passes.
+- **Natural-language Step 8 is now ~90%** (slices 1+2+3 complete and QA-verified);
+  personal MVP approximately 85%. Remaining for Step 8: source-anchor
+  persistence + "jump to source" (later slice).
+- Exact next action: enter the source-anchor/jump-to-source slice, or advance
+  to natural-language Step 9 (conversation/retrieval). Keep user data and owner
+  acceptance disabled.
+
 ## Step 8 slice 3 implementation checkpoint — 2026-08-15 03:15 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅新增/扩展 Python 模块、端点、Web UI 与测试；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 394/394 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）全绿；Web 35/35、pnpm build 通过；live e2e（owner key env-only）导入→生成→接受闭环通过。
 - 缓解/回滚：回退 `dfbcc30` 即回无 AI 草案 UI；不设 `DEEPSEEK_API_KEY` 则端点 503、UI「AI 未连接」；密钥仅 env。
-- 遗留风险/Owner/期限：切片 3 职责隔离 QA 待执行；来源锚点真实落库 + 点来源跳回原文为后续切片；`relation_validate` 思考模式延迟较高为原型边界。
+- 遗留风险/Owner/期限：切片 3 职责隔离 QA 已封存（TR-20260814-015，attempt 001 FAIL → 修复 `d47ce88` → attempt 002 PASS，correlated_review）；来源锚点真实落库 + 点来源跳回原文为后续切片；`relation_validate` 思考模式延迟较高为原型边界。
 
 ## 2026-08-15 — 第 8 步切片 2：LLM 概念抽取/关系候选 live 冒烟（WORK-2026-009）运维记录
 
