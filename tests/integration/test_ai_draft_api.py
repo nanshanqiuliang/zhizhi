@@ -261,6 +261,38 @@ def test_ai_draft_workspace_mode_no_resources_returns_422(tmp_path: Path) -> Non
         assert response.json()["code"] == "draft_invalid"
 
 
+def test_ai_draft_invalid_resource_id_type_422(client: TestClient) -> None:
+    _seed_md_resource(client)
+    response = client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={"resource_id": 123})
+    assert response.status_code == 422
+    assert response.json()["code"] == "draft_invalid"
+
+
+def test_ai_draft_no_new_concepts_returns_422(tmp_path: Path) -> None:
+    def empty_generator(texts: list[tuple[str, str]], graph: JsonObject) -> JsonObject:
+        return {
+            "draft": {"concepts": [], "relations": []},
+            "patch": {"operations": []},
+            "evidence": [],
+        }
+
+    app = create_app(
+        data_root=tmp_path,
+        allowed_origins=[ALLOWED_ORIGIN],
+        workspace_draft_generator=empty_generator,
+    )
+    with TestClient(app) as ws_client:
+        ws_client.put(f"/api/workspaces/{WORKSPACE_ID}/graph", json=_empty_graph())
+        ws_client.post(
+            f"/api/workspaces/{WORKSPACE_ID}/resources",
+            files={"file": ("notes.md", b"# limit\n", "text/markdown")},
+        )
+        response = ws_client.post(f"/api/workspaces/{WORKSPACE_ID}/ai-draft", json={})
+        assert response.status_code == 422
+        assert response.json()["code"] == "draft_invalid"
+        assert response.json()["rule"] == "no_new_concepts"
+
+
 def test_ai_draft_missing_resource_returns_404(client: TestClient) -> None:
     _seed_md_resource(client)
     response = client.post(

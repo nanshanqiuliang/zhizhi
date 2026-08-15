@@ -407,10 +407,15 @@ def deepseek_relation_provider(
     trace_context: TraceContext | None = None,
     id_factory: Callable[[], str] = uuid7,
 ) -> LlmRelationProvider:
-    """Bind a DeepSeek adapter to `LlmRelationProvider` (thinking enabled)."""
+    """Bind a DeepSeek adapter to `LlmRelationProvider` (thinking disabled).
+
+    Relations are structured JSON extraction: thinking mode spends tokens on
+    `reasoning_content` first and can leave empty content, so it is disabled
+    for reliability (WORK-2026-043).
+    """
     return LlmRelationProvider(
         generate=lambda request: adapter.generate(
-            request, thinking="enabled", max_tokens=max_tokens
+            request, thinking="disabled", max_tokens=max_tokens
         ),
         budget=budget,
         trace_context=trace_context,

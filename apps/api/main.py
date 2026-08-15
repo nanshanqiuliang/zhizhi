@@ -744,6 +744,11 @@ def create_app(
         except HTTPException as error:
             raise error
         resource_id = payload.get("resource_id")
+        if "resource_id" in payload and not isinstance(resource_id, str):
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "draft_invalid", "rule": "resource_id_invalid"},
+            )
         # Fail closed before touching storage when the needed generator is absent.
         if isinstance(resource_id, str) and resource_id:
             if ai_state["draft_generator"] is None:
@@ -789,6 +794,14 @@ def create_app(
         if not isinstance(patch, dict):
             raise HTTPException(
                 status_code=500, detail={"code": "draft_invalid", "rule": "patch_missing"}
+            )
+        operations = patch.get("operations")
+        if not isinstance(operations, list) or not operations:
+            # The corpus yielded no new concepts/relations: fail closed with a
+            # clear message instead of an opaque empty-patch validation error.
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "draft_invalid", "rule": "no_new_concepts"},
             )
         # Defense in depth: the returned patch must be a legal proposed
         # (unconfirmed) user-authored patch the commit gate would preview as
