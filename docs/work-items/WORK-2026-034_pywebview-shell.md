@@ -33,7 +33,7 @@ updated_at: 2026-08-15T21:00:00+08:00
   - `apps/desktop/build.spec`：`console=False`（windowed）；hiddenimports 增
     `webview.platforms.winforms`/`webview.platforms.edgechromium`/`clr`/`clr_loader`（PyInstaller
     hook 会自动收集 `webview/lib` 与 pythonnet 运行时，hiddenimports 兜底动态平台导入）。
-  - `pyproject.toml` build 组增 `pywebview>=5,<7`。
+  - `pyproject.toml` `[project] dependencies` 增 `pywebview>=5,<7`（运行时依赖）。
   - 测试：`tests/unit/test_desktop_shell.py`（mock webview 断言 create_window/start）；e2e 改用
     `--no-window` 并增「窗口模式启动不崩溃」冒烟。
 - Out of scope（切片 2）：系统托盘/文件关联/单实例窗口激活（把已运行实例带到前台）；Inno Setup
@@ -42,7 +42,8 @@ updated_at: 2026-08-15T21:00:00+08:00
   改为 `--no-window`，新增 `--browser`）；`build.spec` console/hiddenimports；无 canonical
   contract/迁移/存储格式变化。
 - 依赖和假设：WORK-2026-033（切片 1 已验证）；WebView2 运行时（本机 151.0.4129.86，Win10/11
-  自带）；pywebview 6.2.1 + pythonnet 3.1.0（build 组已装）；PyInstaller hook-webview/hook-clr。
+  自带）；pywebview 6.2.1 + pythonnet 3.1.0（`[project] dependencies` 已装）；PyInstaller
+  hook-webview/hook-clr。
 
 ## 设计边界
 
@@ -66,30 +67,32 @@ updated_at: 2026-08-15T21:00:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1 (c1)：`open_window(url)` 调用 `webview.create_window(title, url)` 与 `webview.start()`。
-- [ ] AC-2 (c2)：窗口模式启动：sidecar `/api/health` 200 且 GUI 循环进入（进程存活、无崩溃）。
-- [ ] AC-3 (c3)：关窗 → sidecar 优雅退出、端口释放（无孤儿）。
-- [ ] AC-4 (c4)：`--no-window`（headless）仍可跑 e2e（sidecar 仅，无窗口）；`--browser` 回退系统浏览器。
-- [ ] AC-5 (c5)：冻结产物（windowed）窗口模式可启动；`webview/lib` + pythonnet 运行时被打包。
-- [ ] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
-- [ ] 错误和恢复路径：WebView2/pythonnet 加载失败时 fail-closed（明确错误、不挂起）；端口占用明确报错。
-- [ ] 回滚/禁用方法：回退本工作项提交即回到「默认系统浏览器」；`--no-window` 保留 headless 路径。
+- [x] AC-1 (c1)：`open_window(url)` 调用 `webview.create_window(title, url)` 与 `webview.start()`。
+- [x] AC-2 (c2)：窗口模式启动：sidecar `/api/health` 200 且 GUI 循环进入（进程存活、无崩溃）。
+- [x] AC-3 (c3)：关窗 → sidecar 优雅退出、端口释放（无孤儿）。
+- [x] AC-4 (c4)：`--no-window`（headless）仍可跑 e2e（sidecar 仅，无窗口）；`--browser` 回退系统浏览器。
+- [x] AC-5 (c5)：冻结产物（windowed）窗口模式可启动；`webview/lib` + pythonnet 运行时被打包。
+- [x] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
+- [x] 错误和恢复路径：WebView2/pythonnet 加载失败时 fail-closed（明确错误、不挂起）；端口占用明确报错。
+- [x] 回滚/禁用方法：回退本工作项提交即回到「默认系统浏览器」；`--no-window` 保留 headless 路径。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-SHELL-001 | unit | `open_window` 调 create_window/start | mock webview 断言 | 待实现 |
-| TC-SHELL-002 | e2e | 窗口模式启动不崩溃 + sidecar 健康 | 进程存活、health 200 | 待实现 |
-| TC-SHELL-003 | e2e | 关窗 → 端口释放 | 优雅退出 | 待实现 |
-| TC-SHELL-004 | e2e | `--no-window` headless + 冻结窗口模式 | 15 项冒烟 + 窗口冒烟 | 待实现 |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 待实现 |
+| TC-SHELL-001 | unit | `open_window` 调 create_window/start | mock webview 断言 | test_desktop_shell 3/3 |
+| TC-SHELL-002 | e2e | 窗口模式启动不崩溃 + sidecar 健康 | 进程存活、health 200 | e2e window-health/process-alive |
+| TC-SHELL-003 | e2e | 关窗 → 端口释放 | 优雅退出 | WM_CLOSE exit 0 + 端口释放 |
+| TC-SHELL-004 | e2e | `--no-window` headless + 冻结窗口模式 | 18 项冒烟 | e2e 18/18 |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | pytest 445 + 5 skipped、mypy 39、QA TR-20260815-002 |
 
 ## 交付物与关闭
 
 - Commit/PR：分支 `feature/WORK-2026-034-pywebview-shell`；Ready → 红灯 → 实现 → QA。
-- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；build 组增 pywebview。
-- Test Run：TC-SHELL-001..004 + 全仓门 + 冻结窗口冒烟。
+- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；`[project] dependencies`
+  增 pywebview（运行时依赖）。
+- Test Run：TC-SHELL-001..004 + 全仓门 + 冻结窗口冒烟 + WM_CLOSE 优雅退出。
 - Release：`dist/zhizhi/zhizhi.exe`（windowed，双击即原生窗口）；便携 zip 由 `package_desktop.py` 产出。
-- 观察结果：双击 exe → 原生窗口；关窗即退；第 10 步切片 2（桌面壳）达成。
+- 观察结果：职责隔离 QA `TR-20260815-002` PASS（0 P0/P1/P2，3 P3 文档/卫生项已修）；双击 exe →
+  原生窗口，关窗即优雅退出；第 10 步切片 2（桌面壳）达成。
 - 未完成项的新 ID：切片 3b（Inno Setup 安装器/升级/签名）待 owner 决策后编号；向量检索（第 9 步遗留）。
