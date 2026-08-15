@@ -1085,6 +1085,42 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 8 slice 2 checkpoint — 2026-08-15 02:40 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Roadmap Step 8 slice 2 (real DeepSeek concept extraction + relation
+  candidates) is implemented; frozen commit `1394a1e`; red truth at parent
+  `1407427` (no `ai_draft_llm` module/test file; process deviation disclosed:
+  red tests and implementation merged into one commit, red truth re-confirmed
+  via the parent).
+- New: `knowledge_tree_infrastructure/ai_draft_llm.py` —
+  `LlmConceptExtractor`/`LlmRelationProvider` implement the draft
+  `ConceptExtractor`/`RelationCandidateProvider` protocols over the canonical
+  LLM port (`concept_extract`/`relation_validate` task profiles); shape
+  violations fail closed (`DraftExtractionError`), content noise (unknown
+  endpoints/self/duplicate edges) is dropped, evidence binds chunk anchors,
+  and the produced patch still passes the commit gate as
+  `requires_confirmation` only. New `scripts/ai_draft_live_smoke.py` (live
+  smoke, `RUN_LIVE_LLM_TESTS` + `DEEPSEEK_API_KEY` double-gated, key from env
+  only, never written to a file).
+- Offline gates pass: targeted contract tests 18/18 (mock adapter, no
+  network); full pytest 386/386 + 5 skipped; repository validator (incl.
+  secret scan), Ruff format/check, strict mypy (packages 26 + scripts 11),
+  Web 32/32 and production build all green.
+- Live AI generation test (owner-provided key, env-only): real DeepSeek
+  extracted 极限/连续/导数/可导 and proposed 4 `prerequisite_of` relations;
+  the draft patch preview status is `requires_confirmation` (12 ops); usage
+  427 in / 3435 out tokens, ~$0.004 USD, ~57.5s. Report:
+  `evals/calculus-v1/ai-draft-live-smoke.json` (labels/usage/cost only).
+- Natural-language Step 8 progress: slice 1 + slice 2 done (approximately
+  60%); personal MVP stays approximately 80% (no user-visible AI draft until
+  slice 3). `relation_validate` thinking-mode latency (~57s) recorded as a
+  prototype boundary.
+- Exact next action: collect role-separated QA verdict on frozen `1394a1e`;
+  if PASS, preserve evidence, then create Ready slice 3 (draft API endpoint +
+  Web batch accept/reject reusing `POST graph/patches`). Keep user data and
+  owner acceptance disabled; no real provider beyond the documented live gate.
+
 ## Step 8 slice 1 checkpoint — 2026-08-15 02:05 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

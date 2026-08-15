@@ -9,7 +9,7 @@ related_ids: [WORK-2026-004, WORK-2026-005, WORK-2026-007, WORK-2026-008, WORK-2
 target_stage: "阶段 1 / 自然语言第 8 步（AI 自动生成知识树草案）"
 risk: high
 created_at: 2026-08-15T01:30:00+08:00
-updated_at: 2026-08-15T01:30:00+08:00
+updated_at: 2026-08-15T02:40:00+08:00
 ```
 
 ## 问题与结果
@@ -23,10 +23,12 @@ updated_at: 2026-08-15T01:30:00+08:00
 - In scope：
   - `packages/domain/src/knowledge_tree_domain/ai_draft.py`：纯领域草案内核——`chunk_text`（段落边界优先的稳定分块）、`normalize_concept_label`（别名合并基础）、`merge_concept_candidates`（去重/别名合并/evidence 并集）、关系去重与自环/端点校验、`detect_prerequisite_cycle`（DAG 环检测）、`assign_draft_layout`（树状分层自动布局）、`build_draft_patch`（AiDraft → GraphPatch v1 operations：create_concept + create_edge + set_layout_item，origin=ai/review_state=proposed/confidence/evidence_ids/requires_confirmation/confirmed=false）。
   - `packages/infrastructure/src/knowledge_tree_infrastructure/ai_draft.py`：离线编排——`ConceptExtractor`/`RelationCandidateProvider` Protocol（注入式，未来接 DeepSeek adapter 不侵入领域），确定性启发式抽取器（无网络），`build_ai_draft`（文档文本 → 分块 → 抽取 → 合并 → 关系候选 → 校验 → 布局 → AiDraft）。
-  - 契约/单元测试：`tests/unit/test_ai_draft.py` + `tests/contract/test_ai_draft_contract.py`（草案 patch 通过 `preview_graph_patch`/`validate_contract`，DAG 无环、evidence 非空、布局合法、幂等确定）。
-- Out of scope：真实 DeepSeek 概念抽取/关系候选调用（concept_extract/relation_validate task profile 已就绪，本轮只做离线确定性骨架，真实 LLM 抽取为第 8 步后续切片）；草案 API 端点与 Web 批量接受/拒绝 UI（复用既有 `POST graph/patches` 提交门，UI 接入后续切片）；向量检索（第 9 步）；PPTX/DOCX/OCR（第 11 步）。
-- 受影响模块/接口/数据：扩展 `knowledge_tree_domain`（新增 `ai_draft` 子模块）与 `knowledge_tree_infrastructure`（新增 `ai_draft` 子模块）；新增两个测试文件；无 canonical contract/migration/prompt 变更；不改动 `config/llm` YAML 语义。
-- 依赖和假设：WORK-2026-005（GraphPatch v1 + 环检测 + 锁定语义）、WORK-2026-007（canonical LLM contract）、WORK-2026-008（DeepSeek adapter）、WORK-2026-016/017/018（安全导入/资源文本读取）已验证；本轮不发起真实网络调用；草案仅生成 `proposed` + `requires_confirmation` 的不可信 patch，确认/落库仍由既有提交门与用户控制。
+  - `packages/infrastructure/src/knowledge_tree_infrastructure/ai_draft_llm.py`（切片 2）：LLM 概念抽取与关系候选——`LlmConceptExtractor`/`LlmRelationProvider` 实现同一 Protocol，经 canonical LLM port（`concept_extract`/`relation_validate` task profile）真实抽取；形状违规失败关闭（`DraftExtractionError`），内容噪声（未知端点/自环/重复边）丢弃，证据绑定 chunk anchor；`deepseek_concept_extractor`/`deepseek_relation_provider` 组合辅助。
+  - `scripts/ai_draft_live_smoke.py`（切片 2）：live 冒烟（`RUN_LIVE_LLM_TESTS` + `DEEPSEEK_API_KEY` 双门控）——真实 DeepSeek 抽取 → 草案 → GraphPatch → 提交门 `requires_confirmation` + 用量/费用报告（密钥仅 env 不落盘）。
+  - 契约/单元测试：`tests/unit/test_ai_draft.py` + `tests/contract/test_ai_draft_contract.py`（草案 patch 通过 `preview_graph_patch`/`validate_contract`，DAG 无环、evidence 非空、布局合法、幂等确定）+ `tests/contract/test_ai_draft_llm.py`（切片 2：LLM 抽取/关系候选离线契约 18/18，确定性 MockLlmAdapter，无网络）。
+- Out of scope：草案 API 端点与 Web 批量接受/拒绝 UI（复用既有 `POST graph/patches` 提交门，UI 接入为切片 3）；向量检索（第 9 步）；PPTX/DOCX/OCR（第 11 步）。
+- 受影响模块/接口/数据：扩展 `knowledge_tree_domain`（新增 `ai_draft` 子模块）与 `knowledge_tree_infrastructure`（新增 `ai_draft`、`ai_draft_llm` 子模块）与 `scripts`（live 冒烟）；新增三个测试文件；无 canonical contract/migration/prompt 变更；不改动 `config/llm` YAML 语义。
+- 依赖和假设：WORK-2026-005（GraphPatch v1 + 环检测 + 锁定语义）、WORK-2026-007（canonical LLM contract）、WORK-2026-008（DeepSeek adapter，owner 已批准 `enabled: true`）、WORK-2026-016/017/018（安全导入/资源文本读取）已验证；切片 2 发起受控真实 LLM 调用（live 冒烟受双门控 + task profile 金额预算约束）；草案仅生成 `proposed` + `requires_confirmation` 的不可信 patch，确认/落库仍由既有提交门与用户控制。
 
 ## 设计边界
 
@@ -55,7 +57,9 @@ updated_at: 2026-08-15T01:30:00+08:00
 - [x] AC-5 (c5)：`build_draft_patch` 生成的 GraphPatch 通过 `preview_graph_patch`（trusted_actor=ai）与 `validate_contract("graph_patch")`；concept/edge 为 `origin=ai`、`review_state=proposed`、`confidence∈[0,1]`、AI 概念与 `prerequisite_of` 边 `evidence_ids` 非空、`requires_confirmation=true`、`confirmed=false`。
 - [x] AC-6 (c6)：离线编排 `build_ai_draft` 端到端"文本 → AiDraft → 合法 patch"，确定性、无网络。
 - [x] AC-7 (c7)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
-- [x] 错误和恢复路径：空文本/空概念/成环草案以稳定错误码拒绝，不产出半成品 patch；抽取器失败不掩盖纯领域校验结果。
+- [x] AC-8 (c8，切片 2)：`LlmConceptExtractor`/`LlmRelationProvider` 离线契约——mock adapter 无网络抽取/关系候选；形状违规（缺列表/缺 label/confidence 越界/aliases 非法/未知边类型）以 `draft_extraction_failed` 失败关闭；未知端点/自环/重复边丢弃；证据绑定 chunk anchor；抽取器失败不掩盖纯领域校验。
+- [x] AC-9 (c9，切片 2)：live 冒烟（`RUN_LIVE_LLM_TESTS` + `DEEPSEEK_API_KEY`）——真实 DeepSeek 抽取概念与 `prerequisite_of` 候选，草案 patch 经提交门 `requires_confirmation`；报告仅含 label/用量/费用；密钥仅 env。
+- [x] 错误和恢复路径：空文本/空概念/成环草案以稳定错误码拒绝，不产出半成品 patch；抽取器失败不掩盖纯领域校验结果；LLM 输出无 JSON/截断时失败关闭。
 - [x] 回滚/禁用方法：回退本工作项提交即回到无 AI 草案能力；不触碰 `config/llm` 与真实 Provider 门控；红灯与证据保留。
 
 ## 验证计划
@@ -68,13 +72,15 @@ updated_at: 2026-08-15T01:30:00+08:00
 | TC-AIDRAFT-004 | unit | 自动布局（拓扑分层） | 分层正确、布局一一对应 | 20/20（`136f7fa`） |
 | TC-AIDRAFT-005 | contract | 草案 → GraphPatch 通过提交门 | preview/validate 通过、origin=ai、evidence 非空 | 20/20（`136f7fa`） |
 | TC-AIDRAFT-006 | integration | 离线编排端到端 | 文本→AiDraft→合法 patch，确定性无网络 | 20/20（`136f7fa`） |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 368/368 + 5 skipped、Web 32/32（`136f7fa`） |
+| TC-AIDRAFT-007 | contract | LLM 抽取/关系候选离线契约（切片 2） | mock adapter 抽取/关系候选 + 失败关闭 + 噪声丢弃 + evidence 绑定 + 端到端 patch | 18/18（`1394a1e`） |
+| TC-AIDRAFT-008 | e2e/live | live 冒烟（切片 2） | 真实 DeepSeek 抽取→草案→提交门 requires_confirmation，报告无正文无密钥 | AI-DRAFT-LIVE-SMOKE-001（`1394a1e`，~$0.004） |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 386/386 + 5 skipped、Web 32/32（`1394a1e`） |
 
 ## 交付物与关闭
 
-- Commit/PR：分支 `feature/WORK-2026-009-ai-draft-pipeline`；Ready `c9f2875` → 红灯 `c9f2875`（3 collection error）→ 实现 `136f7fa` → 无关历史文件 ruff format 修复 `cc23c91`（本轮切片 1 收口）。
-- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 `docs/contracts/knowledge-tree-graph.v1.schema.json`（GraphPatch v1）与 `config/llm` v1。
-- Test Run：TC-AIDRAFT-001..006 20/20；全仓 pytest 368/368 + 5 skipped；validator/Ruff/strict mypy（28 文件）/Web 32/32/pnpm build 全绿。
-- Release：无托管发布；真实 DeepSeek 抽取为后续切片，`config/llm` 与 Provider 门控不变。
-- 观察结果：草案流水线纯领域内核确定性可测、无网络、零模型成本；草案 patch 经 `preview_graph_patch` 以 ai actor 预览通过，`requires_confirmation=true`，绝不直写库。
-- 未完成项的新 ID：真实 DeepSeek 概念抽取/关系候选（第 8 步切片 2）、草案 API 端点与 Web 批量接受/拒绝（切片 3）。
+- Commit/PR：分支 `feature/WORK-2026-009-ai-draft-pipeline`；Ready `c9f2875` → 红灯 `c9f2875`（3 collection error）→ 实现 `136f7fa`（切片 1）→ 无关历史文件 ruff format 修复 `cc23c91` → 切片 2 实现 `1394a1e`（过程披露：切片 2 红灯测试与实现合并为同一提交，红灯真值由父提交 `1407427` 无 `ai_draft_llm` 模块/测试文件确认）。
+- Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；复用 `docs/contracts/knowledge-tree-graph.v1.schema.json`（GraphPatch v1）、`docs/contracts/llm.v1.schema.json` 与 `config/llm` v1。
+- Test Run：TC-AIDRAFT-001..007 38/38；全仓 pytest 386/386 + 5 skipped；validator/Ruff/strict mypy（packages 26 + scripts 11）/Web 32/32/pnpm build 全绿；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001` 通过。
+- Release：无托管发布；真实 DeepSeek 抽取已 live 验证但仅限显式构造 adapter（live 双门控）；`config/llm` 与 Provider 门控不变。
+- 观察结果：草案流水线纯领域内核确定性可测、无网络、零模型成本（切片 1）；LLM 抽取/关系候选离线契约可测、live 冒烟费用 < $0.01（切片 2）；草案 patch 经 `preview_graph_patch` 以 ai actor 预览通过，`requires_confirmation=true`，绝不直写库。
+- 未完成项的新 ID：草案 API 端点与 Web 批量接受/拒绝（第 8 步切片 3，复用 `POST graph/patches` 提交门）。

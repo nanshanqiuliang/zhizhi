@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核与离线编排已实现（第 8 步切片 1，无真实 LLM 调用）。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核与离线编排（切片 1）以及真实 DeepSeek 概念抽取/关系候选（切片 2，含 live 冒烟）已实现。真实调用仍仅显式构造 adapter（live 双门控）；草案只经提交门以 `requires_confirmation` 落库。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 8 步切片 2：LLM 概念抽取/关系候选 live 冒烟（WORK-2026-009）运维记录
+
+- 关联 ID：WORK-2026-009、WORK-2026-007/008、OPS-2026-003。
+- 环境/版本/build/config：commit `1394a1e`（feature/WORK-2026-009-ai-draft-pipeline）；local-dev Windows x64。
+- 变更或症状：新增 `knowledge_tree_infrastructure/ai_draft_llm.py`（`LlmConceptExtractor`/`LlmRelationProvider`）与 `scripts/ai_draft_live_smoke.py`；真实 DeepSeek 概念抽取（deepseek-v4-flash，thinking disabled）与关系判定（deepseek-v4-pro，thinking enabled）；草案仍只经提交门以 `requires_confirmation` 落库；无部署/常驻服务变化。
+- 影响：无部署或常驻服务变化；仅新增 Python 模块/脚本/测试与证据报告；`config/llm` 与 Provider 门控不变。
+- 证据：pytest 386/386 + 5 skipped；repository validator（含 secret scan）/Ruff/strict mypy 全绿；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`（极限/连续/导数/可导 + 4 条 prerequisite_of，preview=requires_confirmation，427/3435 tokens，~$0.004 USD，~57.5s）；报告 `evals/calculus-v1/ai-draft-live-smoke.json`；密钥仅 env，从未写入任何文件。
+- 缓解/回滚：回退 `1394a1e` 即回启发式抽取；live 冒烟受 `RUN_LIVE_LLM_TESTS` + `DEEPSEEK_API_KEY` 双门控。
+- 遗留风险/Owner/期限：切片 2 职责隔离 QA 待执行；切片 3（草案 API/Web 批量接受拒绝）待做；`relation_validate` 思考模式延迟较高（~57s）记录为原型边界。
 
 ## 2026-08-15 — 第 8 步切片 1：AI 草案流水线离线内核（WORK-2026-009）运维记录
 

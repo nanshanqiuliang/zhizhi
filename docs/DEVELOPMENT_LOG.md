@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 2：LLM 概念抽取与关系候选 + live 冒烟（WORK-2026-009）
+
+- 关联 ID：WORK-2026-009、WORK-2026-007、WORK-2026-008、NFR-2026-006/007/008、REQ-2026-006。
+- 实际变化：新增 `knowledge_tree_infrastructure/ai_draft_llm.py`——`LlmConceptExtractor`/`LlmRelationProvider` 实现草案流水线的 `ConceptExtractor`/`RelationCandidateProvider` Protocol，经 canonical LLM port（`concept_extract`/`relation_validate` task profile）从真实 DeepSeek 抽取概念与先修关系候选；`DraftExtractionError` 稳定错误；模型答案形状违规失败关闭（缺 concepts/relations 列表、item 非对象、缺/空 label、confidence 越界、aliases 非法、未知边类型），内容噪声（未知端点、自环、重复边）丢弃；证据绑定 chunk anchor（无 anchor 则无 evidence，提交门按契约拒绝）；新增 `deepseek_concept_extractor`/`deepseek_relation_provider` 组合辅助。新增 `scripts/ai_draft_live_smoke.py`（`RUN_LIVE_LLM_TESTS` + `DEEPSEEK_API_KEY` 双门控 live 冒烟：真实 DeepSeek 抽取 → 草案 → GraphPatch → 提交门 `requires_confirmation` + 用量/费用报告）。
+- 影响模块/接口/schema/migration/prompt：扩展 infrastructure 包新增 `ai_draft_llm` 子模块，scripts 新增 live 冒烟脚本，tests 新增离线契约测试文件；无 canonical contract/ADR/migration/prompt 变更；`config/llm` 语义不变。
+- 兼容性：草案仍只产出 `proposed` + `requires_confirmation` 的不可信 patch；AI 概念/`prerequisite_of` 边必须携带非空 evidence 否则提交门拒绝；live 冒烟仅显式构造 adapter 时发生，密钥仅 env 不落盘。
+- 验证与证据：新契约测试 18/18（确定性 MockLlmAdapter 离线、无网络）；全仓 pytest 386/386 + 5 skipped；repository validator（含 secret scan）/Ruff/strict mypy（packages 26 + scripts 11）全绿；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`：真实 DeepSeek 抽取 极限/连续/导数/可导，4 条 `prerequisite_of` 候选，preview=requires_confirmation、patch 12 ops，427 in / 3435 out tokens、~$0.004 USD、~57.5s；报告 `evals/calculus-v1/ai-draft-live-smoke.json`（仅 label/用量/费用，无正文、无密钥）；密钥从未写入任何文件（secret scan PASS）。
+- 性能/安全/运维影响：抽取/关系判定为真实 LLM 调用（费用受 task profile 金额预算约束）；`relation_validate` 思考模式先耗 reasoning_content，`max_tokens` 过小会得到 `finish_reason=length` 与空 content——live 冒烟以 4096 max_tokens 留足余量；错误 details 仅含标识不含正文/推理内容。
+- 回滚：回退 `1394a1e` 即回到启发式抽取（切片 1 状态）；不触碰 `config/llm` 与 Provider 门控；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `1394a1e`）；切片 3（草案 API 端点 + Web 批量接受/拒绝）复用 `POST graph/patches` 提交门；`relation_validate` 思考模式延迟较高（~57s）记录为原型边界，后续可评估降级/异步策略。
+
 ## 2026-08-15 — 第 8 步切片 1：AI 草案流水线纯领域内核与离线编排（WORK-2026-009）
 
 - 关联 ID：WORK-2026-009、WORK-2026-005、WORK-2026-007、WORK-2026-008、REQ-2026-006。
