@@ -12,19 +12,12 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
-# apps/api is run as `python -m apps.api`; add the workspace source trees.
-_ROOT = Path(__file__).resolve().parents[2]
-for _src in ("packages/contracts-py/src", "packages/domain/src", "packages/infrastructure/src"):
-    _path = str(_ROOT / _src)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
-if str(_ROOT) not in sys.path:
-    sys.path.insert(0, str(_ROOT))
+from apps.api._runtime import ensure_source_paths, runtime_root
+
+ensure_source_paths()
 
 from knowledge_tree_domain.ai_draft import uuid7  # noqa: E402
 from knowledge_tree_infrastructure.llm.canonical import (  # noqa: E402
@@ -90,7 +83,7 @@ def build_deepseek_command_generator() -> CommandGenerator | None:
         return None
 
     try:
-        providers, policies = load_and_validate_llm_config(_ROOT)
+        providers, policies = load_and_validate_llm_config(runtime_root())
         deepseek = providers.get("providers", {}).get("deepseek", {})
         if not isinstance(deepseek, dict) or deepseek.get("enabled") is not True:
             return None

@@ -17,6 +17,7 @@ from uuid import UUID
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from knowledge_tree_domain import GraphPatchError, preview_graph_patch, validate_course_graph
 from knowledge_tree_domain.ai_draft import DraftError, uuid7
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError
@@ -146,12 +147,17 @@ def create_app(
     draft_generator: DraftGenerator | None = None,
     answer_generator: AnswerGenerator | None = None,
     command_generator: CommandGenerator | None = None,
+    web_dist: Path | None = None,
 ) -> FastAPI:
     """Build the persistence API with an explicit data root and CORS allowlist.
 
     `draft_generator`/`answer_generator`/`command_generator` are the AI
     composition roots; when None the corresponding endpoints fail closed with
     503 `ai_not_available`.
+
+    `web_dist` optionally points at a built Web UI directory (`index.html` +
+    `assets/`); when present it is served from the same origin as the API, so a
+    frozen desktop build needs no separate Vite server and no cross-origin CORS.
     """
 
     root = Path(data_root)
@@ -691,6 +697,11 @@ def create_app(
                 detail={"code": "command_invalid", "rule": "patch_not_proposed"},
             )
         return {"summary": interpreted.get("summary", ""), "patch": patch}
+
+    if web_dist is not None and Path(web_dist).is_dir():
+        # Serve the built Web UI from the same origin as the API. API routes
+        # registered above take precedence over this catch-all mount.
+        app.mount("/", StaticFiles(directory=str(web_dist), html=True), name="web")
 
     return app
 

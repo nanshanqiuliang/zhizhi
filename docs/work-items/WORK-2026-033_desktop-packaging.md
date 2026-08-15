@@ -84,7 +84,7 @@ updated_at: 2026-08-15T20:13:00+08:00
 ## 验收标准
 
 - [ ] AC-1 (c1)：`create_app(web_dist=<含 index.html/assets 的目录>)` 时，`GET /` 返回 index.html、
-  `GET /assets/...` 返回静态资源、未知非 API 路径回退 index.html；`/api/health` 仍 200（API 优先）。
+  `GET /assets/...` 返回静态资源；`/api/health` 仍 200（API 路由优先于静态挂载）。
 - [ ] AC-2 (c2)：`apps.desktop.launcher` 可导入；`--data-root` 缺省为 `%LOCALAPPDATA%\知枝\data`
   且自动创建、可写；`--data-root` 覆盖生效。
 - [ ] AC-3 (c3)：单实例：端口被占时第二实例 fail-closed 退出（不双写、不抢端口）。

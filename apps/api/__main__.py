@@ -11,23 +11,18 @@ The API binds loopback only and allows the Vite dev origins used by
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 import uvicorn
 
-# The workspace packages are source trees, not installed distributions; add
-# them so `python -m apps.api` resolves knowledge_tree_* like pytest does.
-_ROOT = Path(__file__).resolve().parents[2]
-for _src in ("packages/contracts-py/src", "packages/domain/src", "packages/infrastructure/src"):
-    _path = str(_ROOT / _src)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
+from apps.api._runtime import ensure_source_paths
+
+ensure_source_paths()
 
 from apps.api.ai_draft import build_deepseek_draft_generator  # noqa: E402
 from apps.api.answer import build_deepseek_answer_generator  # noqa: E402
 from apps.api.command import build_deepseek_command_generator  # noqa: E402
-from apps.api.main import create_app  # noqa: E402  (after sys.path setup)
+from apps.api.main import create_app  # noqa: E402
 
 DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 

@@ -20,7 +20,7 @@ def web_dist(tmp_path: Path) -> Path:
     dist = tmp_path / "web"
     (dist / "assets").mkdir(parents=True)
     (dist / "index.html").write_text(
-        "<!doctype html><html><body><div id=\"root\"></div></body></html>",
+        '<!doctype html><html><body><div id="root"></div></body></html>',
         encoding="utf-8",
     )
     (dist / "assets" / "app.js").write_text("console.log('app')", encoding="utf-8")
@@ -33,7 +33,7 @@ def test_web_dist_serves_index_and_assets(tmp_path: Path, web_dist: Path) -> Non
 
     index = client.get("/")
     assert index.status_code == 200
-    assert "id=\"root\"" in index.text
+    assert 'id="root"' in index.text
 
     asset = client.get("/assets/app.js")
     assert asset.status_code == 200
