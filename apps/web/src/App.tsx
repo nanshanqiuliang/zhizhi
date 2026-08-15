@@ -936,6 +936,7 @@ export function App({
   }
 
   function startDrag(event: React.PointerEvent<HTMLButtonElement>, node: ConceptNode) {
+    if (event.button !== 0) return; // left button only
     selectNode(node.id);
     if (node.positionLocked || node.locks?.position) {
       setStatus("位置已锁定，无法移动");
@@ -966,6 +967,7 @@ export function App({
   }
 
   function startPan(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return; // left button only
     drag.current = {
       mode: "pan",
       nodeId: "",

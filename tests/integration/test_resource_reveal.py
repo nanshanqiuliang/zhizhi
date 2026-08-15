@@ -23,9 +23,7 @@ def _import_md(client: TestClient) -> str:
     return str(resp.json()["id"])
 
 
-def test_open_dir_and_reveal_endpoints(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_open_dir_and_reveal_endpoints(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Do not actually launch Explorer during tests.
     monkeypatch.setattr(
         "apps.api.main._reveal_in_explorer", lambda *args, **kwargs: None, raising=False
