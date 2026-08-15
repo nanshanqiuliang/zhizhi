@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅扩展 Python 模块；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 427/427 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；live e2e（owner key env-only）非空图增量（极限 未重建）。
 - 缓解/回滚：回退 `d012660` 即回全量草案生成；密钥仅 env。
-- 遗留风险/Owner/期限：切片 3b 职责隔离 QA 待执行；向量检索（Embedding provider 未决）、AI 修改历史为后续。
+- 遗留风险/Owner/期限：切片 3b 职责隔离 QA 已封存（TR-20260814-020，attempt 001 PASS + 修复 `f0459f4` + attempt 002 PASS，correlated_review）；向量检索（Embedding provider 未决）、AI 修改历史为后续。
 
 ## 2026-08-15 — 第 9 步切片 3a：增量重建纯领域内核（WORK-2026-030）运维记录
 

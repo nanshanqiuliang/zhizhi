@@ -1,0 +1,22 @@
+# Commands executed for TR-20260814-020 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/integration/test_ai_draft_incremental_llm.py -q   # 2 -> 5 passed
+uv run python -m pytest -q                                                     # 427 -> 430 passed + 5 skipped
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+
+# --- live e2e (owner key, env-only) ---
+$env:DEEPSEEK_API_KEY="<owner-key-from-user>"; uv run python -X utf8 -c "<TestClient + build_deepseek_draft_generator: non-empty graph -> /ai-draft incremental (极限 not re-created)>"
+
+# --- role-separated QA attempt 001 (d012660) ---
+uv run python -m pytest tests/integration/test_ai_draft_incremental_llm.py -q   # 2 passed
+uv run python -m pytest -q                                                     # 427 passed, 5 skipped
+# ... ruff/mypy/validator + adversarial scratch worktree (M1-M4 mutations + B1-B6 probes)
+
+# --- role-separated QA attempt 002 (superseding, f0459f4) ---
+uv run python -m pytest tests/integration/test_ai_draft_incremental_llm.py -q   # 5 passed
+uv run python -m pytest -q                                                     # 430 passed, 5 skipped
+# ... P2-1/P2-2/P2-3/P2-4 closure traced through production code; no production change

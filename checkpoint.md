@@ -1085,6 +1085,29 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 slice 3b QA closure checkpoint — 2026-08-15 08:30 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `d012660`
+  (WORK-2026-031 Step 9 slice 3b incremental rebuild LLM wiring) and returned
+  PASS with 0 P0/P1 and 4 non-blocking P2 coverage notes (dedupe branch,
+  existing↔existing filter, generator wiring, placeholder evidence).
+- Fix `f0459f4`: test-only strengthening (colliding-heading text, 2-existing-
+  concept graph, generator fail-closed, empty-graph equivalence); no production
+  code changed.
+- Superseding QA attempt 002 reviewed `f0459f4` and returned PASS with 0 P0/P1.
+  Correlated machine review, not owner acceptance.
+- Evidence sealed under `evidence/TR-20260814-020/`; report:
+  `docs/test-reports/TR-20260814-020_incremental-rebuild-llm.md`.
+- Full gates green at `f0459f4`: pytest 430/430 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 33). Live e2e
+  (owner key, env-only) non-empty graph incremental (极限 not re-created).
+- **Natural-language Step 9 is now ~80%** (slices 1+2+3a+3b complete and
+  QA-verified); personal MVP approximately 89%. Remaining Step 9: vector
+  retrieval (Embedding provider unresolved) + AI edit history.
+- Exact next action: either close the remaining Step 9 items (AI edit history;
+  vector retrieval is blocked on the unresolved Embedding provider) or advance
+  to Step 10 (Windows desktop packaging) after owner guidance.
+
 ## Step 9 slice 3b implementation checkpoint — 2026-08-15 08:00 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

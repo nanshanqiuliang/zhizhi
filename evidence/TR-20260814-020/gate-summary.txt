@@ -1,0 +1,24 @@
+TR-20260814-020 — incremental rebuild LLM wiring (WORK-2026-031, Step 9 slice 3b) — gate summary
+==================================================================================================
+Reviewed commit: f0459f4 (feature/WORK-2026-009-ai-draft-pipeline); superseding reviewed f0459f4
+Attempt 001: d012660 -> PASS (0 P0/P1; 4 P2 coverage notes)
+Post-review fix: f0459f4 (test-only strengthening; no production code change)
+Attempt 002 (superseding): PASS (0 P0/P1; correlated_review)
+
+Python
+  uv run python -m pytest tests/integration/test_ai_draft_incremental_llm.py -q -> 5 passed
+  uv run python -m pytest tests/contract/test_ai_draft_incremental.py tests/integration/test_ai_draft_pipeline.py
+                       tests/integration/test_ai_draft_api.py -q -> 12 passed
+  uv run python -m pytest -q -> 430 passed, 5 skipped
+Lint / types
+  uv run ruff format --check packages scripts tests apps -> 93 files already formatted
+  uv run ruff check . -> All checks passed
+  uv run mypy scripts -> 11 files; uv run python -m mypy --strict packages/contracts-py/src
+                       packages/domain/src packages/infrastructure/src apps/api -> 33 files
+Repository
+  uv run python -m scripts.validate_repository -> PASS (skeleton, secret scan, contracts,
+                                                       review packet, mock/replay harness)
+
+Live e2e (orchestrator, owner key, env-only): non-empty graph with 极限 -> draft new concepts
+[导数, 连续], relations 极限→连续/极限→导数/连续→导数, create_concept [导数, 连续] (极限 NOT
+re-created). Key never written to any file.

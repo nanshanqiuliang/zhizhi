@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步切片 3b QA 封存（WORK-2026-031，TR-20260814-020）
+
+- 关联 ID：WORK-2026-031、WORK-2026-030、WORK-2026-009、TR-20260814-020、NFR-2026-001/006/007/008、REQ-2026-006。
+- 实际变化：职责隔离 QA 对冻结 `d012660` 返回 **PASS**（0 P0/P1；4 个非阻塞 P2 覆盖缺口）；修复 `f0459f4`（测试强化：冲突 heading 文本 + 2 既有概念图 + generator fail-closed + 空图等价，无生产代码变更）后超越审查 attempt 002 返回 **PASS**（0 P0/P1）。
+- 影响模块/接口/schema/migration/prompt：仅测试文件；无 canonical contract/ADR/migration/prompt 变更。
+- 兼容性：无行为变化；核心性质（增量去重、跨图关系、空图退化、确定性、密钥 env-only）保持。
+- 验证与证据：attempt 001/002 报告与证据存 `evidence/TR-20260814-020/`；报告 `docs/test-reports/TR-20260814-020_incremental-rebuild-llm.md`；全仓 pytest 430/430 + 5 skipped、Ruff/strict mypy/validator 全绿。
+- 性能/安全/运维影响：无新增。
+- 回滚：无新增代码可回滚（修复为测试强化）；回退 `f0459f4` 即回 attempt 001 状态。
+- 遗留风险与下一步：**第 9 步切片 1+2+3a+3b 完成（约 80%）**；剩余第 9 步项为向量检索（Embedding provider 未决）与 AI 修改历史；下一主里程碑为第 10 步（桌面封装）。
+
 ## 2026-08-15 — 第 9 步切片 3b：增量重建 LLM 接线（WORK-2026-031）
 
 - 关联 ID：WORK-2026-031、WORK-2026-030、WORK-2026-009、WORK-2026-026、REQ-2026-006、NFR-2026-001/006/007/008。
@@ -11,7 +22,7 @@
 - 验证与证据：红灯（ImportError）；实现 `d012660`；incremental LLM 2/2 + incremental kernel 4/4；全仓 pytest 427/427 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；live e2e（owner key env-only）非空图 → 新概念 [导数, 连续]、极限 未重建。
 - 性能/安全/运维影响：O(V+E) + 单次 LLM 抽取/关系调用受 task profile 预算约束；文本仅进 user 消息；密钥仅 env。
 - 回滚：回退 `d012660` 即回到全量草案生成；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `d012660`）；向量检索（Embedding provider 未决）、AI 修改历史为第 9 步剩余项。
+- 遗留风险与下一步：职责隔离 QA 已封存（TR-20260814-020，attempt 001 PASS + 修复 `f0459f4` + attempt 002 PASS）；向量检索（Embedding provider 未决）、AI 修改历史为第 9 步剩余项。
 
 ## 2026-08-15 — 第 9 步切片 3a QA 封存（WORK-2026-030，TR-20260814-019）
 
