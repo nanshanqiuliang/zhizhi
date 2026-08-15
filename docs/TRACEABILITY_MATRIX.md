@@ -39,7 +39,7 @@
 | REQ-2026-006 / NFR-2026-001 | 自然语言转 GraphPatch（第 9 步切片 2） | WORK-2026-029 | `build_command_patch`（label→id 严格映射 + set_lock/create_edge）、`POST /interpret`（注入式 generator，503）、DeepSeek `command_interpret`、Web 指令预览/接受/拒绝 | `b4fde38` 实现；`9a255d2`+`9abd339` QA P2 修复 | command 12/12；全仓 421/421 + 5 skipped、Web 41/41；QA `TR-20260814-018` PASS；live e2e 指令→提交门写入 | `docs/USER_MANUAL.md` 待更新 | 指令 Runbook 待建 | prototype_verified |
 | REQ-2026-006 / NFR-2026-001 | 增量重建纯领域内核（第 9 步切片 3a） | WORK-2026-030 | `build_incremental_patch`（label 去重 + 混合端点 + 证据/DAG，proposed patch） | `da73951` 实现；`120e349` QA P2 修复 | incremental 4/4；全仓 425/425 + 5 skipped；QA `TR-20260814-019` PASS | `docs/USER_MANUAL.md` 待更新 | 增量重建 Runbook 待建 | prototype_verified |
 | REQ-2026-006 / NFR-2026-001 | 增量重建 LLM 接线（第 9 步切片 3b） | WORK-2026-031 | `build_incremental_ai_draft`（去重/跨图关系/过滤）+ generator 增量 + `/ai-draft` 增量 | `d012660` 实现；`f0459f4` QA P2 测试强化 | incremental LLM 5/5；全仓 430/430 + 5 skipped；QA `TR-20260814-020` PASS；live e2e 增量 | `docs/USER_MANUAL.md` 待更新 | 增量重建 Runbook 待建 | prototype_verified |
-| REQ-2026-006 / NFR-2026-001 | AI 修改历史（第 9 步收尾） | WORK-2026-032 | `GraphChangeRecord.source`（向后兼容）+ `apply_graph_patch(source)` + `/interpret/accept` + `GET /history` source + Web「AI」标记 | `954a7c8` 实现 | ai_edit_history 4/4；全仓 434/434 + 5 skipped、Web 41/41；QA 待执行 | `docs/USER_MANUAL.md` 待更新 | 历史 Runbook 待建 | prototype_verified |
+| REQ-2026-006 / NFR-2026-001 | AI 修改历史（第 9 步收尾） | WORK-2026-032 | `GraphChangeRecord.source`（向后兼容）+ `apply_graph_patch(source)` + `/interpret/accept` + `GET /history` source + Web「AI」标记 | `954a7c8` 实现 | ai_edit_history 4/4；全仓 434/434 + 5 skipped、Web 41/41；QA `TR-20260814-021` PASS | `docs/USER_MANUAL.md` 待更新 | 历史 Runbook 待建 | prototype_verified |
 
 ## 完整性规则
 

@@ -1085,6 +1085,25 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 final QA closure checkpoint — 2026-08-15 09:30 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) reviewed frozen `954a7c8` (WORK-2026-032
+  AI edit history) and returned PASS with 0 P0/P1 and 4 informational P2 (all
+  Accept). Adversarial review: 32 probes all passed, including a real
+  red-written DB loading at green with source=manual and intact digest.
+- Evidence sealed under `evidence/TR-20260814-021/`; report:
+  `docs/test-reports/TR-20260814-021_ai-edit-history.md`.
+- Full gates green at `954a7c8`: pytest 434/434 + 5 skipped; validator (incl.
+  secret scan), Ruff, strict mypy (scripts 11 + packages/api 33), Web 41/41.
+- **Natural-language Step 9 is now COMPLETE (~100%)**: sourced Q&A, NL→GraphPatch,
+  incremental rebuild (kernel + LLM wiring), and AI edit history are all
+  delivered and QA-verified (TR-20260814-017..021). Vector retrieval remains the
+  sole owner-decision item (Embedding provider unresolved). Personal MVP
+  approximately 90%.
+- Exact next action: advance to Step 10 (Windows desktop packaging — Tauri shell,
+  sidecar lifecycle, install/upgrade/backup) pending owner guidance; the missing
+  Rust toolchain is a documented environment gap.
+
 ## Step 9 final implementation checkpoint — 2026-08-15 09:00 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.

@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅扩展历史记录字段（向后兼容）与端点/Web。
 - 证据：pytest 434/434 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）全绿；Web 41/41。
 - 缓解/回滚：回退 `954a7c8` 即回无 AI 来源标记；旧数据不受影响（digest 向后兼容）。
-- 遗留风险/Owner/期限：切片收尾职责隔离 QA 待执行；向量检索（Embedding provider 未决）为唯一 owner 未决项；下一主里程碑第 10 步（桌面封装）。
+- 遗留风险/Owner/期限：第 9 步收尾职责隔离 QA 已封存（TR-20260814-021，PASS，correlated_review）；向量检索（Embedding provider 未决）为唯一 owner 未决项；下一主里程碑第 10 步（桌面封装，需 Rust/Tauri 工具链）。
 
 ## 2026-08-15 — 第 9 步切片 3b：增量重建 LLM 接线（WORK-2026-031）运维记录
 

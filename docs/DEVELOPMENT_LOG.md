@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步收尾 QA 封存（WORK-2026-032，TR-20260814-021）
+
+- 关联 ID：WORK-2026-032、WORK-2026-011/019/022/026/027/029、TR-20260814-021、NFR-2026-001、REQ-2026-006。
+- 实际变化：职责隔离 QA 对冻结 `954a7c8` 返回 **PASS**（0 P0/P1；4 个 informational P2 均 Accept，无需修复）。对抗审查 32 探针全通过：向后兼容（红灯代码写的 DB 在绿灯载入为 manual、digest 有效）、digest 完整性（篡改 source 稳定拒绝）、提交门/原子性、重放/撤销/重做、端点矩阵。
+- 影响模块/接口/schema/migration/prompt：无代码变更（本条目为证据/文档封存）；历史记录 payload 向后兼容扩展（无迁移）。
+- 兼容性：无行为变化；旧数据不受影响（digest 向后兼容）。
+- 验证与证据：报告与证据存 `evidence/TR-20260814-021/`；报告 `docs/test-reports/TR-20260814-021_ai-edit-history.md`；全仓 pytest 434/434 + 5 skipped、Ruff/strict mypy/validator/Web 41/41 全绿。
+- 性能/安全/运维影响：无新增。
+- 回滚：无新增代码可回滚；回退 `954a7c8` 即回无 AI 来源标记。
+- 遗留风险与下一步：**第 9 步收尾完成**——向量检索为唯一 owner 未决项（Embedding provider）；下一主里程碑为第 10 步（Windows 桌面封装，经 owner 指引）。
+
 ## 2026-08-15 — 第 9 步收尾：AI 修改历史（WORK-2026-032）
 
 - 关联 ID：WORK-2026-032、WORK-2026-011/019/022/026/027/029、REQ-2026-006、NFR-2026-001。
@@ -11,7 +22,7 @@
 - 验证与证据：红灯（source 缺失 + /interpret/accept 404）；实现 `954a7c8`；ai_edit_history 4/4；全仓 pytest 434/434 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）/Web 41/41 全绿。
 - 性能/安全/运维影响：O(1) 字段；source 仅标识；密钥仅 env；本轮无网络。
 - 回滚：回退 `954a7c8` 即回到无 AI 来源标记；旧数据不受影响；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `954a7c8`）；**第 9 步收尾**——向量检索为唯一 owner 未决项（Embedding provider）；下一主里程碑为第 10 步（桌面封装）。
+- 遗留风险与下一步：职责隔离 QA 已封存（TR-20260814-021，PASS 0 P0/P1）；**第 9 步收尾**——向量检索为唯一 owner 未决项（Embedding provider）；下一主里程碑为第 10 步（桌面封装）。
 
 ## 2026-08-15 — 第 9 步切片 3b QA 封存（WORK-2026-031，TR-20260814-020）
 

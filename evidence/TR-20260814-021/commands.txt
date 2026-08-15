@@ -1,0 +1,17 @@
+# Commands executed for TR-20260814-021 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/integration/test_ai_edit_history.py -q   # 4 passed
+uv run python -m pytest -q                                             # 434 passed + 5 skipped
+uv run ruff format --check packages scripts tests apps && uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m scripts.validate_repository
+pnpm check
+
+# --- role-separated QA attempt 001 (954a7c8) ---
+uv run python -m pytest tests/integration/test_ai_edit_history.py -q   # 4 passed
+uv run python -m pytest -q                                             # 434 passed, 5 skipped
+# ... red baseline scratch worktree (4 failed: TypeError/source attr/KeyError/404)
+# ... 32 adversarial probes (backward-compat/digest/atomicity/replay/endpoints) all pass
+# ... real red->green persisted-DB migration proof

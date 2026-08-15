@@ -29,6 +29,7 @@
 | [TR-20260814-018](TR-20260814-018_nl-to-graphpatch.md) | `9abd339` | 第 9 步切片 2：自然语言转 GraphPatch（`build_command_patch` label→id 映射、`POST /interpret`、DeepSeek `command_interpret`、Web 指令预览/接受/拒绝）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-029 |
 | [TR-20260814-019](TR-20260814-019_incremental-rebuild-kernel.md) | `120e349` | 第 9 步切片 3a：增量重建纯领域内核（`build_incremental_patch` 去重/混合端点/证据/DAG）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-030 |
 | [TR-20260814-020](TR-20260814-020_incremental-rebuild-llm.md) | `f0459f4` | 第 9 步切片 3b：增量重建 LLM 接线（`build_incremental_ai_draft` + generator 增量 + `/ai-draft` 增量）、QA PASS→修复→PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-031 |
+| [TR-20260814-021](TR-20260814-021_ai-edit-history.md) | `954a7c8` | 第 9 步收尾：AI 修改历史（`GraphChangeRecord.source` + `/interpret/accept` + `GET /history` source + Web「AI」标记，向后兼容）、QA PASS（0 P0/P1） | GO（仅 prototype；correlated） | WORK-2026-032 |
 
 > WORK-2026-007（canonical LLM contract + mock + TC-LLM-001..009）与 WORK-2026-008
 > （DeepSeek adapter + 金额预算 + 受控回退 + 受控 live smoke + 金标基线 + RB-PROV-001

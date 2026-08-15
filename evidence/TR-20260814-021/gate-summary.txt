@@ -1,0 +1,23 @@
+TR-20260814-021 — AI edit history (WORK-2026-032, Step 9 final) — gate summary
+=============================================================================
+Reviewed commit: 954a7c8 (feature/WORK-2026-009-ai-draft-pipeline)
+Attempt 001: PASS (0 P0/P1; 4 informational P2 accepted; correlated_review)
+
+Python
+  uv run python -m pytest tests/integration/test_ai_edit_history.py -q -> 4 passed
+  uv run python -m pytest tests/unit/test_graph_history.py tests/integration/test_patch_gate.py
+                       tests/integration/test_diff_save_undo.py -q -> 25 passed
+  uv run python -m pytest -q -> 434 passed, 5 skipped
+Lint / types
+  uv run ruff format --check packages scripts tests apps -> 94 files already formatted
+  uv run ruff check . -> All checks passed
+  uv run mypy scripts -> 11 files; uv run python -m mypy --strict packages/contracts-py/src
+                       packages/domain/src packages/infrastructure/src apps/api -> 33 files
+Repository
+  uv run python -m scripts.validate_repository -> PASS (skeleton, secret scan, contracts,
+                                                       review packet, mock/replay harness)
+Web
+  pnpm check -> 41 tests (11 files) + tsc + eslint (0 warnings)
+
+Backward compatibility: red-written DB loads at green with source=manual and intact digest.
+No live LLM/network (backend/Web slice).
