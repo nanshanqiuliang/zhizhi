@@ -149,4 +149,19 @@ describe("AI draft preview", () => {
       expect(screen.getByText("AI 未连接", { selector: "p.import-note" })).toBeInTheDocument();
     });
   });
+
+  it("offers jump-to-source for each draft concept", async () => {
+    const api = mockApi({ listResources: vi.fn(async () => [RESOURCE]) });
+    render(<App api={api} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("notes.md")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /生成草案/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: /AI 草案预览/ })).toBeInTheDocument();
+    });
+    const panel = screen.getByRole("region", { name: /AI 草案预览/ });
+    expect(within(panel).getAllByRole("button", { name: /跳回原文/ }).length).toBeGreaterThan(0);
+  });
 });
