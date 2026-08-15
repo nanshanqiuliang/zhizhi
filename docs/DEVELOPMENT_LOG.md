@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步切片 2：pywebview 原生窗口（WORK-2026-034）
+
+- 关联 ID：WORK-2026-034、WORK-2026-033、NFR-2026-001、REQ-2026-001。
+- 实际变化：新增 `apps/desktop/shell.py`（`open_window` 用 pywebview WebView2 原生窗口，关窗即返回）；launcher 改三模式——默认原生窗口 / `--browser`（系统浏览器）/ `--no-window`（headless，供 CI/e2e）；关窗 → `server.should_exit` 优雅退出释放端口删锁（闭合切片 1 P2-5 硬杀证据）；frozen windowed 无控制台，stdout/stderr 重定向到 `data_root/zhizhi.log`；`build.spec` 改 `console=False` + hiddenimports（clr/clr_loader/webview.platforms.winforms/edgechromium，hook-webview/hook-clr 收集 `webview/lib` 与 `Python.Runtime.dll`）；pywebview 移入 `[project] dependencies`（运行时依赖）；e2e 增窗口冒烟（18 项）。
+- 影响模块/接口/schema/migration/prompt：新增 `apps/desktop/shell.py`；launcher CLI（`--no-browser`→`--no-window`，新增 `--browser`）；`build.spec` console/hiddenimports；无 canonical contract/迁移/存储格式变化。
+- 兼容性：`--no-window` 保持切片 1 headless 行为（e2e/CI）；默认从系统浏览器改为原生窗口。
+- 验证与证据：红灯（`apps.desktop.shell` ModuleNotFoundError）→ 实现 `cee4fe2`；冻结 e2e 18/18（含窗口冒烟）；冻结 `zhizhi.log` 显示 WebView2 窗口加载 UI（GET / + assets）；WM_CLOSE 优雅退出 exit 0 + 端口释放 + 锁删除；pytest 445/445 + 5 skipped、validator/Ruff/strict mypy（39）全绿。
+- 性能/安全/运维影响：WebView2 常驻内存；仍仅 127.0.0.1；pywebview 仅加载本地同源 URL；密钥 env-only。
+- 回滚：回退 `cee4fe2` 即回到「默认系统浏览器」；`--no-window` headless 路径保留。
+- 遗留风险与下一步：职责隔离 QA 待封存（`TR-20260815-002`）；切片 3b（Inno Setup 安装器/升级/签名）待 owner 决策；向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步切片 1 QA 封存（WORK-2026-033，TR-20260815-001）
 
 - 关联 ID：WORK-2026-033、WORK-2026-013/014/021/022/026/027、TR-20260815-001、NFR-2026-001、REQ-2026-001。

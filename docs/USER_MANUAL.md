@@ -6,7 +6,7 @@
 > 数据目录、备份/恢复、撤销/锁定、导入/PDF/AI 草案等能力在两种方式下一致。
 > 本手册按当前已验证功能编写；AI 能力需设置 `DEEPSEEK_API_KEY` 环境变量（无 key 时安全显示「AI 未连接」）。
 
-## 桌面打包版（便携 exe，第 10 步切片 1）
+## 桌面打包版（便携 exe，第 10 步切片 1+2）
 
 不用装 Python/Node，也不用开两个终端：构建后得到一个便携目录，解压即用。
 
@@ -14,18 +14,19 @@
 `pnpm install --frozen-lockfile`）：
 
 ```powershell
-pnpm --filter @knowledge-tree/web build
 uv run python scripts/build_desktop.py
+uv run python scripts/package_desktop.py   # 可选：打成便携 zip
 ```
 
-产物：`dist\zhizhi\`（含 `zhizhi.exe` 与 `_internal\`）。
+产物：`dist\zhizhi\`（含 `zhizhi.exe` 与 `_internal\`）；便携 zip `dist\zhizhi-0.1.0-portable.zip`。
 
 **使用**（任意 Windows 10/11 机器）：
 
 1. 把整个 `dist\zhizhi\` 目录复制/解压到任意位置（例如 `D:\apps\zhizhi\`）。
-2. 双击 `zhizhi.exe`（或命令行 `zhizhi.exe --data-root <目录> --port <端口>`）。
-3. 看到控制台输出「知枝 已启动：http://127.0.0.1:8000/」，默认浏览器自动打开界面。
-4. 关闭：在控制台按 Ctrl+C（或关掉控制台窗口）。
+2. 双击 `zhizhi.exe` → 打开**原生桌面窗口**（pywebview/WebView2），显示「知枝」界面。
+3. 关闭窗口 = 退出程序（自动关闭本地服务、释放端口）。
+4. 其它启动方式：`zhizhi.exe --browser`（用系统浏览器打开）、`zhizhi.exe --no-window`
+   （只启动本地服务、无界面，供脚本/测试）、`zhizhi.exe --data-root <目录> --port <端口>`。
 
 说明：
 
@@ -36,7 +37,8 @@ uv run python scripts/build_desktop.py
 - AI 功能（草案/问答/指令）：设一次环境变量 `DEEPSEEK_API_KEY` 后启动，无 key 时界面安全
   显示「AI 未连接」。
 - 备份/恢复、撤销/重做、锁定、来源回跳等能力与源码运行完全一致。
-- 尚未实现：原生窗口壳（当前用系统浏览器）与安装器（Inno Setup）——待后续切片。
+- 窗口版无控制台，运行诊断写 `%LOCALAPPDATA%\知枝\data\zhizhi.log`。
+- 尚未实现：Inno Setup 安装器（开始菜单/卸载/升级覆盖）与自动升级——待切片 3b。
 
 ## 当前可以做什么
 

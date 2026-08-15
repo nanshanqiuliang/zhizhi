@@ -60,6 +60,7 @@
 | WORK-2026-031 | 增量重建 LLM 接线（第 9 步切片 3b） | 已验证 prototype（correlated） | ai-draft + api + QA | WORK-2026-030、WORK-2026-009 切片 1/2、WORK-2026-026 已验证 | `build_incremental_ai_draft`（去重/跨图关系/过滤）+ generator 改增量路径 + `/ai-draft` 增量 | `d012660` 实现；`f0459f4` QA P2 测试强化；incremental LLM 5/5、全仓 430/430 + 5 skipped、QA `TR-20260814-020` PASS、live e2e 通过 |
 | WORK-2026-032 | AI 修改历史（第 9 步收尾） | 已验证 prototype（correlated） | history + api + web + QA | WORK-2026-011/019/022/026/027/029 已验证 | `GraphChangeRecord.source`（向后兼容）+ `apply_graph_patch(source)` + `/interpret/accept` + `GET /history` source + Web「AI」标记 | `954a7c8` 实现；ai_edit_history 4/4、全仓 434/434 + 5 skipped、Web 41/41、QA `TR-20260814-021` PASS |
 | WORK-2026-033 | Windows 桌面封装切片 1（PyInstaller 冻结 + 自托管 UI + 生命周期） | 已验证 prototype（correlated，切片 1） | desktop + api + packaging | WORK-2026-013/014/021/022/026/027 已验证 | `create_app(web_dist)` 同源自托管 + `apps/api/_runtime.py`（frozen 感知）+ `apps/desktop/launcher.py`（数据目录/单实例/优雅退出）+ `build.spec`/`build_desktop.py`（onedir `zhizhi.exe`）+ `desktop_e2e.py` + 便携 zip（`package_desktop.py`） | `3fc46c7` Ready；`8edf336` 红灯；`39117a1` 实现；`545b404` 打包+单实例修复；`a0e60dc` 便携 zip；`0067aae` QA P2 修复；e2e 15/15、全仓 442/442 + 5 skipped、Web 42/42、QA `TR-20260815-001` PASS |
+| WORK-2026-034 | Windows 桌面壳（pywebview 原生窗口，第 10 步切片 2） | 实现完成（本地门全绿，待职责隔离 QA） | desktop + packaging | WORK-2026-033 已验证 | `apps/desktop/shell.py`（`open_window` WebView2）+ launcher 三模式（window/browser/headless）+ 关窗优雅退出 + `build.spec` `console=False` + pywebview 入 `[project] dependencies` | `14a9ffc` Ready；`4f47e5b` 红灯；`cee4fe2` 实现；e2e 18/18、全仓 445/445 + 5 skipped、WM_CLOSE 优雅退出 exit 0 |
 
 ## 当前受阻项
 
@@ -69,4 +70,4 @@
 
 ## 下一门
 
-`第 10 步（封装为 Windows App）`：切片 1（PyInstaller 冻结 + 同源自托管 UI + 生命周期 + 数据目录 + 便携 zip，`0067aae`，WORK-2026-033，e2e 15/15，QA `TR-20260815-001` PASS）已实现并经职责隔离 QA 封存。剩余切片 2（pywebview 原生窗口）与切片 3b（Inno Setup 安装器/升级/签名）待 owner 决策后编号。第 9 步向量检索仍为唯一 owner 未决项（Embedding provider）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。
+`第 10 步（封装为 Windows App）`：切片 1（PyInstaller 冻结 + 自托管 UI + 生命周期 + 数据目录 + 便携 zip，QA `TR-20260815-001` PASS）与切片 2（pywebview 原生窗口，`cee4fe2`，WORK-2026-034，e2e 18/18）已实现，切片 2 待职责隔离 QA 封存。剩余切片 3b（Inno Setup 安装器/升级/签名）待 owner 决策后编号。第 9 步向量检索仍为唯一 owner 未决项（Embedding provider）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。

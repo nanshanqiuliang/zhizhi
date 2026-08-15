@@ -2,6 +2,24 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Step 10 slice 2 implementation checkpoint — 2026-08-15 21:20 +08:00
+
+- Active branch: `feature/WORK-2026-034-pywebview-shell`.
+- Ready work item: `docs/work-items/WORK-2026-034_pywebview-shell.md` (Ready `14a9ffc`);
+  red baseline `4f47e5b` (ModuleNotFoundError apps.desktop.shell); implementation `cee4fe2`.
+- Scope delivered (slice 2): `apps/desktop/shell.py`（`open_window` 经 pywebview WebView2
+  原生窗口，关窗即返回）；launcher 三模式——默认原生窗口 / `--browser` / `--no-window`
+  （headless）；关窗 → `should_exit` 优雅退出释放端口删锁；frozen windowed 写 `zhizhi.log`；
+  `build.spec` `console=False` + webview/pythonnet hiddenimports（hook 收集 lib + Python.Runtime）；
+  pywebview 移入 `[project] dependencies`；e2e 增窗口冒烟（18 项）。
+- Verification: 冻结 e2e 18/18（含 window-health / window-process-alive / window-port-released）；
+  冻结 `zhizhi.log` 显示 WebView2 窗口实际加载 UI（GET / + assets）；WM_CLOSE 优雅退出 exit 0 +
+  端口释放 + 锁删除；pytest 445/445 + 5 skipped；validator、Ruff、strict mypy（39）、全绿。
+- Natural-language Step 10 progress: slice 1 + 2 + 3a (portable zip) done (~85%); personal MVP
+  ~92%. Remaining: slice 3b (Inno Setup installer) pending owner decision.
+- Exact next action: collect role-separated QA verdict on frozen `cee4fe2`; seal evidence; then
+  slice 3b (Inno Setup) or close Step 10.
+
 ## Step 10 slice 1 QA closure checkpoint — 2026-08-15 20:55 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) reviewed frozen `fa8be62` (WORK-2026-033 Step 10
