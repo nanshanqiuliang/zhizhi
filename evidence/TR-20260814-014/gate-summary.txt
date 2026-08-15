@@ -1,0 +1,33 @@
+TR-20260814-014 — AI draft LLM extraction (WORK-2026-009 slice 2) — gate summary
+===============================================================================
+Reviewed commit: 1394a1e65d6e42b7429ef3deb4399338fdf47883 (feature/WORK-2026-009-ai-draft-pipeline)
+Red truth parent: 1407427 (no ai_draft_llm module / test file; process deviation disclosed)
+QA verdict: PASS (0 P0/P1; 3 P2 recorded as prototype boundaries; correlated_review)
+
+Python
+  uv run python -m pytest tests/contract/test_ai_draft_llm.py -q          -> 18 passed
+  uv run python -m pytest tests/contract/test_ai_draft_contract.py        -> 20 passed (no regression)
+                       tests/integration/test_ai_draft_pipeline.py
+                       tests/unit/test_ai_draft.py -q
+  uv run python -m pytest -q                                              -> 386 passed, 5 skipped
+Lint / types
+  uv run ruff format --check packages scripts tests apps                  -> 82 files already formatted
+  uv run ruff check .                                                     -> All checks passed
+  uv run python -m mypy --strict packages/contracts-py/src
+                       packages/domain/src packages/infrastructure/src    -> no issues in 26 files
+  uv run python -m mypy --strict ... apps/api                             -> no issues in 29 files (orchestrator)
+Repository
+  uv run python -m scripts.validate_repository                            -> PASS (skeleton, secret scan,
+                                                                             graph/LLM contracts, review packet,
+                                                                             v2 mock/replay harness)
+Web (orchestrator)
+  pnpm install --frozen-lockfile / pnpm peers check                       -> OK / no peer issues
+  pnpm check (vitest)                                                     -> 8 files, 32 tests passed
+  pnpm build                                                              -> OK (chunk-size warning only)
+
+Live AI generation test (orchestrator, owner key, env-only)
+  RUN_LIVE_LLM_TESTS=1 DEEPSEEK_API_KEY=<env> uv run python -m scripts.ai_draft_live_smoke
+  -> concepts 极限/连续/导数/可导; 4 prerequisite_of relations;
+     preview=requires_confirmation, 12 patch ops; 427 in / 3435 out tokens;
+     ~$0.004035 USD; ~57.5s; report evals/calculus-v1/ai-draft-live-smoke.json
+     (labels/usage/cost only; key never written to any file; secret scan PASS)

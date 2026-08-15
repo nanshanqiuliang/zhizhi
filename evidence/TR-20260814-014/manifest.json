@@ -1,0 +1,30 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260814-014",
+  "created_at": "2026-08-15T02:50:00+08:00",
+  "reviewed_commit": "1394a1e65d6e42b7429ef3deb4399338fdf47883",
+  "qa_attempt001_commit": "1394a1e65d6e42b7429ef3deb4399338fdf47883",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": "attempt001",
+    "attempt001": {
+      "path": "ai-draft-llm-qa-attempt-001.md",
+      "reviewed_commit": "1394a1e65d6e42b7429ef3deb4399338fdf47883",
+      "decision": "pass",
+      "findings": "0 P0/P1; 3 P2 recorded as prototype boundaries (model-supplied labels in error details, inherent single-user-message injection surface, opt-in live gate silent skip)"
+    }
+  },
+  "files": [
+    "ai-draft-llm-qa-attempt-001.md",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "notes": "Live DeepSeek smoke AI-DRAFT-LIVE-SMOKE-001 was executed by the orchestrator (owner key, env only) and recorded separately under evals/calculus-v1/ai-draft-live-smoke.json; the QA review itself was fully offline."
+}

@@ -1,0 +1,25 @@
+# Commands executed for TR-20260814-014 (orchestrator + role-separated QA)
+
+# --- orchestrator (implementation + gates) ---
+uv run python -m pytest tests/contract/test_ai_draft_llm.py tests/integration/test_ai_draft_pipeline.py tests/contract/test_ai_draft_contract.py tests/unit/test_ai_draft.py -q
+uv run ruff format --check packages/infrastructure/src/knowledge_tree_infrastructure/ai_draft_llm.py tests/contract/test_ai_draft_llm.py scripts/ai_draft_live_smoke.py
+uv run ruff check packages/infrastructure/src/knowledge_tree_infrastructure/ai_draft_llm.py tests/contract/test_ai_draft_llm.py scripts/ai_draft_live_smoke.py
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+uv run python -m pytest -q
+uv run python -m scripts.validate_repository
+pnpm install --frozen-lockfile && pnpm peers check && pnpm check && pnpm build
+
+# --- live AI generation test (owner-provided key, env only; NEVER in a file) ---
+$env:RUN_LIVE_LLM_TESTS="1"; $env:DEEPSEEK_API_KEY="<owner-key-from-user>"; uv run python -X utf8 -m scripts.ai_draft_live_smoke
+# -> AI-DRAFT-LIVE-SMOKE-001: 427 in / 3435 out tokens, ~$0.004 USD, preview=requires_confirmation
+
+# --- role-separated QA (ai_qa_auditor, immutable SHA 1394a1e) ---
+uv run python -m pytest tests/contract/test_ai_draft_llm.py -q                       # 18 passed
+uv run python -m pytest tests/contract/test_ai_draft_contract.py tests/integration/test_ai_draft_pipeline.py tests/unit/test_ai_draft.py -q  # 20 passed
+uv run ruff format --check packages scripts tests apps && uv run ruff check .        # pass
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src  # 26 files
+uv run python -m scripts.validate_repository                                         # PASS incl. secret scan
+uv run python -m pytest -q                                                           # 386 passed, 5 skipped
+git show 1407427:packages/infrastructure/src/knowledge_tree_infrastructure/ai_draft_llm.py  # exit 128 (red truth)
+git log --all -- packages/infrastructure/src/knowledge_tree_infrastructure/ai_draft_llm.py tests/contract/test_ai_draft_llm.py  # only 1394a1e

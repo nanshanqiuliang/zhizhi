@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 2 QA 封存（WORK-2026-009，TR-20260814-014）
+
+- 关联 ID：WORK-2026-009、WORK-2026-007/008、TR-20260814-014、NFR-2026-006/007/008、REQ-2026-006。
+- 实际变化：职责隔离 QA（`ai_qa_auditor`）对冻结 `1394a1e` 返回 **PASS**（0 P0/P1；3 个 P2 记录为 prototype 边界：模型提供 label 进入异常 details、单条 user 消息的固有注入面、live 门控在 CI 静默跳过）。QA 独立复核红绿链（父提交 `1407427` 无 `ai_draft_llm` 模块/测试文件，过程披露红灯与实现合并为同一提交）、18/18 + 20/20 定向测试、Ruff/mypy/validator（含 secret scan）、全仓 386/386 + 5 skipped；对抗变异（25+ 畸形答案形状绕过、evidence/contract 绕过、噪声处理、不可变性、注入面、错误卫生、冒烟失败关闭）全部通过。
+- 影响模块/接口/schema/migration/prompt：无代码变化；新增证据封存（`evidence/TR-20260814-014/`）与测试报告（`docs/test-reports/TR-20260814-014_ai-draft-llm-extraction.md`）。
+- 兼容性：无行为变化；`config/llm` 与 Provider 门控不变。
+- 验证与证据：QA PASS（correlated_review，机器证明非 owner 接受）；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001` 报告存 `evals/calculus-v1/ai-draft-live-smoke.json`。
+- 性能/安全/运维影响：无新增。
+- 回滚：无代码变更可回滚；证据为新增只读记录。
+- 遗留风险与下一步：第 8 步切片 1+2 完成（约 60%）；下一动作为切片 3——草案 API 端点 + Web 批量接受/拒绝，复用 `POST graph/patches` 提交门；`relation_validate` 思考模式延迟 ~57s 为原型边界。
+
 ## 2026-08-15 — 第 8 步切片 2：LLM 概念抽取与关系候选 + live 冒烟（WORK-2026-009）
 
 - 关联 ID：WORK-2026-009、WORK-2026-007、WORK-2026-008、NFR-2026-006/007/008、REQ-2026-006。
@@ -11,7 +22,7 @@
 - 验证与证据：新契约测试 18/18（确定性 MockLlmAdapter 离线、无网络）；全仓 pytest 386/386 + 5 skipped；repository validator（含 secret scan）/Ruff/strict mypy（packages 26 + scripts 11）全绿；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`：真实 DeepSeek 抽取 极限/连续/导数/可导，4 条 `prerequisite_of` 候选，preview=requires_confirmation、patch 12 ops，427 in / 3435 out tokens、~$0.004 USD、~57.5s；报告 `evals/calculus-v1/ai-draft-live-smoke.json`（仅 label/用量/费用，无正文、无密钥）；密钥从未写入任何文件（secret scan PASS）。
 - 性能/安全/运维影响：抽取/关系判定为真实 LLM 调用（费用受 task profile 金额预算约束）；`relation_validate` 思考模式先耗 reasoning_content，`max_tokens` 过小会得到 `finish_reason=length` 与空 content——live 冒烟以 4096 max_tokens 留足余量；错误 details 仅含标识不含正文/推理内容。
 - 回滚：回退 `1394a1e` 即回到启发式抽取（切片 1 状态）；不触碰 `config/llm` 与 Provider 门控；红灯与证据保留。
-- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `1394a1e`）；切片 3（草案 API 端点 + Web 批量接受/拒绝）复用 `POST graph/patches` 提交门；`relation_validate` 思考模式延迟较高（~57s）记录为原型边界，后续可评估降级/异步策略。
+- 遗留风险与下一步：切片 2 职责隔离 QA 已封存（TR-20260814-014，PASS）；切片 3（草案 API 端点 + Web 批量接受/拒绝）复用 `POST graph/patches` 提交门；`relation_validate` 思考模式延迟较高（~57s）记录为原型边界，后续可评估降级/异步策略。
 
 ## 2026-08-15 — 第 8 步切片 1：AI 草案流水线纯领域内核与离线编排（WORK-2026-009）
 

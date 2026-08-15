@@ -20,7 +20,7 @@
 - 影响：无部署或常驻服务变化；仅新增 Python 模块/脚本/测试与证据报告；`config/llm` 与 Provider 门控不变。
 - 证据：pytest 386/386 + 5 skipped；repository validator（含 secret scan）/Ruff/strict mypy 全绿；live 冒烟 `AI-DRAFT-LIVE-SMOKE-001`（极限/连续/导数/可导 + 4 条 prerequisite_of，preview=requires_confirmation，427/3435 tokens，~$0.004 USD，~57.5s）；报告 `evals/calculus-v1/ai-draft-live-smoke.json`；密钥仅 env，从未写入任何文件。
 - 缓解/回滚：回退 `1394a1e` 即回启发式抽取；live 冒烟受 `RUN_LIVE_LLM_TESTS` + `DEEPSEEK_API_KEY` 双门控。
-- 遗留风险/Owner/期限：切片 2 职责隔离 QA 待执行；切片 3（草案 API/Web 批量接受拒绝）待做；`relation_validate` 思考模式延迟较高（~57s）记录为原型边界。
+- 遗留风险/Owner/期限：切片 2 职责隔离 QA 已封存（TR-20260814-014，PASS，correlated_review）；切片 3（草案 API/Web 批量接受拒绝）待做；`relation_validate` 思考模式延迟较高（~57s）记录为原型边界。
 
 ## 2026-08-15 — 第 8 步切片 1：AI 草案流水线离线内核（WORK-2026-009）运维记录
 

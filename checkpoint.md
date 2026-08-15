@@ -1085,6 +1085,31 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 8 slice 2 QA closure checkpoint — 2026-08-15 02:50 +08:00
+
+- Role-separated QA (`ai_qa_auditor`) reviewed frozen `1394a1e` (WORK-2026-009
+  slice 2) and returned PASS with 0 P0/P1 and 3 P2 recorded as prototype
+  boundaries (model-supplied labels in DraftExtractionError details, inherent
+  single-user-message injection surface, opt-in live gate silent skip in CI).
+- QA independently verified the direct red/green chain (parent `1407427` lacks
+  `ai_draft_llm` module/test file; red tests + implementation merged into one
+  commit as disclosed), targeted 18/18 + regression 20/20, Ruff, strict mypy
+  (26 files), repository validator incl. secret scan, full pytest 386/386 + 5
+  skipped, and executed an adversarial mutation harness (25+ malformed answers
+  all fail closed; evidence/contract bypass closed; noise/immutability/
+  injection/error-hygiene/smoke-fail-closed verified; scratch harness removed).
+- Evidence sealed under `evidence/TR-20260814-014/`; report:
+  `docs/test-reports/TR-20260814-014_ai-draft-llm-extraction.md`. QA is
+  correlated machine review, not owner acceptance.
+- Live AI generation test (owner key, env-only) remains recorded:
+  `evals/calculus-v1/ai-draft-live-smoke.json` (~$0.004, preview
+  requires_confirmation).
+- Natural-language Step 8 progress: slice 1 + slice 2 done (approximately
+  60%); personal MVP approximately 80% (user-visible AI draft awaits slice 3).
+- Exact next action: create Ready slice 3 (draft API endpoint + Web batch
+  accept/reject reusing `POST graph/patches`) starting from failing red tests.
+  Keep user data and owner acceptance disabled.
+
 ## Step 8 slice 2 checkpoint — 2026-08-15 02:40 +08:00
 
 - Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
