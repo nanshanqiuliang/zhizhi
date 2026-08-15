@@ -45,4 +45,20 @@ describe("persist api URL contract", () => {
       `/api/workspaces/${WORKSPACE_ID}/backup`,
     ]);
   });
+
+  it("surfaces the rule in draft generation errors", async () => {
+    const fetchMock = vi.fn<
+      (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+    >(
+      async () =>
+        new Response(
+          JSON.stringify({ code: "draft_invalid", rule: "no_new_concepts" }),
+          { status: 422 },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const api = httpPersistApi(BASE);
+
+    await expect(api.generateDraft()).rejects.toThrow(/draft_invalid\/no_new_concepts/);
+  });
 });
