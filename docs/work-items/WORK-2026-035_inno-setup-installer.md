@@ -65,25 +65,25 @@ updated_at: 2026-08-15T21:50:00+08:00
 
 ## 验收标准
 
-- [ ] AC-1 (c1)：`scripts/generate_icon.py` 产出 `apps/desktop/icon.ico`；`build.spec` 与安装器引用它。
-- [ ] AC-2 (c2)：`installer.iss` 存在且含固定 AppId、按用户安装、开始菜单/桌面快捷方式、卸载器注册。
-- [ ] AC-3 (c3)：`scripts/build_installer.py` 产出 `dist/zhizhi-<version>-setup.exe`。
-- [ ] AC-4 (c4)：静默安装后：`zhizhi.exe` 在安装目录、开始菜单快捷方式存在、卸载器注册正确；
+- [x] AC-1 (c1)：`scripts/generate_icon.py` 产出 `apps/desktop/icon.ico`；`build.spec` 与安装器引用它。
+- [x] AC-2 (c2)：`installer.iss` 存在且含固定 AppId、按用户安装、开始菜单/桌面快捷方式、卸载器注册。
+- [x] AC-3 (c3)：`scripts/build_installer.py` 产出 `dist/zhizhi-<version>-setup.exe`。
+- [x] AC-4 (c4)：静默安装后：`zhizhi.exe` 在安装目录、开始菜单快捷方式存在、卸载器注册正确；
   静默卸载后：安装目录/快捷方式/卸载器移除，`%LOCALAPPDATA%\知枝\data` 保留。
-- [ ] AC-5 (c5)：覆盖安装升级后用户数据仍在。
-- [ ] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
-- [ ] 错误和恢复路径：ISCC 缺失时明确报错；签名证书缺失时跳过签名并告警（不失败）。
-- [ ] 回滚/禁用方法：回退本工作项提交即回到「便携 zip 手动解压」；安装器不影响数据目录。
+- [x] AC-5 (c5)：覆盖安装升级后用户数据仍在。
+- [x] AC-6 (c6)：repository 门：validator、Ruff、scripts + strict package mypy、全仓 pytest、Web 全绿。
+- [x] 错误和恢复路径：ISCC 缺失时明确报错；签名证书缺失时跳过签名并告警（不失败）。
+- [x] 回滚/禁用方法：回退本工作项提交即回到「便携 zip 手动解压」；安装器不影响数据目录。
 
 ## 验证计划
 
 | Test ID | 层次 | 场景 | 期望 | 证据 |
 |---|---|---|---|---|
-| TC-INST-001 | unit | installer.iss 存在 + 关键节 | AppId/目录/快捷方式/卸载器 | 待实现 |
-| TC-INST-002 | build | build_installer 产出 setup.exe | 产物存在且可执行 | 待实现 |
-| TC-INST-003 | e2e | 静默安装/卸载 + 数据保留 | 文件/快捷方式/卸载器 + 数据在 | 待实现 |
-| TC-INST-004 | e2e | 覆盖安装升级数据保留 | 数据仍在 | 待实现 |
-| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | 待实现 |
+| TC-INST-001 | unit | installer.iss 存在 + 关键节 | AppId/目录/快捷方式/卸载器 | test_installer 3/3 |
+| TC-INST-002 | build | build_installer 产出 setup.exe | 产物存在且可执行 | 23,675,549 B |
+| TC-INST-003 | e2e | 静默安装/卸载 + 数据保留 | 文件/快捷方式/卸载器 + 数据在 | 冒烟 exit 0 + 标记保留 |
+| TC-INST-004 | e2e | 覆盖安装升级数据保留 | 数据仍在 | 标记内容不变 |
+| TC-REPO-001 | repository | 全仓门 | validator/Ruff/mypy/pytest/Web | pytest 448、QA TR-20260815-003 |
 
 ## 交付物与关闭
 
@@ -91,6 +91,6 @@ updated_at: 2026-08-15T21:50:00+08:00
 - Contract/ADR/migration/prompt：无新 canonical contract/ADR/migration/prompt；build 组增 pillow。
 - Test Run：TC-INST-001..004 + 全仓门 + 静默安装/卸载冒烟。
 - Release：`dist/zhizhi-<version>-setup.exe`（单文件安装器）；便携 zip 仍由 `package_desktop.py` 产出。
-- 观察结果：新机器可「双击 setup.exe 安装 → 开始菜单启动 → 覆盖安装升级 → 卸载」，数据始终保留；
-  第 10 步完成标志达成。
+- 观察结果：职责隔离 QA `TR-20260815-003` PASS（0 P0/P1，1 P2 + 3 P3 由 `cb46909` 关闭）；新机器
+  可「双击 setup.exe 安装 → 开始菜单启动 → 覆盖安装升级 → 卸载」，数据始终保留；第 10 步完成标志达成。
 - 未完成项的新 ID：代码签名证书（owner 未提供，`SignTool` 行待取消注释）；自动更新；向量检索（第 9 步遗留）。

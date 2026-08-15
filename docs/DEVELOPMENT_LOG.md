@@ -2,6 +2,24 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步切片 3b QA 封存（WORK-2026-035，TR-20260815-003）
+
+- 关联 ID：WORK-2026-035、WORK-2026-033/034、TR-20260815-003、NFR-2026-001、REQ-2026-001。
+- 实际变化：职责隔离 QA 对冻结 `c0cd6a9` 返回 **PASS**（0 P0/P1；1 P2 + 3 P3 非阻塞）。QA
+  执行全部门（pytest 448/448 + 5 skipped、ruff、strict mypy 39、validator、Web 42/42）与完整
+  静默安装/升级/卸载循环（HKCU 注册表 + 数据标记，零残留）。
+- 影响模块/接口/schema/migration/prompt：无新代码（封存证据）；后续 `cb46909` 关闭 P2-1（`.iss`
+  纳入 validator secret scan）、P2-2（签名文档修正）、P3-1（注释修正）、P3-2（桌面快捷方式
+  `unchecked` 改为按需）；并瘦身冻结产物（pillow 移回 build 组 + spec `excludes` PIL/mypy/
+  hypothesis/pytest/ruff，安装器 22.6→18.4 MB）。
+- 兼容性：无行为变化；数据目录 `%LOCALAPPDATA%\知枝\data` 安装/升级/卸载均不触碰。
+- 验证与证据：`evidence/TR-20260815-003/`；报告 `docs/test-reports/TR-20260815-003_desktop-inno-setup.md`；
+  修复后 e2e 18/18、安装器静默冒烟（桌面快捷方式默认关闭）。
+- 性能/安全/运维影响：安装器 18.4 MB；免管理员按用户安装；代码签名缺省不签名（SmartScreen 可能提示）。
+- 回滚：无新增代码可回滚；回退 `cb46909` 即回 P2/P3 修复前。
+- 遗留风险与下一步：**第 10 步完成（约 100%）**；代码签名证书（owner 可选）、自动更新、向量
+  检索（第 9 步 owner 未决项）为剩余项；治理上建议把已验证链合并 `main` 并跑一次 CI。
+
 ## 2026-08-15 — 第 10 步切片 3b：Inno Setup 安装器（WORK-2026-035）
 
 - 关联 ID：WORK-2026-035、WORK-2026-033/034、NFR-2026-001、REQ-2026-001。

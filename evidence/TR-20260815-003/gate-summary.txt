@@ -1,0 +1,15 @@
+# Gate summary for TR-20260815-003 (WORK-2026-035 slice 3b)
+
+reviewed_commit: c0cd6a98c0911b43a57fc399fc6459dfb5203445
+decision: PASS (0 P0 / 0 P1 / 1 P2 / 3 P3)
+
+- focused (test_installer): 3 passed
+- full pytest: 448 passed, 5 skipped (live-LLM gate)
+- ruff check .: clean
+- ruff format --check: 109 files formatted
+- mypy scripts: 16 source files, no issues
+- mypy --strict (contracts/domain/infrastructure + apps/api + apps/desktop): 39 source files, no issues
+- scripts.validate_repository: PASS (incl. secret scan)
+- web check/build: 42/42 tests, build exit 0
+- build_installer: dist/zhizhi-0.1.0-setup.exe (23,675,549 B)
+- silent install/upgrade/uninstall: exit 0, data preserved, zero residue

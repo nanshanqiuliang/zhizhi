@@ -1,0 +1,15 @@
+# Gate commands executed for TR-20260815-003 (WORK-2026-035 slice 3b)
+
+```text
+uv run python -m pytest tests/unit/test_installer.py -q
+uv run python -m pytest -q
+uv run ruff check .
+uv run ruff format --check packages scripts tests apps
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+uv run python -m scripts.validate_repository
+pnpm --filter @knowledge-tree/web check
+pnpm --filter @knowledge-tree/web build
+uv run python scripts/build_installer.py
+# silent install / upgrade / uninstall smoke (see attempt report)
+```

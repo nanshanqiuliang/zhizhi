@@ -2,6 +2,24 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Step 10 slice 3b QA closure checkpoint — 2026-08-15 22:20 +08:00
+
+- Role-separated QA reviewed frozen `c0cd6a9` (WORK-2026-035 Step 10 slice 3b Inno Setup
+  installer) and returned **PASS** with 0 P0/P1, 1 P2 + 3 P3 (all closed by `cb46909`).
+- QA executed all gates (pytest 448/448 + 5 skipped, ruff, strict mypy 39, validator incl. secret
+  scan, Web 42/42) and a full silent install/upgrade/uninstall cycle (registry + data marker
+  checks, zero residue).
+- `cb46909` also slims the frozen bundle (exclude PIL/mypy/hypothesis/pytest/ruff; installer
+  22.6→18.4 MB) and adds `.iss` to the validator secret scan.
+- Evidence sealed under `evidence/TR-20260815-003/`; report:
+  `docs/test-reports/TR-20260815-003_desktop-inno-setup.md`.
+- **Natural-language Step 10 is COMPLETE (~100%)**: PyInstaller freeze + pywebview native window +
+  portable zip + Inno Setup installer + lifecycle/path/backup + e2e, all QA-sealed
+  (TR-20260815-001..003). Personal MVP ~98% (residual: code-signing cert optional, vector
+  retrieval Step 9 owner-unresolved).
+- Exact next action: owner may opt into code signing (provide cert) or merge the verified chain
+  to `main` and run CI once (governance gap recorded earlier).
+
 ## Step 10 slice 3b implementation checkpoint — 2026-08-15 22:05 +08:00
 
 - Active branch: `feature/WORK-2026-035-inno-setup-installer`.
