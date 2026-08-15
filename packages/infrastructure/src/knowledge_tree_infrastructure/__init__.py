@@ -2,6 +2,7 @@
 
 from .workspace import (
     AnchorRef,
+    AnswerContext,
     PageSegment,
     ResourceInfo,
     SearchResult,
@@ -10,6 +11,7 @@ from .workspace import (
     accept_ai_draft,
     apply_graph_patch,
     backup_workspace,
+    build_answer_context,
     create_workspace,
     export_course_graph,
     get_page_text,
@@ -40,6 +42,7 @@ from .workspace import (
 
 __all__ = [
     "AnchorRef",
+    "AnswerContext",
     "PageSegment",
     "ResourceInfo",
     "SearchResult",
@@ -48,6 +51,7 @@ __all__ = [
     "accept_ai_draft",
     "apply_graph_patch",
     "backup_workspace",
+    "build_answer_context",
     "create_workspace",
     "export_course_graph",
     "get_page_text",

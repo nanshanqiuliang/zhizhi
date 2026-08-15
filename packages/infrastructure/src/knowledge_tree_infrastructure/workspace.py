@@ -95,6 +95,14 @@ class SearchResult:
 
 
 @dataclass(frozen=True, slots=True)
+class AnswerContext:
+    """Citation-numbered context text plus the source refs it cites."""
+
+    context: str
+    sources: tuple[SearchResult, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class WorkspaceLayout:
     """User-visible local workspace directory layout."""
 
@@ -305,6 +313,55 @@ def search_course_graph(layout: WorkspaceLayout, query: str) -> list[SearchResul
         )
     results.sort(key=lambda result: result.label.casefold())
     return results
+
+
+def build_answer_context(layout: WorkspaceLayout, question: str) -> AnswerContext:
+    """Retrieve FTS5 matches and render them as citation-numbered context.
+
+    Each matched concept is cited as `[n] label：snippet` in the context text and
+    kept as a source ref (id = concept id, clickable in the Web). When a natural
+    question does not literally appear in any label/note (e.g. "什么是极限" vs the
+    label "极限"), a reverse substring fallback matches concepts whose label is
+    contained in the question. No LLM call and no write; an empty result yields
+    empty context and no sources.
+    """
+
+    results = search_course_graph(layout, question)
+    if not results:
+        results = _reverse_match_concepts(layout, question)
+    if not results:
+        return AnswerContext(context="", sources=())
+    lines = [
+        f"[{index}] {result.label}：{result.snippet}"
+        for index, result in enumerate(results, start=1)
+    ]
+    return AnswerContext(context="\n".join(lines), sources=tuple(results))
+
+
+def _reverse_match_concepts(layout: WorkspaceLayout, question: str) -> list[SearchResult]:
+    """Match concepts whose label appears inside the question (best-effort)."""
+
+    graph = load_course_graph(layout)
+    needle = question.strip().casefold()
+    matches: list[SearchResult] = []
+    for concept in graph["concepts"]:
+        label = str(concept["label"])
+        if not label or label.casefold() not in needle:
+            continue
+        note = ""
+        for annotation in concept.get("annotations", []):
+            if isinstance(annotation, Mapping) and annotation.get("kind") == "note":
+                note = str(annotation.get("value", ""))
+                break
+        matches.append(
+            SearchResult(
+                id=str(concept["id"]),
+                label=label,
+                snippet=_snippet(label, note, question.strip()),
+            )
+        )
+    matches.sort(key=lambda result: result.label.casefold())
+    return matches[:5]
 
 
 def load_course_graph(layout: WorkspaceLayout) -> JsonObject:

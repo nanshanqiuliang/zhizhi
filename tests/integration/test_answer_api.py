@@ -11,15 +11,14 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-
-from apps.api.main import create_app
 from knowledge_tree_infrastructure.workspace import (
-    AnswerContext,
     build_answer_context,
     create_workspace,
     migrate,
     save_course_graph,
 )
+
+from apps.api.main import create_app
 from tests.contract.test_graph_contracts import COURSE_ID, WORKSPACE_ID
 
 JsonObject = dict[str, Any]

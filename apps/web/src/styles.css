@@ -1175,6 +1175,76 @@ a:focus-visible {
   }
 }
 
+/* --- WORK-2026-028: sourced Q&A --- */
+
+.answer-section {
+  margin: 14px 0 4px;
+}
+
+.answer-form {
+  display: flex;
+  gap: 6px;
+}
+
+.answer-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid #d7ded5;
+  border-radius: 7px;
+  font-size: 0.8rem;
+}
+
+.answer-form button {
+  padding: 6px 12px;
+  border: 1px solid #7d9a8a;
+  border-radius: 7px;
+  background: #eaf3ec;
+  color: #2f5740;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.answer-form button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.answer-body {
+  padding: 14px 18px;
+}
+
+.answer-text {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.answer-sources ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.answer-sources li {
+  padding: 4px 0;
+}
+
+.answer-sources button {
+  border: 0;
+  background: none;
+  color: #3c5a4a;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.answer-sources button:hover {
+  color: #1f3d2c;
+}
+
+
 .pdf-viewer {
   margin: 18px 28px 6px;
   border: 1px solid #d7ded5;

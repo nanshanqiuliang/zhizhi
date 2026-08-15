@@ -27,6 +27,7 @@ from knowledge_tree_infrastructure.workspace import (
     accept_ai_draft,
     apply_graph_patch,
     backup_workspace,
+    build_answer_context,
     create_workspace,
     get_page_text,
     get_resource_file_path,
@@ -56,6 +57,9 @@ _MAX_JSON_BYTES = 10 * 1024 * 1024
 
 # Injected draft generator: (resource_text, resource_id, current_graph) -> {draft, patch}.
 DraftGenerator = Callable[[str, str, JsonObject], JsonObject]
+
+# Injected answer generator: (question, context, sources) -> {answer, sources}.
+AnswerGenerator = Callable[[str, str, list[JsonObject]], JsonObject]
 
 
 def _is_uuidv7(value: str) -> bool:
@@ -132,12 +136,17 @@ def _http_error(error: WorkspaceError) -> HTTPException:
 
 
 def create_app(
-    *, data_root: Path, allowed_origins: list[str], draft_generator: DraftGenerator | None = None
+    *,
+    data_root: Path,
+    allowed_origins: list[str],
+    draft_generator: DraftGenerator | None = None,
+    answer_generator: AnswerGenerator | None = None,
 ) -> FastAPI:
     """Build the persistence API with an explicit data root and CORS allowlist.
 
-    `draft_generator` is the AI-draft composition root; when None the
-    `/ai-draft` endpoint fails closed with 503 `ai_not_available`.
+    `draft_generator`/`answer_generator` are the AI composition roots; when None
+    the `/ai-draft` and `/answer` endpoints fail closed with 503
+    `ai_not_available`.
     """
 
     root = Path(data_root)
@@ -555,6 +564,42 @@ def create_app(
             "change_id": record.change_id,
             "revision_no": record.after_revision_no,
         }
+
+    @app.post("/api/workspaces/{workspace_id}/answer")
+    async def post_answer(workspace_id: str, request: Request) -> JsonObject:
+        if answer_generator is None:
+            raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        question = payload.get("question")
+        if not isinstance(question, str) or not question.strip():
+            raise HTTPException(
+                status_code=422, detail={"code": "answer_invalid", "rule": "question_empty"}
+            )
+        if len(question) > 500:
+            raise HTTPException(
+                status_code=422, detail={"code": "answer_invalid", "rule": "question_too_long"}
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            context_obj = build_answer_context(layout, question)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        sources = [
+            {"id": source.id, "label": source.label, "kind": "concept"}
+            for source in context_obj.sources
+        ]
+        if not sources:
+            return {"answer": "", "sources": [], "note": "no_matches"}
+        try:
+            return answer_generator(question, context_obj.context, sources)
+        except LLMProviderError as error:
+            raise HTTPException(
+                status_code=502, detail={"code": error.code, **error.details}
+            ) from error
 
     return app
 

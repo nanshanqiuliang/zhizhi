@@ -33,6 +33,10 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
     getResourceText: vi.fn(async () => "text content"),
     generateDraft: vi.fn(async () => ({ draft: { concepts: [], relations: [] }, patch: {} })),
     acceptDraft: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
+    askQuestion: vi.fn(async () => ({
+      answer: "极限描述自变量趋近某一点时函数值的趋势。",
+      sources: [{ id: "00000000-0000-7000-8000-000000000101", label: "极限", kind: "concept" }],
+    })),
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),
@@ -57,5 +61,9 @@ describe("sourced Q&A", () => {
     await waitFor(() => {
       expect(screen.getByRole("region", { name: /回答/ })).toBeInTheDocument();
     });
+    const panel = screen.getByRole("region", { name: /回答/ });
+    expect(within(panel).getByText(/极限描述自变量趋近/)).toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: /\[1\] 极限/ })).toBeInTheDocument();
+    expect(api.askQuestion).toHaveBeenCalledWith("什么是极限");
   });
 });

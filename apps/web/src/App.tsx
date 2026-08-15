@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   AiDraftResult,
   AnchorRef,
+  AnswerResult,
   ConceptLocks,
   ConceptNode,
   HistoryRecord,
@@ -239,6 +240,9 @@ export function App({ api }: { api?: PersistApi }) {
   const [draft, setDraft] = useState<AiDraftResult | null>(null);
   const [draftStatus, setDraftStatus] = useState<"idle" | "generating" | "ready" | "applying" | "failed">("idle");
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<AnswerResult | null>(null);
+  const [answerStatus, setAnswerStatus] = useState<"idle" | "asking" | "done" | "failed">("idle");
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -512,6 +516,32 @@ export function App({ api }: { api?: PersistApi }) {
       return;
     }
     void openViewer(resource);
+  }
+
+  async function handleAsk() {
+    if (!api || !question.trim()) return;
+    setAnswerStatus("asking");
+    setAnswer(null);
+    try {
+      const result = await api.askQuestion(question.trim());
+      setAnswer(result);
+      setAnswerStatus("done");
+      setStatus(result.note === "no_matches" ? "本地没有相关内容，换个关键词试试" : "已生成回答");
+    } catch (error) {
+      const code = (error as Error).message;
+      setAnswerStatus("failed");
+      setAnswer(null);
+      setStatus(code === "ai_not_available" ? "AI 未连接，无法回答" : `问答失败（${code}）`);
+    }
+  }
+
+  function jumpToAnswerSource(sourceId: string) {
+    const node = present.nodes.find((candidate) => candidate.id === sourceId);
+    if (!node) {
+      setStatus("该来源已不在当前知识树中");
+      return;
+    }
+    selectNode(node.id);
   }
 
   function rejectDraft() {
@@ -941,6 +971,30 @@ export function App({ api }: { api?: PersistApi }) {
               </button>
             ))}
           </div>
+          <div className="answer-section" aria-label="问答">
+            <p className="overline">向本地知识提问</p>
+            <div className="answer-form">
+              <input
+                type="text"
+                aria-label="向本地知识提问"
+                placeholder="提问或输入关键词…"
+                maxLength={200}
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void handleAsk();
+                }}
+              />
+              <button
+                type="button"
+                disabled={!question.trim() || answerStatus === "asking"}
+                onClick={() => void handleAsk()}
+              >
+                提问
+              </button>
+            </div>
+            {answerStatus === "asking" && <p className="import-note">AI 思考中…</p>}
+          </div>
           <div className="resource-section" aria-label="资料导入">
             <p className="overline">本地资料</p>
             <label className="import-control" htmlFor="resource-upload">
@@ -1278,6 +1332,35 @@ export function App({ api }: { api?: PersistApi }) {
             </button>
             <button type="button" className="secondary-button" onClick={rejectDraft}>拒绝</button>
           </footer>
+        </section>
+      )}
+
+      {answer && (
+        <section className="draft-panel" aria-label="回答">
+          <header className="viewer-header">
+            <div>
+              <p className="overline">带来源回答</p>
+              <strong>基于本地知识片段</strong>
+            </div>
+            <button type="button" className="viewer-close" onClick={() => setAnswer(null)}>关闭</button>
+          </header>
+          <div className="answer-body" aria-live="polite">
+            <p className="answer-text">{answer.answer || "本地没有相关内容，换个关键词试试。"}</p>
+            {answer.sources.length > 0 && (
+              <nav className="answer-sources" aria-label="回答来源">
+                <p className="overline">来源</p>
+                <ul>
+                  {answer.sources.map((source, index) => (
+                    <li key={source.id}>
+                      <button type="button" onClick={() => jumpToAnswerSource(source.id)}>
+                        [{index + 1}] {source.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
+          </div>
         </section>
       )}
 

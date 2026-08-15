@@ -99,6 +99,18 @@ export type AiDraftResult = {
   evidence?: DraftEvidence[];
 };
 
+export type AnswerSource = {
+  id: string;
+  label: string;
+  kind: string;
+};
+
+export type AnswerResult = {
+  answer: string;
+  sources: AnswerSource[];
+  note?: string;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -115,6 +127,7 @@ export interface PersistApi {
     patch: Record<string, unknown>,
     evidence: DraftEvidence[],
   ): Promise<{ status: string; change_id: string; revision_no: number }>;
+  askQuestion(question: string): Promise<AnswerResult>;
   applyPatch(patch: Record<string, unknown>): Promise<{
     status: string;
     change_id: string;
@@ -518,6 +531,18 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         change_id: string;
         revision_no: number;
       };
+    },
+    async askQuestion(question: string): Promise<AnswerResult> {
+      const response = await fetch(`${workspaceBase}/answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `answer failed: ${response.status}`);
+      }
+      return (await response.json()) as AnswerResult;
     },
   };
 }
