@@ -62,6 +62,10 @@
 | WORK-2026-033 | Windows 桌面封装切片 1（PyInstaller 冻结 + 自托管 UI + 生命周期） | 已验证 prototype（correlated，切片 1） | desktop + api + packaging | WORK-2026-013/014/021/022/026/027 已验证 | `create_app(web_dist)` 同源自托管 + `apps/api/_runtime.py`（frozen 感知）+ `apps/desktop/launcher.py`（数据目录/单实例/优雅退出）+ `build.spec`/`build_desktop.py`（onedir `zhizhi.exe`）+ `desktop_e2e.py` + 便携 zip（`package_desktop.py`） | `3fc46c7` Ready；`8edf336` 红灯；`39117a1` 实现；`545b404` 打包+单实例修复；`a0e60dc` 便携 zip；`0067aae` QA P2 修复；e2e 15/15、全仓 442/442 + 5 skipped、Web 42/42、QA `TR-20260815-001` PASS |
 | WORK-2026-034 | Windows 桌面壳（pywebview 原生窗口，第 10 步切片 2） | 已验证 prototype（correlated，切片 2） | desktop + packaging | WORK-2026-033 已验证 | `apps/desktop/shell.py`（`open_window` WebView2）+ launcher 三模式（window/browser/headless）+ 关窗优雅退出 + `build.spec` `console=False` + pywebview 入 `[project] dependencies` | `14a9ffc` Ready；`4f47e5b` 红灯；`cee4fe2` 实现；`dd86465` QA P3 修复；e2e 18/18、全仓 445/445 + 5 skipped、WM_CLOSE 优雅退出 exit 0、QA `TR-20260815-002` PASS |
 | WORK-2026-035 | Windows 安装器（Inno Setup，第 10 步切片 3b） | 已验证 prototype（correlated，切片 3b） | installer + packaging | WORK-2026-033/034 已验证 | `installer.iss`（按用户安装/开始菜单/卸载/覆盖升级）+ `build_installer.py` + `generate_icon.py`/`icon.ico` + pillow | `04029a7` Ready；`babf418` 红灯；`c0cd6a9` 实现；`cb46909` QA P2/P3 修复；安装器静默安装/升级/卸载冒烟、全仓 448/448 + 5 skipped、QA `TR-20260815-003` PASS |
+| WORK-2026-036 | 画布拖拽修复（仅左键按住时拖拽） | 实现完成（本地门全绿，待 QA） | web | WORK-2026-003 已验证 | `moveDrag` buttons 校验 + `setPointerCapture` + `onPointerCancel` | `69d0de9` 实现；Web 43/43 |
+| WORK-2026-037 | 打开本地资料目录（reveal） | 实现完成（本地门全绿，待 QA） | api + web | WORK-2026-016 已验证 | `POST /resources/open-dir` + `/{rid}/reveal`（explorer + 路径守卫）+ Web 按钮 | `1f01795` 实现；集成 2/2 |
+| WORK-2026-038 | AI 接入设置（DeepSeek key 配置 + 对话框） | 实现完成（本地门全绿，待 QA） | api + web | WORK-2026-008/026 已验证 | `ai_config.py` + `GET/PUT/DELETE /api/settings/ai` + Web 设置对话框/徽标 | `abf2d9a` 实现；集成 2/2 + Web 2 用例 |
+| WORK-2026-039 | 多课程 / 新建课程（多工作区） | 实现完成（本地门全绿，待 QA） | api + web | WORK-2026-013/014 已验证 | `GET/POST /api/workspaces` + `httpPersistApi(baseUrl, workspaceId)` + 侧边栏课程列表/新建/切换 | `e0fc05f` 实现；集成 2/2 + Web 2 用例 |
 
 ## 当前受阻项
 
@@ -71,4 +75,4 @@
 
 ## 下一门
 
-`第 10 步（封装为 Windows App）`：切片 1（PyInstaller 冻结 + 自托管 UI + 生命周期 + 数据目录 + 便携 zip，QA `TR-20260815-001` PASS）、切片 2（pywebview 原生窗口，QA `TR-20260815-002` PASS）与切片 3b（Inno Setup 安装器，QA `TR-20260815-003` PASS）全部实现并经职责隔离 QA 封存。**第 10 步完成（约 100%）**；代码签名为可选（owner 未提供证书）。第 9 步向量检索仍为唯一 owner 未决项（Embedding provider）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。治理：建议把已验证链合并 `main` 并跑一次 CI。
+`第 10 步（封装为 Windows App）`：切片 1（PyInstaller 冻结 + 自托管 UI + 生命周期 + 数据目录 + 便携 zip，QA `TR-20260815-001` PASS）、切片 2（pywebview 原生窗口，QA `TR-20260815-002` PASS）与切片 3b（Inno Setup 安装器，QA `TR-20260815-003` PASS）全部实现并经职责隔离 QA 封存。**第 10 步完成（约 100%）**；代码签名为可选（owner 未提供证书）。第 10 步后 5 项使用反馈已修复（WORK-2026-036..039：拖拽/AI 设置/打开资料目录/多课程），待职责隔离 QA 封存。第 9 步向量检索仍为唯一 owner 未决项（Embedding provider）。owner 风险接受（认证边界）在 WORK-2026-010 前保持拒绝。治理：建议把已验证链合并 `main` 并跑一次 CI。
