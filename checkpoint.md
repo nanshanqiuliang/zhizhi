@@ -2,6 +2,20 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Post-delivery fixes round 2 QA closure checkpoint — 2026-08-15 23:55 +08:00
+
+- Role-separated QA reviewed the four round-2 fixes (WORK-2026-040..043) and returned **PASS**
+  (0 P0/P1/P2; 3 P3). P3s (stale relation helper thinking=enabled; non-string resource_id; opaque
+  no-new-concepts 422) closed by `cf1bdad`.
+- QA executed all gates (pytest 461/461 + 5 skipped, ruff, mypy 40, validator, Web 51/51) plus 28
+  adversarial probes (filename safety, kernel caps, endpoint fail-closed, PDF auto-parse with real
+  extraction) and a frozen-exe probe; red baselines 040/041 re-run in isolated worktrees.
+- Evidence sealed under `evidence/TR-20260815-005/`.
+- **All 10 user-reported issues across two rounds are fixed and QA-sealed** (TR-20260815-004/005).
+  Desktop artifacts (exe/installer/zip) rebuilt with all fixes.
+- Exact next action: hand the updated installer/portable zip to the owner; optional: code signing,
+  merge to `main` + CI, vector retrieval (Step 9 owner-unresolved).
+
 ## Post-delivery fixes round 2 checkpoint — 2026-08-15 23:45 +08:00 (5 项新反馈)
 
 - 用户第二轮反馈 5 项已定位并修复：

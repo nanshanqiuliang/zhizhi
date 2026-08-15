@@ -2,6 +2,24 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步后第二轮修复 QA 封存（WORK-2026-040..043，TR-20260815-005）
+
+- 关联 ID：WORK-2026-040..043、TR-20260815-005、NFR-2026-001、REQ-2026-001。
+- 实际变化：职责隔离 QA 对四项修复返回 **PASS**（0 P0/P1/P2；3 个 P3）。QA 执行全部门
+  （pytest 461/461 + 5 skipped、ruff、mypy 40、validator、Web 51/51）、28 断言对抗探针与冻结
+  exe 探针，并在隔离 worktree 重跑 040/041 红灯真值。
+- 影响模块/接口/schema/migration/prompt：无新代码（封存证据）；`cf1bdad` 关闭 3 个 P3
+  （`deepseek_relation_provider` 陈旧 helper 改 thinking=disabled、`resource_id` 类型 422、
+  零新概念 422 `no_new_concepts`）。
+- 兼容性：无行为变化（除错误码更清晰）。
+- 验证与证据：`evidence/TR-20260815-005/`；桌面产物（exe/安装器/zip）重建含全部修复；期间
+  修复了本机 node_modules 内容丢失（tsc/vite 等包内容被清空）→ 清理重装 `pnpm install
+  --frozen-lockfile` 恢复。
+- 性能/安全/运维影响：无新增。
+- 回滚：无新增代码可回滚；回退 `cf1bdad` 即回 P3 修复前。
+- 遗留风险与下一步：两轮共 10 项反馈全部修复并 QA 封存（TR-20260815-004/005）；全库模式 live
+  验证需 owner key；课程重命名/删除、key 加密（第 11 步）；向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 10 步后第二轮使用反馈修复（WORK-2026-040..043）
 
 - 关联 ID：WORK-2026-040（拖拽背景稳定）、041（文件名保留）、042（AI 内容右移 + 边栏可调/
