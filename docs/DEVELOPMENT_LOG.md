@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 9 步收尾：AI 修改历史（WORK-2026-032）
+
+- 关联 ID：WORK-2026-032、WORK-2026-011/019/022/026/027/029、REQ-2026-006、NFR-2026-001。
+- 实际变化：`GraphChangeRecord` 增 `source: str = "manual"`（向后兼容：`_record_payload` 仅当 source≠manual 时写入 source，旧记录 digest 不变）；`apply_graph_patch(source=...)`、`accept_ai_draft(source="ai_draft")`；新增 `POST /interpret/accept`（source="ai_command"）；`GET /history` 返回 source；Web 版本历史面板对非 manual 来源显示「AI」标记；`acceptCommand` 改走 `/interpret/accept`。
+- 影响模块/接口/schema/migration/prompt：扩展 GraphChangeRecord 与历史序列化（向后兼容，无迁移）；`apply_graph_patch`/`accept_ai_draft`/`/interpret/accept`/`/history`/Web；无 canonical contract/ADR/prompt 变更。
+- 兼容性：旧记录（无 source）反序列化为 manual 且 digest 校验不变；undo/redo 不改变 source。
+- 验证与证据：红灯（source 缺失 + /interpret/accept 404）；实现 `954a7c8`；ai_edit_history 4/4；全仓 pytest 434/434 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 33）/Web 41/41 全绿。
+- 性能/安全/运维影响：O(1) 字段；source 仅标识；密钥仅 env；本轮无网络。
+- 回滚：回退 `954a7c8` 即回到无 AI 来源标记；旧数据不受影响；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `954a7c8`）；**第 9 步收尾**——向量检索为唯一 owner 未决项（Embedding provider）；下一主里程碑为第 10 步（桌面封装）。
+
 ## 2026-08-15 — 第 9 步切片 3b QA 封存（WORK-2026-031，TR-20260814-020）
 
 - 关联 ID：WORK-2026-031、WORK-2026-030、WORK-2026-009、TR-20260814-020、NFR-2026-001/006/007/008、REQ-2026-006。

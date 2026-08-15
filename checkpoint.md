@@ -1085,6 +1085,30 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 9 final implementation checkpoint — 2026-08-15 09:00 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-032_ai-edit-history.md`;
+  red baseline (GraphChangeRecord has no source / /interpret/accept 404);
+  implementation `954a7c8`.
+- Roadmap Step 9 final (AI edit history): `GraphChangeRecord` gains
+  `source: str = "manual"`; `_record_payload` includes `source` only when
+  non-manual (old records keep their exact digest); `apply_graph_patch(source=...)`
+  + `accept_ai_draft(source="ai_draft")`; new `POST /interpret/accept`
+  (source="ai_command"); `GET /history` returns source; Web version-history
+  panel shows an "AI" badge for non-manual sources.
+- Backward compatibility: records persisted before this change deserialize as
+  "manual" and their digest validates unchanged.
+- Verification: ai_edit_history 4/4; full pytest 434/434 + 5 skipped; validator
+  (incl. secret scan), Ruff, strict mypy (scripts 11 + packages/api 33), Web
+  41/41 all green.
+- **Natural-language Step 9 is now complete** (~100%) except vector retrieval,
+  which is the sole remaining owner-decision item (Embedding provider
+  unresolved). Personal MVP approximately 90%.
+- Exact next action: collect role-separated QA verdict on frozen `954a7c8`;
+  if PASS preserve evidence, then Step 10 (Windows desktop packaging) is the
+  next user-visible milestone (pending owner guidance on Tauri/Rust toolchain).
+
 ## Step 9 slice 3b QA closure checkpoint — 2026-08-15 08:30 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `d012660`
