@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 10 步切片 1：桌面封装（PyInstaller 冻结 + 自托管 UI + 生命周期，WORK-2026-033）
+
+- 关联 ID：WORK-2026-033、WORK-2026-013/014/021/022/026/027、NFR-2026-001、REQ-2026-001。
+- 实际变化：`create_app(web_dist=...)` 同源自托管 Web UI（API 路由优先，`StaticFiles(html=True)` 挂在最后）；新增 `apps/api/_runtime.py`（frozen 感知 `runtime_root()`/`ensure_source_paths()`），ai_draft/answer/command/__main__ 共用同一路径引导；新增 `apps/desktop/launcher.py`（数据目录默认 `%LOCALAPPDATA%\知枝\data`、`uvicorn` 以 asyncio+h11 运行、健康轮询后打开系统浏览器、锁文件记录端口 + 健康探测做单实例、优雅退出释放端口）；`apps/desktop/build.spec` + `scripts/build_desktop.py`（PyInstaller onedir 冻结 `zhizhi.exe`，打包 `config/llm` 与 `apps/web/dist` 到 `_MEIPASS`）；`pyproject.toml` 新增 `build` 依赖组（pyinstaller）；`scripts/desktop_e2e.py` 15 项冻结冒烟。
+- 影响模块/接口/schema/migration/prompt：`create_app` 增可选 `web_dist`（无 canonical contract/迁移）；三个 generator 组合根的路径引导改为共享 `_runtime`；新增 `apps/desktop/`；无存储格式/迁移变化。
+- 兼容性：数据目录默认值变化（`%LOCALAPPDATA%\知枝\data`），旧 `Path.home()/knowledge-tree-data` 可由 `--data-root` 指向；冻结产物与源码运行行为一致；`python -m apps.api` 与 `python -m apps.desktop` 均可源码运行。
+- 验证与证据：红灯 `8edf336`（web_dist TypeError + launcher ModuleNotFoundError）→ 核心实现 `39117a1` → 打包+单实例修复 `545b404`；e2e 15/15；全仓 pytest 436/436 + 5 skipped；validator/Ruff/strict mypy（scripts 13 + packages/api 37）/Web 41/41/pnpm build 全绿；冻结产物健康/UI/数据目录/图 PUT-GET/导入/补丁+撤销/AI 无 key 503/单实例/崩溃后陈旧锁接管/端口释放全通过。
+- 性能/安全/运维影响：仅绑定 127.0.0.1；自托管免 CORS；密钥仍 env-only；单实例 fail-closed 防双写/抢端口；无网络开放。
+- 回滚：回退 `39117a1`/`545b404` 即回到「python -m apps.api + 外部 Vite」；无数据格式变更。
+- 遗留风险与下一步：切片 2（pywebview 原生窗口）与切片 3（Inno Setup 安装器/升级/签名）待 owner 决策后编号；向量检索仍为第 9 步 owner 未决项。
+
 ## 2026-08-15 — 第 9 步收尾 QA 封存（WORK-2026-032，TR-20260814-021）
 
 - 关联 ID：WORK-2026-032、WORK-2026-011/019/022/026/027/029、TR-20260814-021、NFR-2026-001、REQ-2026-006。

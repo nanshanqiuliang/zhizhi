@@ -2,6 +2,28 @@
 
 Updated: 2026-08-15 (Asia/Shanghai)
 
+## Step 10 slice 1 implementation checkpoint — 2026-08-15 20:35 +08:00
+
+- Active branch: `feature/WORK-2026-033-desktop-packaging`.
+- Ready work item: `docs/work-items/WORK-2026-033_desktop-packaging.md` (Ready `3fc46c7`);
+  red baseline `8edf336` (web_dist TypeError + apps.desktop.launcher ModuleNotFoundError);
+  core implementation `39117a1`; packaging + e2e + single-instance fix `545b404`.
+- Scope delivered (slice 1): `create_app(web_dist=...)` serves the built Web UI same-origin
+  (API routes first); `apps/api/_runtime.py` provides frozen-aware `runtime_root()`/
+  `ensure_source_paths()` (ai_draft/answer/command/__main__ now share it); new
+  `apps/desktop/launcher.py` (data root default `%LOCALAPPDATA%\知枝\data`, uvicorn asyncio+h11,
+  health poll then open browser, lock file records port + health probe for single-instance,
+  graceful shutdown); PyInstaller onedir `dist/zhizhi/zhizhi.exe` bundling `config/llm` +
+  `apps/web/dist` under `_MEIPASS`; `scripts/build_desktop.py` + `scripts/desktop_e2e.py`.
+- Verification: frozen e2e 15/15 (health/UI/data-dir/graph PUT-GET/import/patch+undo/AI no-key
+  503/single-instance fail-closed/stale-lock takeover/port release); full pytest 436/436 + 5
+  skipped; validator, Ruff, strict mypy (scripts 13 + packages/api 37), Web 41/41, pnpm build
+  all green.
+- Natural-language Step 10 progress: slice 1 (freeze + self-host + lifecycle + data dir) done
+  (approximately 50%); personal MVP remains ~90% (installer/native shell pending owner decision).
+- Exact next action: owner decides slice 2 shell (pywebview native window) and slice 3
+  installer (Inno Setup / portable zip); then a Ready item + red tests for the chosen slice.
+
 ## Step 10 handoff — next-session entry point
 
 - Natural-language position: Steps 0–9 complete and QA-sealed (TR-20260814-001..021);
