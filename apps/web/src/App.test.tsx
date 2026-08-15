@@ -92,6 +92,20 @@ describe("knowledge tree workspace", () => {
     expect(node.getAttribute("style")).toBe(moved);
   });
 
+  it("keeps the canvas background stable while dragging a node", () => {
+    const { container } = render(<App />);
+    const surface = container.querySelector(".canvas-surface") as HTMLElement;
+    const before = surface.getAttribute("style");
+
+    const node = nodeButton("极限");
+    fireEvent.pointerDown(node, { pointerId: 1, clientX: 100, clientY: 100, buttons: 1 });
+    fireEvent.pointerMove(node, { pointerId: 1, clientX: 190, clientY: 150, buttons: 1 });
+    fireEvent.pointerUp(node, { pointerId: 1, clientX: 190, clientY: 150, buttons: 1 });
+
+    // Dragging a node moves the node, not the canvas camera/background.
+    expect(surface.getAttribute("style")).toBe(before);
+  });
+
   it("keeps toolbar and detail controls accessible", () => {
     render(<App />);
 
