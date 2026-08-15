@@ -163,3 +163,48 @@ def test_ai_draft_accept_endpoint_rejects_unconfirmed_patch(tmp_path: Path) -> N
             json={"patch": patch, "evidence": []},
         )
         assert response.status_code in (409, 422, 500)
+
+
+def test_ai_draft_accept_writes_no_anchors_on_gate_rejection(tmp_path: Path) -> None:
+    layout, resource_id = _md_workspace(tmp_path)
+    app = create_app(data_root=tmp_path, allowed_origins=[ALLOWED_ORIGIN])
+    with TestClient(app) as client:
+        patch = _confirmed_patch(resource_id)
+        patch["confirmed"] = False
+        response = client.post(
+            f"/api/workspaces/{WORKSPACE_ID}/ai-draft/accept",
+            json={
+                "patch": patch,
+                "evidence": [
+                    {"anchor_id": EVIDENCE, "resource_id": resource_id, "label": "AI 草案来源"}
+                ],
+            },
+        )
+        assert response.status_code in (409, 422)
+    # The gate rejected the patch; no anchor and no graph write may remain.
+    assert list_anchors(layout, resource_id) == []
+    assert load_course_graph(layout)["concepts"] == []
+
+
+def test_ai_draft_accept_endpoint_validation_codes(tmp_path: Path) -> None:
+    resource_id = _md_workspace(tmp_path)[1]
+    app = create_app(data_root=tmp_path, allowed_origins=[ALLOWED_ORIGIN])
+    with TestClient(app) as client:
+        base = f"/api/workspaces/{WORKSPACE_ID}/ai-draft/accept"
+        assert client.post(base, json={}).status_code == 422  # missing patch
+        assert (
+            client.post(
+                base, json={"patch": _confirmed_patch(resource_id), "evidence": "x"}
+            ).status_code
+            == 422
+        )
+        assert (
+            client.post(
+                base,
+                json={
+                    "patch": _confirmed_patch(resource_id),
+                    "evidence": [{"anchor_id": "", "resource_id": resource_id}],
+                },
+            ).status_code
+            == 422
+        )

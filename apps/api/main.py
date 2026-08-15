@@ -525,10 +525,13 @@ def create_app(
             )
         anchors: list[JsonObject] = []
         for item in evidence:
+            anchor_id = item.get("anchor_id") if isinstance(item, dict) else None
+            resource_id = item.get("resource_id") if isinstance(item, dict) else None
             if (
-                not isinstance(item, dict)
-                or not isinstance(item.get("anchor_id"), str)
-                or not isinstance(item.get("resource_id"), str)
+                not isinstance(anchor_id, str)
+                or not _is_uuidv7(anchor_id)
+                or not isinstance(resource_id, str)
+                or not _is_uuidv7(resource_id)
             ):
                 raise HTTPException(
                     status_code=422,
@@ -536,8 +539,8 @@ def create_app(
                 )
             anchors.append(
                 {
-                    "id": item["anchor_id"],
-                    "resource_id": item["resource_id"],
+                    "id": anchor_id,
+                    "resource_id": resource_id,
                     "page": 0,
                     "label": item.get("label", "AI 草案来源"),
                 }

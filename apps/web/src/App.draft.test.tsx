@@ -172,4 +172,22 @@ describe("AI draft preview", () => {
     const panel = screen.getByRole("region", { name: /AI 草案预览/ });
     expect(within(panel).getAllByRole("button", { name: /跳回原文/ }).length).toBeGreaterThan(0);
   });
+
+  it("omits jump-to-source when the draft has no evidence", async () => {
+    const api = mockApi({
+      listResources: vi.fn(async () => [RESOURCE]),
+      generateDraft: vi.fn(async () => ({ ...DRAFT, evidence: [] })),
+    });
+    render(<App api={api} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("notes.md")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /生成草案/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: /AI 草案预览/ })).toBeInTheDocument();
+    });
+    const panel = screen.getByRole("region", { name: /AI 草案预览/ });
+    expect(within(panel).queryByRole("button", { name: /跳回原文/ })).not.toBeInTheDocument();
+  });
 });
