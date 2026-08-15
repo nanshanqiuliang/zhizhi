@@ -1,0 +1,14 @@
+# Gate summary for TR-20260815-005 (WORK-2026-040..043)
+
+decision: PASS (0 P0 / 0 P1 / 0 P2 / 3 P3)
+
+- focused pytest (workspace_ai_draft + resource_filename + ai_draft_api): 12 passed
+- full pytest: 461 passed, 5 skipped (live-LLM gate)
+- ruff check .: clean
+- ruff format --check: 115 files formatted
+- mypy scripts: 16 files; mypy --strict: 40 files
+- scripts.validate_repository: PASS (incl. secret scan)
+- pnpm check: tsc + eslint 0 warnings + vitest 14 files / 51 tests
+- desktop e2e (frozen exe): 18/18
+- frozen exe probe (--no-window): workspaces 200; POST /ai-draft {} without key -> 503; settings no key echo
+- adversarial probes: 28 assertions + 3 edge scenarios passed (filenames, kernel caps, endpoint fail-closed, PDF auto-parse)
