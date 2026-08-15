@@ -11,9 +11,9 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from knowledge_tree_infrastructure.command import CommandError, build_command_patch
 
 from apps.api.main import create_app
-from knowledge_tree_infrastructure.command import CommandError, build_command_patch
 from tests.contract.test_graph_contracts import COURSE_ID, WORKSPACE_ID
 
 JsonObject = dict[str, Any]
@@ -108,7 +108,8 @@ def client(tmp_path: Path) -> TestClient:
 
 def test_interpret_endpoint_returns_proposed_patch(client: TestClient) -> None:
     response = client.post(
-        f"/api/workspaces/{WORKSPACE_ID}/interpret", json={"command": "锁定极限并注明连续以极限为前提"}
+        f"/api/workspaces/{WORKSPACE_ID}/interpret",
+        json={"command": "锁定极限并注明连续以极限为前提"},
     )
     assert response.status_code == 200
     body = response.json()

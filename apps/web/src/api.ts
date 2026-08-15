@@ -111,6 +111,11 @@ export type AnswerResult = {
   note?: string;
 };
 
+export type CommandResult = {
+  summary: string;
+  patch: Record<string, unknown>;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -128,6 +133,7 @@ export interface PersistApi {
     evidence: DraftEvidence[],
   ): Promise<{ status: string; change_id: string; revision_no: number }>;
   askQuestion(question: string): Promise<AnswerResult>;
+  interpretCommand(command: string): Promise<CommandResult>;
   applyPatch(patch: Record<string, unknown>): Promise<{
     status: string;
     change_id: string;
@@ -543,6 +549,18 @@ export function httpPersistApi(baseUrl: string): PersistApi {
         throw new Error(body.code ?? `answer failed: ${response.status}`);
       }
       return (await response.json()) as AnswerResult;
+    },
+    async interpretCommand(command: string): Promise<CommandResult> {
+      const response = await fetch(`${workspaceBase}/interpret`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(body.code ?? `interpret failed: ${response.status}`);
+      }
+      return (await response.json()) as CommandResult;
     },
   };
 }

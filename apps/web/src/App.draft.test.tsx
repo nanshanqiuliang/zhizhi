@@ -71,6 +71,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
       revision_no: 1,
     })),
     askQuestion: vi.fn(async () => ({ answer: "", sources: [] })),
+    interpretCommand: vi.fn(async () => ({ summary: "", patch: {} })),
     applyPatch: vi.fn(async () => ({
       status: "applied",
       change_id: "00000000-0000-7000-8100-000000000099",

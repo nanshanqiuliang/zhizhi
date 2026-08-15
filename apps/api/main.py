@@ -18,8 +18,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from knowledge_tree_domain import GraphPatchError, preview_graph_patch, validate_course_graph
-from knowledge_tree_domain.ai_draft import DraftError
+from knowledge_tree_domain.ai_draft import DraftError, uuid7
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError
+from knowledge_tree_infrastructure.command import CommandError, build_command_patch
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
@@ -60,6 +61,9 @@ DraftGenerator = Callable[[str, str, JsonObject], JsonObject]
 
 # Injected answer generator: (question, context, sources) -> {answer, sources}.
 AnswerGenerator = Callable[[str, str, list[JsonObject]], JsonObject]
+
+# Injected command generator: (command, concepts) -> {summary, operations}.
+CommandGenerator = Callable[[str, list[JsonObject]], JsonObject]
 
 
 def _is_uuidv7(value: str) -> bool:
@@ -141,12 +145,13 @@ def create_app(
     allowed_origins: list[str],
     draft_generator: DraftGenerator | None = None,
     answer_generator: AnswerGenerator | None = None,
+    command_generator: CommandGenerator | None = None,
 ) -> FastAPI:
     """Build the persistence API with an explicit data root and CORS allowlist.
 
-    `draft_generator`/`answer_generator` are the AI composition roots; when None
-    the `/ai-draft` and `/answer` endpoints fail closed with 503
-    `ai_not_available`.
+    `draft_generator`/`answer_generator`/`command_generator` are the AI
+    composition roots; when None the corresponding endpoints fail closed with
+    503 `ai_not_available`.
     """
 
     root = Path(data_root)
@@ -600,6 +605,66 @@ def create_app(
             raise HTTPException(
                 status_code=502, detail={"code": error.code, **error.details}
             ) from error
+
+    @app.post("/api/workspaces/{workspace_id}/interpret")
+    async def post_interpret(workspace_id: str, request: Request) -> JsonObject:
+        if command_generator is None:
+            raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        command = payload.get("command")
+        if not isinstance(command, str) or not command.strip():
+            raise HTTPException(
+                status_code=422, detail={"code": "command_invalid", "rule": "command_empty"}
+            )
+        if len(command) > 500:
+            raise HTTPException(
+                status_code=422, detail={"code": "command_invalid", "rule": "command_too_long"}
+            )
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = load_course_graph(layout)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        concepts = [
+            {"id": concept["id"], "label": concept["label"]}
+            for concept in graph.get("concepts", [])
+        ]
+        try:
+            interpreted = command_generator(command, concepts)
+        except LLMProviderError as error:
+            raise HTTPException(
+                status_code=502, detail={"code": error.code, **error.details}
+            ) from error
+        except ValueError as error:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "command_invalid", "rule": getattr(error, "args", ("parse",))[0]},
+            ) from error
+        try:
+            patch = build_command_patch(
+                graph, interpreted.get("operations", []), id_factory=uuid7, reason=command
+            )
+        except CommandError as error:
+            raise HTTPException(
+                status_code=422, detail={"code": error.code, **error.details}
+            ) from error
+        try:
+            preview = preview_graph_patch(graph, patch, trusted_actor=_LOCAL_ACTOR)
+        except GraphPatchError as error:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "command_invalid", "rule": error.code, **error.details},
+            ) from error
+        if preview.status != "requires_confirmation":
+            raise HTTPException(
+                status_code=500,
+                detail={"code": "command_invalid", "rule": "patch_not_proposed"},
+            )
+        return {"summary": interpreted.get("summary", ""), "patch": patch}
 
     return app
 

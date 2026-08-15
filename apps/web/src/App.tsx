@@ -4,6 +4,7 @@ import type {
   AiDraftResult,
   AnchorRef,
   AnswerResult,
+  CommandResult,
   ConceptLocks,
   ConceptNode,
   HistoryRecord,
@@ -243,6 +244,9 @@ export function App({ api }: { api?: PersistApi }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [answerStatus, setAnswerStatus] = useState<"idle" | "asking" | "done" | "failed">("idle");
+  const [command, setCommand] = useState("");
+  const [commandResult, setCommandResult] = useState<CommandResult | null>(null);
+  const [commandStatus, setCommandStatus] = useState<"idle" | "interpreting" | "ready" | "applying" | "failed">("idle");
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
@@ -542,6 +546,51 @@ export function App({ api }: { api?: PersistApi }) {
       return;
     }
     selectNode(node.id);
+  }
+
+  async function handleInterpret() {
+    if (!api || !command.trim() || commandStatus === "interpreting") return;
+    setCommandStatus("interpreting");
+    setCommandResult(null);
+    try {
+      const result = await api.interpretCommand(command.trim());
+      setCommandResult(result);
+      setCommandStatus("ready");
+      setStatus(`已解释指令：${result.summary}`);
+    } catch (error) {
+      const code = (error as Error).message;
+      setCommandStatus("failed");
+      setStatus(code === "ai_not_available" ? "AI 未连接，无法执行指令" : `指令解释失败（${code}）`);
+    }
+  }
+
+  async function acceptCommand() {
+    if (!api || !commandResult) return;
+    setCommandStatus("applying");
+    try {
+      await api.applyPatch({ ...commandResult.patch, confirmed: true });
+      const refreshed = await api.loadGraph();
+      if (refreshed) {
+        setPresent(refreshed);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(refreshed, selectedId);
+      }
+      setCommandResult(null);
+      setCommandStatus("idle");
+      setCommand("");
+      setStatus("已执行指令并写入知识树");
+      void refreshHistory();
+    } catch (error) {
+      setCommandStatus("failed");
+      setStatus(`指令写入失败（${(error as Error).message}）`);
+    }
+  }
+
+  function rejectCommand() {
+    setCommandResult(null);
+    setCommandStatus("idle");
+    setStatus("已丢弃指令预览");
   }
 
   function rejectDraft() {
@@ -995,6 +1044,30 @@ export function App({ api }: { api?: PersistApi }) {
             </div>
             {answerStatus === "asking" && <p className="import-note">AI 思考中…</p>}
           </div>
+          <div className="answer-section" aria-label="指令">
+            <p className="overline">自然语言指令</p>
+            <div className="answer-form">
+              <input
+                type="text"
+                aria-label="向知识树下达指令"
+                placeholder="如：连续以极限为前提"
+                maxLength={200}
+                value={command}
+                onChange={(event) => setCommand(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void handleInterpret();
+                }}
+              />
+              <button
+                type="button"
+                disabled={!command.trim() || commandStatus === "interpreting" || commandStatus === "applying"}
+                onClick={() => void handleInterpret()}
+              >
+                执行
+              </button>
+            </div>
+            {commandStatus === "interpreting" && <p className="import-note">解释指令中…</p>}
+          </div>
           <div className="resource-section" aria-label="资料导入">
             <p className="overline">本地资料</p>
             <label className="import-control" htmlFor="resource-upload">
@@ -1361,6 +1434,33 @@ export function App({ api }: { api?: PersistApi }) {
               </nav>
             )}
           </div>
+        </section>
+      )}
+
+      {commandResult && (
+        <section className="draft-panel" aria-label="指令预览">
+          <header className="viewer-header">
+            <div>
+              <p className="overline">指令预览</p>
+              <strong>拟执行的图修改</strong>
+            </div>
+            <button type="button" className="viewer-close" onClick={rejectCommand}>关闭</button>
+          </header>
+          <div className="answer-body" aria-live="polite">
+            <p className="answer-text">{commandResult.summary}</p>
+            <p className="draft-boundary">指令仅在预览后经确认门写入；锁定的内容不会被覆盖，写入后可撤销。</p>
+          </div>
+          <footer className="draft-actions">
+            <button
+              type="button"
+              className="primary-button"
+              disabled={commandStatus === "applying"}
+              onClick={() => void acceptCommand()}
+            >
+              {commandStatus === "applying" ? "写入中…" : "接受并写入"}
+            </button>
+            <button type="button" className="secondary-button" onClick={rejectCommand}>拒绝</button>
+          </footer>
         </section>
       )}
 

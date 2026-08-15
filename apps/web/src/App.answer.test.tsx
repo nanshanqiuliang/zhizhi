@@ -37,6 +37,7 @@ function mockApi(overrides: Partial<PersistApi> = {}): PersistApi {
       answer: "极限描述自变量趋近某一点时函数值的趋势。",
       sources: [{ id: "00000000-0000-7000-8000-000000000101", label: "极限", kind: "concept" }],
     })),
+    interpretCommand: vi.fn(async () => ({ summary: "", patch: {} })),
     applyPatch: vi.fn(async () => ({ status: "applied", change_id: "c", revision_no: 1 })),
     undoGraph: vi.fn(async () => ({ status: "undone", revision_no: 0 })),
     redoGraph: vi.fn(async () => ({ status: "redone", revision_no: 1 })),
