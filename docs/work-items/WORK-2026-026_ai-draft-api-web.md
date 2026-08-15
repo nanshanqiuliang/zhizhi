@@ -76,4 +76,4 @@ updated_at: 2026-08-15T03:00:00+08:00
 - Test Run：TC-AIDRAFT-API-001..003 + TC-AIDRAFT-WEB-001 + 全仓门。
 - Release：无托管发布；真实 DeepSeek 调用仅 `__main__` 显式 opt-in（`DEEPSEEK_API_KEY`）。
 - 观察结果：草案生成/预览/接受闭环打通；草案绝不直写库、不覆盖锁定项；AI 概念/边带 evidence 与 provenance。
-- 未完成项的新 ID：草案证据锚点真实落库 + 点来源跳回原文（后续切片）。
+- 未完成项的新 ID：草案证据锚点真实落库 + 点来源跳回原文（第 8 步切片 4，见 `WORK-2026-027_ai-draft-source-anchor.md`，实现 `38df493`）；"接受后点击树节点跳原文"与精确页/bbox 定位（后续增强）。

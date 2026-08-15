@@ -1085,6 +1085,32 @@ database/API/UI, real Provider/Web, user data, and owner acceptance disabled.
   reusing the approved DeepSeek adapter and GraphPatch commit gate, start from
   failing tests.
 
+## Step 8 slice 4 implementation checkpoint — 2026-08-15 04:10 +08:00
+
+- Active branch: `feature/WORK-2026-009-ai-draft-pipeline`.
+- Ready work item: `docs/work-items/WORK-2026-027_ai-draft-source-anchor.md`
+  (Ready `b7094bc`); red baseline `2fcad41`; implementation `38df493`.
+- Source-anchor persistence + jump-to-source implemented: `deterministic_uuidv7`
+  (stable per-resource UUIDv7), `accept_ai_draft` (confirmed patch + anchor rows
+  in ONE transaction), `POST /api/workspaces/{id}/ai-draft/accept` (`{patch,
+  evidence}`), generator returns `evidence` with a single resource-level anchor,
+  Web `acceptDraft()` + draft-panel "跳回原文".
+- Safety properties: generation stays read-only; only user acceptance writes
+  anchors; anchors use page=0 sentinel + deterministic id (idempotent across
+  repeated drafts); anchor failure rolls back the whole acceptance; accept still
+  goes through the commit gate (revision/lock/confirmation/origin enforcement).
+- Verification: accept tests 5/5; full pytest 400/400 + 5 skipped; validator
+  (incl. secret scan), Ruff, strict mypy (scripts 11 + packages/api 30), Web
+  36/36, pnpm build all green.
+- Live e2e (owner key, env-only): import calculus.md -> generate -> accept
+  applied; accepted concepts' evidence_ids point at a real persisted anchor
+  (source=ai_draft, page=0).
+- Natural-language Step 8 progress: approximately 95% (slices 1+2+3+4 done);
+  personal MVP approximately 86%. Remaining: role-separated QA, then
+  post-accept node->source jump + precise page/bbox anchoring (follow-up).
+- Exact next action: collect role-separated QA verdict on frozen `38df493`;
+  if PASS preserve evidence and update docs.
+
 ## Step 8 slice 3 QA closure checkpoint — 2026-08-15 03:45 +08:00
 
 - Role-separated QA (`ai_qa_auditor`) attempt 001 reviewed frozen `dfbcc30`

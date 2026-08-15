@@ -4,13 +4,23 @@
 
 ## 当前运行状态
 
-- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核 + 离线编排（切片 1）、真实 DeepSeek 概念抽取/关系候选（切片 2）、草案 API 端点 + Web 生成/预览/接受/拒绝（切片 3）均已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案只经提交门以 `requires_confirmation` 落库，接受后以 user/origin 写入。
+- 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线纯领域内核 + 离线编排（切片 1）、真实 DeepSeek 概念抽取/关系候选（切片 2）、草案 API 端点 + Web 生成/预览/接受/拒绝（切片 3）、来源锚点落库 + 点来源跳回原文（切片 4）均已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案只经提交门落库；接受时来源引用单事务物化为真实锚点。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
 - CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
 - 值守/支持渠道：未建立。
+
+## 2026-08-15 — 第 8 步切片 4：AI 草案来源锚点落库（WORK-2026-027）运维记录
+
+- 关联 ID：WORK-2026-027、WORK-2026-026、WORK-2026-009、WORK-2026-007/008。
+- 环境/版本/build/config：commit `38df493`（feature/WORK-2026-009-ai-draft-pipeline）；local-dev Windows x64。
+- 变更或症状：新增 `deterministic_uuidv7`、`accept_ai_draft`（单事务：确认 patch + 锚点行 + 图/record/applied/索引）、`POST /ai-draft/accept` 端点、generator 确定性资源级锚点 + `evidence`、Web 草案面板"跳回原文"；接受仍只经提交门；无部署/常驻服务变化。
+- 影响：无部署或常驻服务变化；仅扩展 Python 模块/端点与 Web UI；`config/llm` 与 Provider 门控不变。
+- 证据：pytest 400/400 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）全绿；Web 36/36、pnpm build 通过；live e2e（owner key env-only）生成→接受 applied，证据指向真实锚点。
+- 缓解/回滚：回退 `38df493` 即回合成来源引用；生成只读；密钥仅 env。
+- 遗留风险/Owner/期限：切片 4 职责隔离 QA 待执行；"接受后点击树节点跳原文"与精确页/bbox 定位为后续增强；`relation_validate` 思考模式延迟较高为原型边界。
 
 ## 2026-08-15 — 第 8 步切片 3：AI 草案 API/Web 接入（WORK-2026-026）运维记录
 

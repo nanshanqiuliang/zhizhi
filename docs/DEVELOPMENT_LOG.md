@@ -2,6 +2,17 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-15 — 第 8 步切片 4：AI 草案来源锚点落库 + 点来源跳回原文（WORK-2026-027）
+
+- 关联 ID：WORK-2026-027、WORK-2026-026、WORK-2026-009、WORK-2026-005/017/019/022、REQ-2026-006、NFR-2026-001、TR-20260814-015。
+- 实际变化：新增 `knowledge_tree_domain.ai_draft.deterministic_uuidv7(seed)`（sha256 派生的稳定 UUIDv7）；`workspace.accept_ai_draft(layout, patch, *, trusted_actor, anchors)`——经 `GraphHistory.apply_patch` 应用确认 patch，并把 `anchors`（`{id, resource_id, page, label}`，page=0 哨兵表示资源级来源）与图/record/applied-count/FTS 索引**单事务**提交（`_atomic_commit_graph` 增 `anchors` 参数，锚点失败整体回滚）；`POST /api/workspaces/{id}/ai-draft/accept`（body `{patch, evidence}`）校验证据结构后调 `accept_ai_draft`；generator 改用确定性资源级锚点 id（`anchor_id_factory=lambda: deterministic_uuidv7(resource_id)`）并返回 `evidence`；Web `acceptDraft(patch, evidence)` + 草案面板"跳回原文"（按 evidence `resource_id` 打开查看器）。
+- 影响模块/接口/schema/migration/prompt：扩展 domain（`deterministic_uuidv7`）、workspace（`accept_ai_draft` + `_atomic_commit_graph` anchors）、apps/api（accept 端点 + generator evidence）、apps/web（api.ts/App）；无 canonical contract/ADR/migration/prompt 变更（复用 anchor 表 schema v3）。
+- 兼容性：草案生成仍只读；仅用户显式接受写库；接受仍走提交门（锁定/revision/确认门）；确定性锚点 id + `ON CONFLICT(id) DO UPDATE` 幂等，重复起草/接受不产生悬空/重复锚点。
+- 验证与证据：红灯 `2fcad41`（ImportError + Web 按钮缺失）；实现 `38df493`；accept 5/5；全仓 pytest 400/400 + 5 skipped；validator（含 secret scan）/Ruff/mypy（scripts 11 + strict packages/api 30）/Web 36/36/pnpm build 全绿；live e2e（owner key env-only）生成→接受 applied，接受后概念 `evidence_ids` 指向真实 `anchor` 行（`source=ai_draft`、page=0）。
+- 性能/安全/运维影响：单资源单锚点 O(1) 插入；锚点 payload 仅标识 + `source="ai_draft"`，无正文；错误 details 仅标识。
+- 回滚：回退 `38df493` 即回合成来源引用（切片 3 状态）；红灯与证据保留。
+- 遗留风险与下一步：职责隔离 QA 待执行（已提交冻结 SHA `38df493`）；"接受后点击树节点 → 跳原文"（evidence→resource 反查）与精确页/bbox 级定位为后续增强；第 8 步完成后进入第 9 步（对话/检索）。
+
 ## 2026-08-15 — 第 8 步切片 3 QA 封存（WORK-2026-026，TR-20260814-015）
 
 - 关联 ID：WORK-2026-026、WORK-2026-009、TR-20260814-015、NFR-2026-001/006/007/008、REQ-2026-006。
