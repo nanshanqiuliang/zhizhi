@@ -23,6 +23,8 @@ source_roots = [
 # asyncio + h11, but keep the auto fallbacks importable in the frozen bundle.
 # pywebview selects its Windows backend dynamically, so list it and the
 # pythonnet loader explicitly (hook-webview/hook-clr collect their data/binaries).
+# mcp (WORK-2026-048) selects transports/backends dynamically (importlib), so
+# list the server/client session + transport modules explicitly.
 hiddenimports = [
     "uvicorn.logging",
     "uvicorn.loops.auto",
@@ -35,6 +37,25 @@ hiddenimports = [
     "clr_loader",
     "webview.platforms.winforms",
     "webview.platforms.edgechromium",
+    "mcp",
+    "mcp.server",
+    "mcp.server.fastmcp",
+    "mcp.server.fastmcp.server",
+    "mcp.server.lowlevel",
+    "mcp.server.lowlevel.server",
+    "mcp.server.lowlevel.transport",
+    "mcp.server.session",
+    "mcp.server.stdio",
+    "mcp.server.streamable_http",
+    "mcp.server.sse",
+    "mcp.shared",
+    "mcp.shared.session",
+    "mcp.shared.message",
+    "mcp.types",
+    "mcp.client",
+    "mcp.client.stdio",
+    "mcp.client.session",
+    "mcp.client.streamable_http",
 ]
 
 datas = [

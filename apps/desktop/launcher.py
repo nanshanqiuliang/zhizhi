@@ -111,6 +111,11 @@ def main() -> None:
     parser.add_argument(
         "--browser", action="store_true", help="open system browser instead of window"
     )
+    parser.add_argument(
+        "--mcp-stdio",
+        action="store_true",
+        help="run the built-in MCP server over stdio (external AI clients); no window",
+    )
     args = parser.parse_args()
 
     if args.no_window:
@@ -126,6 +131,14 @@ def main() -> None:
     except OSError as error:
         print(f"无法创建数据目录 {data_root}：{error}", file=sys.stderr)
         raise SystemExit(1) from error
+
+    if args.mcp_stdio:
+        # MCP stdio: stdout is the JSON-RPC channel, so never redirect it to a
+        # log file; no single-instance lock (read/propose only, safe to run
+        # alongside the app).
+        _run_mcp_stdio(data_root)
+        return
+
     _setup_frozen_logging(data_root)
 
     # Single-instance guard: an exclusive lock file in the data root that
@@ -164,6 +177,19 @@ def main() -> None:
     finally:
         with suppress(OSError):
             lock_path.unlink()
+
+
+def _run_mcp_stdio(data_root: Path) -> None:
+    """Run the built-in MCP server (WORK-2026-048) over stdio.
+
+    stdout must stay clean for the JSON-RPC protocol; FastMCP logs via the
+    logging module (stderr). Blocking until the client closes the pipe.
+    """
+
+    from apps.api.mcp_server import build_mcp_server
+
+    server = build_mcp_server(data_root)
+    server.run()
 
 
 def _run(*, data_root: Path, port: int, web_dist: Path | None, mode: str) -> None:
