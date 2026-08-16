@@ -2,6 +2,28 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 画布无限延伸（WORK-2026-045）
+
+- 关联 ID：WORK-2026-045、WORK-2026-043/046、REQ-2026-001；QA `TR-20260815-008`。
+- 实际变化：① `moveDrag` 去掉 835/555 上界钳制（保留 ≥8 下限防节点不可达）；
+  ② 新增 `apps/web/src/canvas.ts` 纯函数 `canvasSurfaceSize(nodes)`（内容包围盒 +
+  节点 150×68 + 边距 48，下限 1000×650），应用于 `.canvas-surface` 内联宽高与
+  `edge-layer` SVG viewBox/宽高，画布随内容无限生长；③ `.canvas-legend` 移出变换
+  画布、锚定视口角落（巨大画布下图例不漂移）；④ `USER_MANUAL` 画布说明补充。
+- 影响模块/接口/schema/migration/prompt：仅 `apps/web`（`App.tsx`、新增 `canvas.ts`、
+  新增测试；`styles.css` 无需改动）。无契约/迁移。
+- 兼容性：1000×650 下限保留，示例图/既有拖拽/缩放/平移行为不变（既有测试全绿）。
+- 验证与证据：红灯真值（隔离 worktree @`16e72c4`：3 failed——拖拽被钳 835/835、
+  surface 固定 1000×650、helper 缺失；HEAD 3 passed）→ 实现 `16e72c4`/`6277db7`/
+  `ce80bd2`；Web 56/56（新增 3 用例）；pytest 469/469 + 5 skipped；ruff/mypy/validator/
+  pnpm 全绿；e2e 18/18；QA `TR-20260815-008` PASS（0 P0/P1；1 P2 既有缺陷——空工作区
+  崩溃，登记 BUG-2026-001；5 P3 含冻结 JS 哈希差异=桌面构建 `VITE_LOCAL_API=""` 既定
+  配置，已实证字节一致）。
+- 性能/安全/运维影响：超大画布（数万像素）grid/SVG 渲染线性开销，可接受；无安全变化。
+- 回滚：回退 `6277db7` 即回固定画布。
+- 遗留风险与下一步：空工作区空态兜底（BUG-2026-001，另立工作项）；负坐标裁剪与视口
+  自动居中（可选）。
+
 ## 2026-08-16 — GraphPatch 单补丁操作数上限放宽（WORK-2026-046，maxitems 修复）
 
 - 关联 ID：WORK-2026-046、WORK-2026-043/044、REQ-2026-001、NFR-2026-001；QA `TR-20260815-007`。

@@ -1,0 +1,86 @@
+# Gate commands executed for TR-20260815-008 (WORK-2026-045 unbounded canvas)
+
+```text
+# 1. Red-light truth in isolated worktree (detached @ 16e72c4, test-only commit)
+git worktree add --detach %TEMP%\qa-wt-16e72c4 16e72c4
+pnpm install --frozen-lockfile          # worktree deps (shared pnpm store)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.canvas.test.tsx
+#   -> 3 failed (red, as designed):
+#      1) drags a node beyond the old 835/555 clamp bounds  -> expected 835 to be greater than 835
+#      2) grows the canvas surface and edge layer with content -> expected NaN to be greater than 1000 (no inline size)
+#      3) keeps a 1000x650 floor ... -> TypeError: canvasSurfaceSize is not a function
+git worktree remove %TEMP%\qa-wt-16e72c4 --force; git worktree prune
+
+# 2. Same test at HEAD (ce80bd2 = implementation 6277db7 + module split)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.canvas.test.tsx
+#   -> 3 passed (green)
+
+# 3. Full gates (main worktree @ ce80bd2; reviewed commit 6277db7)
+uv run python -m scripts.validate_repository
+#   -> PASS: repository skeleton, secret scan, graph/LLM contracts, calculus review packet, v2 mock/replay harness
+uv run ruff format --check packages scripts tests apps
+#   -> 116 files already formatted
+uv run ruff check .
+#   -> All checks passed!
+uv run mypy scripts
+#   -> Success: no issues found in 16 source files
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+#   -> Success: no issues found in 40 source files
+uv run python -m pytest
+#   -> 469 passed, 5 skipped in 25.67s (5 skips = live DeepSeek gate, no key)
+pnpm install --frozen-lockfile
+#   -> Already up to date
+pnpm peers check
+#   -> No peer dependency issues found
+pnpm check
+#   -> tsc -b + eslint --max-warnings 0 + vitest: Test Files 15 passed (15); Tests 56 passed (56)
+pnpm build
+#   -> built in 203ms; assets index-DAqfXjrT.css / index-fVCMW_zK.js (chunk-size warning pre-existing)
+pnpm --filter @knowledge-tree/contracts-ts check
+#   -> exit 0 (generate.mjs --check + tsc --noEmit --pretty false, no drift)
+
+# 4. Adversarial probes (vitest; probe file apps/web/src/App.qa-probes.test.tsx executed, copy kept in evidence)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.qa-probes.test.tsx
+#   -> 14/15 passed; P-008 empty-workspace FAIL (pre-existing crash, see finding P2)
+# Probe list: P-001 far drag exact target / P-002 negative floor >=8 / P-003 zoom=2 delta / P-004 zoom=0.5 delta /
+# P-005 canvasSurfaceSize pure / P-006 surface==viewBox==size() / P-007 legend anchored / P-008 empty workspace (FAIL) /
+# P-009 locked node drag refused / P-010 auto-layout box / P-010b locked far node preserved / P-011 far-coord api graph /
+# P-012 edge paths beyond old bounds / P-013 zoom clamp [0.5,2.5] / P-014 node-drag keeps camera transform stable
+
+# Pre-existing proof for P-008 (isolated worktree @ 16e72c4)
+git worktree add --detach %TEMP%\qa-wt-16e72c4b 16e72c4
+# copy src/pre-008.test.tsx (empty-workspace probe) into worktree apps/web/src
+pnpm --filter @knowledge-tree/web exec vitest run src/pre-008.test.tsx
+#   -> 1 failed / 1 error: TypeError: Cannot read properties of undefined (reading 'tone')
+#      at App.tsx:1507 (16e72c4 file layout) == same crash at HEAD App.tsx:1523 -> pre-existing
+git worktree remove %TEMP%\qa-wt-16e72c4b --force; git worktree prune
+
+# Frozen-bundle provenance (why the frozen JS hash differs from a default pnpm build)
+git worktree add --detach %TEMP%\qa-wt-6277db7 6277db7
+pnpm install --frozen-lockfile && pnpm --filter @knowledge-tree/web build
+#   -> index-D-dc3rzX.js (default config at 6277db7)  -- NOT the frozen hash
+git worktree add --detach %TEMP%\qa-wt-head-desktop ce80bd2
+pnpm install --frozen-lockfile
+uv run python -c "import os,subprocess; env={**os.environ,'VITE_LOCAL_API':''}; subprocess.run('pnpm --filter @knowledge-tree/web build', cwd=r'...\qa-wt-head-desktop', env=env, check=True, shell=True)"
+#   -> index-BEtXJdQj.js == frozen exe embedded asset (byte-identical)  -- provenance proven
+git worktree remove --force; git worktree prune
+
+# 5. Frozen exe probes (6/6 PASS)
+uv run python evidence/TR-20260815-008/probe_frozen_exe.py
+#   -> EXE-001 health 200; EXE-002 index.html #root; EXE-003 asset refs resolved;
+#      EXE-004 served SHA256 == embedded SHA256 (js fc655ccd04f6 / css 0c2c9ff15181);
+#      EXE-005 frozen JS has no old 835/555 clamp, has 8px floor + canvas-surface markers;
+#      EXE-006 port released after terminate
+
+# 6. Desktop e2e against the frozen bundle (18/18 PASS)
+uv run --group build python scripts/desktop_e2e.py
+#   -> 18/18 checks passed (health, ui-index, data-dir, graph put/get, patch, undo,
+#      resource import, ai-draft fail-closed 503, single-instance, port release,
+#      stale-lock takeover, window-mode health/alive/port release)
+
+# 7. Evidence hygiene
+uv run ruff format evidence/TR-20260815-008/probe_frozen_exe.py
+uv run ruff check evidence/TR-20260815-008/
+uv run ruff check .        # final re-run with evidence files in tree -> clean
+uv run python -m scripts.validate_repository   # final re-run -> PASS
+```

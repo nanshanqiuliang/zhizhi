@@ -12,6 +12,23 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-045：画布无限延伸 + 桌面产物重发
+
+- 关联 ID：WORK-2026-045、WORK-2026-043/046、TR-20260815-008。
+- 环境/版本/build/config：commit `6277db7`/`ce80bd2`（feature/WORK-2026-045-canvas-unbounded）；
+  local-dev Windows x64。桌面产物重建：`dist/zhizhi/zhizhi.exe`（8,632,729 字节）、
+  `dist/zhizhi-0.1.0-setup.exe`（19.3MB）、`dist/zhizhi-0.1.0-portable.zip`（22.5MB）。
+- 变更或症状：画布此前固定 1000×650 且节点拖拽钳制在 x≤835/y≤555，全库思维导图
+  （单补丁上限 5000 操作）的超大布局被裁剪、节点拖不远；现画布随内容无限生长、
+  去拖拽上界钳制（保留 ≥8 下限）、边层 viewBox 动态、图例锚定视口。
+- 影响：用户安装新产物后大思维导图不再被裁剪；数据目录（`%LOCALAPPDATA%\知枝\data`）
+  不受影响、无需迁移。
+- 证据：QA `TR-20260815-008` PASS（correlated_review，0 P0/P1；1 P2 既有缺陷
+  BUG-2026-001）；Web 56/56、pytest 469/469 + 5 skipped、e2e 18/18。
+- 缓解/回滚：回退 `6277db7` 即回固定画布。
+- 遗留风险/Owner/期限：空工作区空态兜底（BUG-2026-001）另立工作项；live DeepSeek
+  全库生成复测待 owner key。
+
 ## 2026-08-16 — WORK-2026-046：GraphPatch 操作数上限放宽 + 桌面产物重发（maxitems 修复）
 
 - 关联 ID：WORK-2026-046、WORK-2026-043/044、TR-20260815-007。

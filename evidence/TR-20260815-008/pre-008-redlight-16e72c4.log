@@ -1,0 +1,20 @@
+﻿# Empty-workspace probe @ 16e72c4 (red baseline, pre-implementation)
+# Run: pnpm --filter @knowledge-tree/web exec vitest run src/pre-008.test.tsx  (in isolated worktree qa-wt-16e72c4b)
+# Result: 1 failed / 1 error -> the SAME crash exists before WORK-2026-045 (pre-existing).
+
+Test Files  1 failed (1)
+     Tests  1 failed (1)
+    Errors  1 error
+
+Uncaught Exception:
+TypeError: Cannot read properties of undefined (reading 'tone')
+ > App src/App.tsx:1507:60   (this line number is from the 16e72c4 file layout)
+    1505|             <div>
+    1506|               <p className="overline">节点详情</p>
+    1507|               <span className={'detail-chip ' + selectedNode.tone}>{selectedNode.tone === "root" ? "主题" : "概念"}</span>
+    1508|             </div>
+    1509|             <span className="selected-dot" title="当前选中" />
+
+Conclusion: loadGraph returning a schema-valid workspace with zero concepts crashes the App
+in the detail panel; identical at HEAD (App.tsx:1523). Pre-existing defect, NOT introduced by
+WORK-2026-045; recorded as finding P2 (see qa-attempt report).

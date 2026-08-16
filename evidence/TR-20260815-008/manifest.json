@@ -1,0 +1,52 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260815-008",
+  "created_at": "2026-08-16T13:20:00+08:00",
+  "reviewed_commit": "6277db7",
+  "head_commit": "ce80bd2",
+  "red_baseline_commit": "16e72c4",
+  "qa_attempt001_commit": "ce80bd2",
+  "review": {
+    "correlation_classification": "correlated_review",
+    "human_signature": false,
+    "owner_acceptance": false,
+    "passing_attempt": "attempt001",
+    "attempt001": {
+      "path": "TR-20260815-008_qa-attempt-001.md",
+      "reviewed_commit": "6277db7",
+      "decision": "pass",
+      "findings": "0 P0/P1; 1 P2 pre-existing (empty-workspace crash, not a regression of WORK-2026-045); 5 P3 observations"
+    }
+  },
+  "files": [
+    "TR-20260815-008_qa-attempt-001.md",
+    "manifest.json",
+    "checksums.sha256",
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt",
+    "probes/App.qa-probes.test.tsx",
+    "probe_frozen_exe.py",
+    "probes-output.log",
+    "exe-probe-output.log",
+    "desktop-e2e.log",
+    "red-run-wt.log",
+    "green-run.log",
+    "pre-008-redlight-16e72c4.log",
+    "gate1.log",
+    "gate2.log",
+    "gate3.log",
+    "gate4.log",
+    "gate5.log",
+    "gate6.log",
+    "gate7a.log",
+    "gate7b.log",
+    "gate7c.log",
+    "gate7d.log",
+    "gate8.log"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "notes": "WORK-2026-045 unbounded canvas. Red-light truth in isolated worktree @16e72c4: App.canvas.test.tsx 3 failed (835/555 clamp, fixed 1000x650, canvasSurfaceSize missing); @HEAD 3 passed. Gates: pytest 469 passed + 5 skipped (live DeepSeek no key), ruff/mypy/validator clean, Web 56/56, build OK, contracts-ts drift clean. Adversarial probes 14/15 (P-008 empty-workspace crash -> P2 pre-existing, reproduced identically @16e72c4, not a regression). Frozen exe (rebuilt 2026-08-16 12:56:54): 6/6 asset/service probes + desktop e2e 18/18; frozen JS hash reproduced byte-identical at HEAD with desktop VITE_LOCAL_API='' build config (P3-1). Correlation: correlated_review, no human signature, owner acceptance pending."
+}

@@ -71,6 +71,7 @@
 | WORK-2026-042 | AI 内容右移 + 边栏可调/可隐藏 | 已完成（QA `TR-20260815-005` PASS） | web | WORK-2026-037 已验证 | `right-column` 布局（草案/回答/指令在右侧栏）；边栏 170–480 拖拽调宽、「«」隐藏/恢复 | `f7c845a` 实现 |
 | WORK-2026-043 | 全库思维导图 agent | 已完成（QA `TR-20260815-005` PASS） | api + ai-draft + web | WORK-2026-009/031 已验证 | `build_workspace_ai_draft`（跨资源合并/去重/关系、40 块上限）+ `/ai-draft` 全库模式（resource_id 可选）+ PDF 自动解析 + Web「从全部资料生成思维导图」+ harness 文档 | `cba4238` 实现；`1255dd8`/`50ef3aa` 记录；QA `TR-20260815-005` |
 | WORK-2026-044 | 草案生成可诊断化（rule 显示 + 40 块上限 + fail-soft） | 已完成（QA `TR-20260815-006` PASS） | api + ai-draft + web | WORK-2026-043 已验证 | `readError`/`formatCode` 显示精确 `code/rule`（14 处抛错位）；`max_chunks=40` 截断长资料；`fail_soft_extractor`/`fail_soft_relation_provider` 仅吞 `DraftExtractionError` | `c549a17` 红灯；`0abe9e9` 实现；`33ba11a` P2；QA `TR-20260815-006` |
+| WORK-2026-045 | 画布无限延伸（去钳制 + 随内容生长） | 已完成（QA `TR-20260815-008` PASS） | web | WORK-2026-043/046 已验证 | `canvas.ts` `canvasSurfaceSize`（包围盒+边距，下限 1000×650）+ `moveDrag` 去 835/555 上界钳制 + `edge-layer` viewBox 动态 + 图例锚定视口 | `16e72c4` 红灯；`6277db7` 实现；`ce80bd2` 模块拆分；Web 56/56、pytest 469/469+5、e2e 18/18；QA `TR-20260815-008` PASS |
 | WORK-2026-046 | 放宽 GraphPatch 单补丁操作数上限（maxitems 修复） | 已完成（QA `TR-20260815-007` PASS） | api + ai-draft + QA | WORK-2026-043/044 已验证 | `GraphPatch.operations.maxItems` 100→5000 + 生成产物 + 契约/API 回归测试（150 操作接受、上限+1 拒绝、240 操作全库草案）+ harness 文档补充 | `87f9c1a` 红灯；`f8d673c` 实现；pytest 469/469+5、Web 53/53、e2e 18/18；QA `TR-20260815-007` PASS |
 
 ## 当前受阻项

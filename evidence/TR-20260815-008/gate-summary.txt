@@ -1,0 +1,53 @@
+# Gate summary for TR-20260815-008 (WORK-2026-045 canvas-unbounded)
+
+reviewed_commit: 6277db7 (head ce80bd2 includes module-split refactor)
+decision: PASS (0 P0 / 0 P1 / 1 P2 pre-existing / 5 P3 observations)
+
+Red-light truth (isolated worktree @ 16e72c4, test-only commit):
+- App.canvas.test.tsx: 3 FAILED (red as designed)
+    * drag beyond old 835/555 clamp -> expected 835 > 835 (clamped)
+    * surface/edge-layer growth -> NaN width (fixed 1000x650, no inline size)
+    * canvasSurfaceSize helper -> TypeError: canvasSurfaceSize is not a function
+- Same test at HEAD: 3 PASSED (green)
+
+Gates:
+- scripts.validate_repository: PASS
+- ruff format --check packages scripts tests apps: 116 files already formatted
+- ruff check .: All checks passed (re-run clean with evidence files)
+- mypy scripts: 16 files clean; mypy --strict (packages+apps/api+apps/desktop): 40 files clean
+- pytest: 469 passed, 5 skipped in 25.67s (live DeepSeek gate, no key)
+- pnpm install --frozen-lockfile / peers check: OK
+- pnpm check: tsc + eslint --max-warnings 0 + vitest 56/56 (15 files)
+- pnpm build: OK (chunk-size warning pre-existing)
+- contracts-ts drift: generate.mjs --check + tsc exit 0 (no drift)
+
+Adversarial probes (vitest): 14/15 PASS
+- P-001 far drag exact (5015,4105) no upper clamp
+- P-002 negative drag floored at 8
+- P-003/P-004 zoom 2.0 / 0.5 delta division exact (closeTo)
+- P-005 canvasSurfaceSize pure: floor / far / negatives / max-only
+- P-006 surface inline == edge viewBox == canvasSurfaceSize(nodes)
+- P-007 legend direct child of viewport, outside transformed surface
+- P-008 empty workspace renders without error -> FAIL (pre-existing crash, P2)
+- P-009 locked node drag refused
+- P-010 / P-010b auto-layout box + locked far node preserved
+- P-011 api far-coordinate graph grows surface, node at style left 5000px
+- P-012 edge paths beyond old bounds (5090/4105)
+- P-013 zoom clamp [0.5, 2.5]
+- P-014 node drag keeps camera transform stable; pan still moves camera
+
+Frozen exe probes: 6/6 PASS (health 200; index #root; asset refs resolved;
+served==embedded SHA256; no old clamp markers + floor present; port released)
+
+Desktop e2e (frozen exe): 18/18 PASS
+
+Findings: 0 P0/P1; 1 P2 (pre-existing empty-workspace crash: loadGraph with zero
+concepts -> TypeError selectedNode.tone at App.tsx:1523; schema-valid per contract
+(concepts has no minItems) but not produced by current backend flows; identical
+crash confirmed at 16e72c4 -> NOT a regression of WORK-2026-045; follow-up work
+item recommended); 5 P3 observations (frozen JS hash differs from default pnpm
+build because desktop build sets VITE_LOCAL_API="" - reproduced exactly at HEAD,
+documented WORK-2026-033 P2-2; wheel zoom float drift 2.000000000000001; leftover
+user-installed zhizhi process PID 17784 started 12:25:39 pre-session, untouched;
+pnpm build chunk-size warning pre-existing; pdf.js 'legacy' build vitest warning
+pre-existing)

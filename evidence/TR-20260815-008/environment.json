@@ -1,0 +1,33 @@
+﻿{
+    "leftover_process":  {
+                             "pid":  17784,
+                             "started":  "2026-08-16T12:25:39",
+                             "note":  "user-installed app instance started before this QA session; unrelated to probe runs (all probe-spawned exe processes were terminated and ports released)",
+                             "image":  "C:\\Users\\16839\\AppData\\Local\\Programs\\知枝\\zhizhi.exe"
+                         },
+    "branch":  "feature/WORK-2026-045-canvas-unbounded",
+    "uv":  "uv 0.12.3 (507230998 2026-08-07 x86_64-pc-windows-msvc)",
+    "pnpm":  "11.19.0",
+    "frozen_web_assets":  {
+                              "index_html":  "dist/zhizhi/_internal/web_dist/index.html",
+                              "note":  "desktop build uses VITE_LOCAL_API=\u0027\u0027 (same-origin relative base, WORK-2026-033 P2-2); fresh HEAD build with same env reproduces identical hashes",
+                              "css":  "assets/index-DAqfXjrT.css",
+                              "js":  "assets/index-BEtXJdQj.js"
+                          },
+    "os":  "Windows",
+    "node":  "v24.14.1",
+    "reviewed_commit":  "6277db7",
+    "live_llm":  {
+                     "DEEPSEEK_API_KEY":  "not set",
+                     "note":  "5 pytest skips are the documented live DeepSeek gate; not treated as a failure",
+                     "RUN_LIVE_LLM_TESTS":  "not set"
+                 },
+    "frozen_exe":  {
+                       "path":  "dist/zhizhi/zhizhi.exe",
+                       "last_write_time":  "2026-08-16T12:56:54",
+                       "bytes":  8632729
+                   },
+    "python":  "3.12.6",
+    "head_commit":  "ce80bd2",
+    "red_baseline_commit":  "16e72c4"
+}
