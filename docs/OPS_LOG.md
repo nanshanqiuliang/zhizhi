@@ -12,6 +12,30 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-049/050：空图崩溃修复 + MCP 提议确认 + 桌面产物重发
+
+- 关联 ID：WORK-2026-049（BUG-2026-001）、WORK-2026-050、TR-20260816-001、
+  TR-20260816-002。
+- 环境/版本/build/config：commits `5094482`/`4624c4c`（049）+ `9a8374a`/`2a8256c`
+  （050），分支 feature/WORK-2026-049-empty-graph-crash；local-dev Windows x64；
+  无新增依赖。桌面产物重建（15:39–15:43）：`dist/zhizhi/zhizhi.exe`（onedir）、
+  `dist/zhizhi-0.1.0-setup.exe`（24,916,030 字节）、
+  `dist/zhizhi-0.1.0-portable.zip`（29,297,933 字节）。
+- 变更或症状：① 空工作区（0 节点）不再崩溃（BUG-2026-001 ready_for_release），
+  右侧显示空态引导 + 「添加总纲」；② MCP server 工具集 4→6：新增 `propose_patch`
+  （外部 AI 把补丁提交为**待确认提议**，不写图库）与 `proposal_status`（只读观察）；
+  应用内新增「外部提议（MCP）」面板（逐条接受/拒绝，接受经提交门 source=
+  mcp_proposal，可撤销）；提议存于 `<工作区>/proposals/*.json`（跨进程信道）。
+- 影响：需要安装新产物才能体验 049/050；旧版本工作区数据兼容（无 schema 变化）；
+  `proposals/` 目录为新增文件，可独立删除。外部 AI 仍无任何写图库/自确认路径。
+- 证据：QA `TR-20260816-001`（049）与 `TR-20260816-002`（050）均 PASS
+  （correlated_review，0 P0/P1/P2）；pytest 493/493 + 5 skipped、Web 72/72、
+  mypy strict 42 files、冻结 exe MCP 冒烟 6/6 PASS（6 工具枚举 + propose→status
+  全链路 + 图库未动 + fail-closed，`evidence/TR-20260816-002/probes/
+  frozen_mcp_smoke.py`）。
+- 缓解/回滚：回退对应提交即回旧形态；提议目录可清理；BUG-2026-001 随本产物发布
+  转 closed。
+
 ## 2026-08-16 — WORK-2026-048：内置 MCP server（第 11 步切片 1）+ 桌面产物重发
 
 - 关联 ID：WORK-2026-048、第 11 步、TR-20260815-010。
