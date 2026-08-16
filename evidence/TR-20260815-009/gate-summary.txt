@@ -1,0 +1,35 @@
+# QA TR-20260815-009 — 门禁汇总（全部在 HEAD c878c44 真实运行）
+
+| 门禁 | 命令 | 结果 | 证据 |
+|---|---|---|---|
+| Python 依赖 | `uv sync --locked --group dev` | PASS（81 packages resolved） | gates/uv-sync.log |
+| 仓库验证 | `uv run python -m scripts.validate_repository` | PASS（skeleton/secret scan/graph/LLM 契约/复包/v2 mock-replay） | gates/validate_repository.log |
+| ruff format | `uv run ruff format --check packages scripts tests apps` | PASS（116 files already formatted） | gates/ruff_format_check.log |
+| ruff lint | `uv run ruff check .` | PASS（All checks passed） | gates/ruff_check.log |
+| mypy scripts | `uv run mypy scripts` | PASS（16 source files，无问题） | gates/mypy_scripts.log |
+| mypy strict | `uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop` | PASS（40 source files，无问题；含 apps/desktop） | gates/mypy_strict.log |
+| pytest 全量 | `uv run python -m pytest -q` | **469 passed, 5 skipped**（5 skip=live DeepSeek 无 key，符合预期） | gates/pytest.log |
+| pnpm 安装 | `pnpm install --frozen-lockfile` | PASS（Already up to date） | 本汇总 |
+| peers | `pnpm peers check` | PASS（No peer dependency issues found） | 本汇总 |
+| pnpm check | `pnpm check`（tsc -b + eslint --max-warnings 0 + vitest run） | PASS：**16 files / 64 tests 全绿**（含 App.edit 6、api 5、App.test 9、layout 3、persist 6、lock 6、draft 6、command 3、canvas 3、workspaces、ai-settings、answer、PdfViewer/Render、markdown、ResourceImport） | gates/pnpm-check.log |
+| pnpm build | `pnpm build` | PASS（vite built in ~188ms；chunk>500kB 警告为既有提示，非错误） | gates/pnpm-build.log |
+| contracts-ts drift | `pnpm --filter @knowledge-tree/contracts-ts check` + 直接 `node scripts/generate.mjs --check` + `tsc --noEmit` | PASS（exit 0，无 drift） | gates/contracts-ts-check2.log |
+
+## 红灯真值（隔离 worktree @8a67656）
+`pnpm --filter @knowledge-tree/web exec vitest run src/App.edit.test.tsx src/api.test.ts`
+→ **Test Files 2 failed (2)；Tests 6 failed | 5 passed (11)**
+失败用例（全部为"无实现"红灯）：
+1. api.test.ts：preserves a typed edge through graphToSnapshot → snapshotToGraph（边类型未往返）
+2. App.edit：does not recenter the canvas after a node drag + browser click（拖拽后重定心）
+3. App.edit：adds a free concept block without a parent edge（无添加概念按钮）
+4. App.edit：adds a root outline block（无添加总纲按钮）
+5. App.edit：connects two blocks with the selected edge type（无连线入口）
+6. App.edit：disconnects an edge from the detail panel（无断线入口）
+通过 5 项 = 3 项既有 persist api 测试 + “plain click still recenters”（旧行为本就居中）+ “type-less 默认 related_to”（旧硬编码本就输出 related_to）——符合红灯语义。
+→ HEAD 同命令：**Tests 11 passed (11)**。worktree 已移除并 prune。
+
+## 冻结产物（2026-08-16 13:36:36 重建）
+- dist\zhizhi\zhizhi.exe（8,632,729 B）
+- 内置 web_dist：index-ec9Mn6UR.js / index-DimZVipg.css / pdf.worker.min.mjs
+- 探针：health 200、GET / 200（id=root）、资产 sha256 与冻结包一致、冻结包 == HEAD 桌面式重建（VITE_LOCAL_API="" 经 Python env dict 传递）哈希一致、端口释放 —— 10/10 PASS
+- desktop_e2e.py：18/18 PASS

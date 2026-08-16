@@ -1,0 +1,54 @@
+# QA TR-20260815-009 — 执行的命令清单（WORK-2026-047）
+# 每条命令均在真实环境执行；输出见 logs/ 与 gates/。
+
+## 0. 环境勘察
+git -C "E:\知识树 - 副本" status --short --branch
+git -C "E:\知识树 - 副本" log --oneline -6
+git -C "E:\知识树 - 副本" worktree list
+node --version / pnpm --version / uv --version / python --version / git --version
+
+## 1. 红灯真值（隔离 worktree @8a67656，仅测试无实现）
+git worktree add --detach C:\Users\16839\AppData\Local\Temp\kt-qa-8a67656 8a67656
+pnpm install --frozen-lockfile            # worktree 内安装依赖（复用全局 store）
+pnpm --filter @knowledge-tree/web exec vitest run src/App.edit.test.tsx src/api.test.ts
+#  → 红灯：Test Files 2 failed (2)；Tests 6 failed | 5 passed (11)  [logs/redlight-8a67656.log]
+git worktree remove --force ... && git worktree prune   # 用后移除（目录残留手动清理）
+
+## 2. HEAD 同命令（绿）
+pnpm --filter @knowledge-tree/web exec vitest run src/App.edit.test.tsx src/api.test.ts
+#  → 绿灯：Test Files 2 passed (2)；Tests 11 passed (11)  [logs/head-c878c44.log]
+
+## 3. Python 侧门禁（gates/run_python_gates.ps1，逐项输出存 gates/*.log）
+uv sync --locked --group dev
+uv run python -m scripts.validate_repository
+uv run ruff format --check packages scripts tests apps
+uv run ruff check .
+uv run mypy scripts
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+uv run python -m pytest -q
+
+## 4. pnpm 侧门禁
+pnpm install --frozen-lockfile
+pnpm peers check
+pnpm check                      # tsc -b + eslint --max-warnings 0 + vitest run（64/64）
+pnpm build                      # vite build（桌面构建另有 VITE_LOCAL_API="" 变体，见探针）
+pnpm --filter @knowledge-tree/contracts-ts check        # generate --check + tsc --noEmit（exit 0）
+node scripts/generate.mjs --check  &&  .\node_modules\.bin\tsc.cmd --noEmit --pretty false  # 直接复核
+
+## 5. 对抗探针（vitest 临时脚本，执行后从 src/ 移除并归档到 probes/）
+pnpm --filter @knowledge-tree/web exec vitest run src/qa-probe-01-drag.test.tsx src/qa-probe-02-connect.test.tsx src/qa-probe-03-freeblocks.test.tsx src/qa-probe-04-misc.test.tsx
+#  → 18/18 passed  [logs/vitest-probes.log]
+
+## 6. 边类型持久化闭环（TestClient 起真实后端）
+uv run python evidence/TR-20260815-009/probes/qa_probe_edge_type_backend.py
+#  → 6/6 passed  [logs/backend-edge-type-probe.log]
+
+## 7. 冻结 exe 探针（HTTP/资产层；Web 交互以 vitest 层为准）
+uv run python evidence/TR-20260815-009/probes/exe_asset_probe.py
+#  → 10/10 passed（health、index.html、资产 sha256 与冻结包一致、冻结包==HEAD 桌面式重建、端口释放）
+uv run --group build python scripts/desktop_e2e.py
+#  → 18/18 checks passed（含 window 冒烟与端口释放） [logs/desktop-e2e-utf8.log]
+
+## 8. 桌面式重建比对（证明冻结包=当前源码；VITE_LOCAL_API 空串必须经 Python env dict 传递）
+uv run python -c "... VITE_LOCAL_API='' 经 subprocess env dict → vite build ..."
+#  → 产物 index-ec9Mn6UR.js sha256 3268ae923a0c... 与冻结包一致（MATCH）

@@ -73,6 +73,7 @@
 | WORK-2026-044 | 草案生成可诊断化（rule 显示 + 40 块上限 + fail-soft） | 已完成（QA `TR-20260815-006` PASS） | api + ai-draft + web | WORK-2026-043 已验证 | `readError`/`formatCode` 显示精确 `code/rule`（14 处抛错位）；`max_chunks=40` 截断长资料；`fail_soft_extractor`/`fail_soft_relation_provider` 仅吞 `DraftExtractionError` | `c549a17` 红灯；`0abe9e9` 实现；`33ba11a` P2；QA `TR-20260815-006` |
 | WORK-2026-045 | 画布无限延伸（去钳制 + 随内容生长） | 已完成（QA `TR-20260815-008` PASS） | web | WORK-2026-043/046 已验证 | `canvas.ts` `canvasSurfaceSize`（包围盒+边距，下限 1000×650）+ `moveDrag` 去 835/555 上界钳制 + `edge-layer` viewBox 动态 + 图例锚定视口 | `16e72c4` 红灯；`6277db7` 实现；`ce80bd2` 模块拆分；Web 56/56、pytest 469/469+5、e2e 18/18；QA `TR-20260815-008` PASS |
 | WORK-2026-046 | 放宽 GraphPatch 单补丁操作数上限（maxitems 修复） | 已完成（QA `TR-20260815-007` PASS） | api + ai-draft + QA | WORK-2026-043/044 已验证 | `GraphPatch.operations.maxItems` 100→5000 + 生成产物 + 契约/API 回归测试（150 操作接受、上限+1 拒绝、240 操作全库草案）+ harness 文档补充 | `87f9c1a` 红灯；`f8d673c` 实现；pytest 469/469+5、Web 53/53、e2e 18/18；QA `TR-20260815-007` PASS |
+| WORK-2026-047 | 完整编辑工具箱（自由建块/接线/断线）+ 拖拽跳变修复 | 已完成（QA `TR-20260815-009` PASS） | web + api + QA | WORK-2026-040/045 已验证 | 拖拽后 click 不重定心（`suppressRecentOnClick`）；「添加概念/总纲」自由块 + 「连线」模式（边类型选择）+ 详情面板「关联关系」断线 + 关系锁保护；`ConceptEdge.edge_type` 往返保留（默认 related_to） | `8a67656` 红灯；`c878c44` 实现；Web 64/64、pytest 469/469+5、e2e 18/18；QA `TR-20260815-009` PASS |
 
 ## 当前受阻项
 

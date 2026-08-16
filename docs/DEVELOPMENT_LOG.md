@@ -2,6 +2,34 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 完整编辑工具箱 + 拖拽跳变修复（WORK-2026-047）
+
+- 关联 ID：WORK-2026-047、WORK-2026-040/045、REQ-2026-001、NFR-2026-001；QA `TR-20260815-009`。
+- 实际变化：
+  ① **拖拽跳变修复**：根因是真实浏览器 pointerup 后补发 `click`，节点 `onClick=selectNode`
+     调 `centerOnNode` 重定心相机；`suppressRecentOnClick` ref（`endDrag` 有位移时置位、
+     `selectNode` 消费并跳过重定心）修复；普通点击仍居中。WORK-2026-040 只修了拖拽起点，
+     未修拖拽后的 click。
+  ② **编辑工具箱**：工具栏新增「添加概念」（自由块：视口中心放置、无父连线、无上界钳制）、
+     「添加总纲」（root 块）、「连线」模式（先点起点再点终点建立连线，边类型选择 相关/先修/
+     包含/举例，Esc 退出，起点 `connect-source` 高亮）；详情面板新增「关联关系」列表
+     （指向/来自 + 类型标签 + 删除=断线），两端 `relations` 锁任一为真则拒绝连线/断线；
+     边 `<path>` 增 `aria-label`（可测/可定位）。
+  ③ **边类型往返修复**：`api.ts` `ConceptEdge.edge_type`（`EdgeKind`）经
+     `snapshotToGraph`/`graphToSnapshot` 保留（此前保存时硬编码改写为 `related_to`，AI 草案
+     的 `prerequisite_of` 等类型会丢失）；默认 `related_to` 向后兼容。
+- 影响模块/接口/schema/migration/prompt：仅 `apps/web`（App.tsx、api.ts、styles.css、新增
+  测试）。无契约/迁移；后端 diff 保存路径不变（自动生成 create/delete_edge）。
+- 兼容性：旧数据无边类型按 `related_to`；快照边字段为可选增量（既有 fixture 不受影响）。
+- 验证与证据：红灯真值（worktree @`8a67656`：6 failed 与预期一一对应；HEAD 11/11 passed）
+  → 实现 `8a67656`/`c878c44`；Web 64/64；pytest 469/469 + 5 skipped；ruff/mypy/validator/pnpm
+  全绿；后端 TestClient 闭环 6/6（prerequisite_of/part_of 经提交门保留 + 历史记录）；e2e
+  18/18；QA `TR-20260815-009` PASS（0 P0/P1；1 P2 既有 BUG-2026-001；3 P3）。
+- 性能/安全/运维影响：无显著变化；连线/断线入历史可撤销。
+- 回滚：回退 `c878c44` 即回旧行为（含边类型改写缺陷）。
+- 遗留风险与下一步：空工作区空态兜底（BUG-2026-001，待立工作项）；拖拽橡皮筋预览、边类型
+  编辑（可选）；MCP 内置 server（第 11 步方向文档已入库）。
+
 ## 2026-08-16 — 画布无限延伸（WORK-2026-045）
 
 - 关联 ID：WORK-2026-045、WORK-2026-043/046、REQ-2026-001；QA `TR-20260815-008`。

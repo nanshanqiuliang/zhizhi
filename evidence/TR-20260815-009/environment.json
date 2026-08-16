@@ -1,0 +1,36 @@
+{
+  "test_run_id": "TR-20260815-009",
+  "captured_at": "2026-08-16T13:50:00+08:00",
+  "host": {
+    "os": "Windows",
+    "platform": "win32",
+    "machine": "x86_64",
+    "system_locale": "zh-CN (cp936 console)",
+    "repo_path": "E:\\知识树 - 副本"
+  },
+  "toolchain": {
+    "node": "v24.14.1",
+    "pnpm": "11.19.0",
+    "uv": "0.12.3",
+    "python": "3.12.6",
+    "git": "2.53.0.windows.2",
+    "pnpm_store": "C:\\Users\\16839\\AppData\\Local\\pnpm\\store\\v11"
+  },
+  "repo_state": {
+    "branch": "feature/WORK-2026-047-edit-toolbox",
+    "head_commit": "c878c448b71fcc104aaf051953550dfc6646754f",
+    "red_baseline_commit": "8a67656e4045a70edaa9dac7f4092f624c240dba",
+    "head_commit_time": "2026-08-16T13:34:57+08:00",
+    "red_commit_time": "2026-08-16T13:34:57+08:00",
+    "working_tree": "docs/USER_MANUAL.md modified (pre-existing, not part of this change); untracked: .reasonix/, .workbuddy/, handoff/, paper.pdf (pre-existing)"
+  },
+  "frozen_artifact": {
+    "exe": "dist\\zhizhi\\zhizhi.exe",
+    "exe_size_bytes": 8632729,
+    "exe_build_time": "2026-08-16T13:36:36+08:00",
+    "bundled_web": "dist\\zhizhi\\_internal\\web_dist",
+    "bundled_js": "assets\\index-ec9Mn6UR.js",
+    "bundled_css": "assets\\index-DimZVipg.css",
+    "bundled_pdf_worker": "pdf.worker.min.mjs"
+  }
+}

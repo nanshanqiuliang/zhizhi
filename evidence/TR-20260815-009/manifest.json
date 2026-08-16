@@ -1,0 +1,122 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260815-009",
+  "work_item": "WORK-2026-047",
+  "title": "完整编辑工具箱 + 拖拽跳变修复",
+  "reviewed_commit": "c878c44",
+  "reviewed_commit_sha": "c878c448b71fcc104aaf051953550dfc6646754f",
+  "red_baseline_commit": "8a67656",
+  "red_baseline_commit_sha": "8a67656e4045a70edaa9dac7f4092f624c240dba",
+  "branch": "feature/WORK-2026-047-edit-toolbox",
+  "verdict": "PASS",
+  "findings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 1,
+    "P3": 3
+  },
+  "findings_detail": [
+    {
+      "id": "P-2-001",
+      "severity": "P2",
+      "status": "pre-existing",
+      "title": "BUG-2026-001：空工作区（0 节点）渲染崩溃",
+      "detail": "loadGraph 返回空 concepts（契约合法）时 App 读取 selectedNode.tone 抛 TypeError；在 HEAD c878c44 复现（P-305 探针反向断言=崩溃确认）。非本变更引入（TR-20260815-008 P-008 已在 16e72c4 复现确认）。不阻塞本次 PASS，建议另立工作项做空态兜底。"
+    },
+    {
+      "id": "P-3-001",
+      "severity": "P3",
+      "status": "pre-existing/observation",
+      "title": "桌面构建与普通 pnpm build 的 JS 哈希差异（VITE_LOCAL_API=\"\"）",
+      "detail": "普通构建 index-Cc9qNbZx.js vs 冻结包 index-ec9Mn6UR.js；差异仅为 api base（默认 127.0.0.1:8000 vs 同源相对基址）。按 build_desktop.py 同法（Python env dict 传空串）重建后哈希与冻结包完全一致，冻结产物=当前 HEAD 桌面式构建。Windows 空环境变量传递陷阱已记录。"
+    },
+    {
+      "id": "P-3-002",
+      "severity": "P3",
+      "status": "observation",
+      "title": "vite chunk>500kB 警告",
+      "detail": "build 时 chunk size 警告（既有提示，非错误）。"
+    },
+    {
+      "id": "P-3-003",
+      "severity": "P3",
+      "status": "observation",
+      "title": "关系锁拒绝连线时保留起点高亮（设计选择）",
+      "detail": "探针 P-103 确认：点击锁定端点被拒时源起点高亮保留、可改选其它终点；无新边产生且状态提示正确。符合'任一端锁拒绝连线/断线'契约，非缺陷；后续工作项可选加 toast 引导。"
+    }
+  ],
+  "red_light": {
+    "command": "pnpm --filter @knowledge-tree/web exec vitest run src/App.edit.test.tsx src/api.test.ts",
+    "red_result": "Test Files 2 failed (2); Tests 6 failed | 5 passed (11)",
+    "red_log": "logs/redlight-8a67656.log",
+    "green_result": "Test Files 2 passed (2); Tests 11 passed (11)",
+    "green_log": "logs/head-c878c44.log",
+    "worktree_removed": true
+  },
+  "gates": {
+    "validate_repository": "PASS",
+    "ruff_format_check": "PASS",
+    "ruff_check": "PASS",
+    "mypy_scripts": "PASS",
+    "mypy_strict": "PASS (packages/contracts-py, domain, infrastructure, apps/api, apps/desktop)",
+    "pytest": "469 passed, 5 skipped",
+    "pnpm_install_frozen": "PASS",
+    "pnpm_peers": "PASS",
+    "pnpm_check": "PASS (tsc + eslint 0 warnings + vitest 64/64)",
+    "pnpm_build": "PASS",
+    "contracts_ts_drift": "PASS"
+  },
+  "probes": {
+    "vitest_web": "18/18 PASS (probes/qa-probe-01..04)",
+    "backend_edge_type": "6/6 PASS (probes/qa_probe_edge_type_backend.py)",
+    "exe_http_assets": "10/10 PASS (probes/exe_asset_probe.py)",
+    "desktop_e2e": "18/18 PASS (scripts/desktop_e2e.py)"
+  },
+  "files": [
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt",
+    "qa-attempt.md",
+    "gates/contracts-ts-check.log",
+    "gates/contracts-ts-check2.log",
+    "gates/mypy_scripts.log",
+    "gates/mypy_strict.log",
+    "gates/pnpm-build.log",
+    "gates/pnpm-check.log",
+    "gates/pytest.log",
+    "gates/ruff_check.log",
+    "gates/ruff_format_check.log",
+    "gates/run_python_gates.ps1",
+    "gates/uv-sync.log",
+    "gates/validate_repository.log",
+    "logs/backend-edge-type-probe.log",
+    "logs/desktop-e2e.log",
+    "logs/desktop-e2e-utf8.log",
+    "logs/exe-asset-probe.log",
+    "logs/exe-asset-probe2.log",
+    "logs/head-c878c44.log",
+    "logs/redlight-8a67656.log",
+    "logs/vitest-probes.log",
+    "probes/exe_asset_probe.py",
+    "probes/qa_probe_edge_type_backend.py",
+    "probes/qa-probe-01-drag.test.tsx",
+    "probes/qa-probe-02-connect.test.tsx",
+    "probes/qa-probe-03-freeblocks.test.tsx",
+    "probes/qa-probe-04-misc.test.tsx"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "correlation": {
+    "correlated_review": true,
+    "human_signature": false,
+    "owner_acceptance": false,
+    "note": "机器 QA 证据不冒充人类签名；最终残余风险接受权归工作区所有者。"
+  },
+  "notes": [
+    "探针临时测试文件执行后已从 apps/web/src 移除（保证 pnpm check 64/64 为基线套件计数），归档于 probes/。",
+    "P-305 探针语义为反向（通过=缺陷复现），用于确认 BUG-2026-001 仍存在于 HEAD。",
+    "冻结 exe 探针仅覆盖 HTTP/资产层；Web 交互行为以 vitest 层为准。",
+    "未提交任何 git 变更；工作树状态与勘察时一致。"
+  ]
+}
