@@ -44,6 +44,7 @@ from knowledge_tree_domain import GraphPatchError, preview_graph_patch  # noqa: 
 from knowledge_tree_domain.ai_draft import DraftError  # noqa: E402
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError  # noqa: E402
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError  # noqa: E402
+from knowledge_tree_infrastructure.png_export import export_workspace_png  # noqa: E402
 from knowledge_tree_infrastructure.proposals import (  # noqa: E402
     read_proposal,
     save_proposal,
@@ -226,6 +227,20 @@ def tool_proposal_status(root: Path, workspace_id: str, proposal_id: str) -> Jso
     }
 
 
+def tool_export_png(root: Path, workspace_id: str) -> JsonObject:
+    """Render the workspace graph to exports/mindmap.png (never the graph db)."""
+    try:
+        layout = resolve_workspace(root / workspace_id)
+        graph = load_course_graph(layout)
+    except WorkspaceError as error:
+        return _error_from(error)
+    try:
+        exported = export_workspace_png(layout, graph)
+    except WorkspaceError as error:
+        return _error_from(error)
+    return {"ok": True, "path": str(exported)}
+
+
 # -- server assembly ------------------------------------------------------------
 
 
@@ -260,7 +275,8 @@ def build_mcp_server(
         instructions=(
             "知枝本地知识树。本服务器只读并提出 AI 草案：list_workspaces / "
             "read_workspace / preview_draft / validate_patch；propose_patch 可把补丁"
-            "提交为待确认提议（pending），proposal_status 只读查询提议结果。"
+            "提交为待确认提议（pending），proposal_status 只读查询提议结果；"
+            "export_png 把当前知识树渲染为 exports/mindmap.png。"
             "AI 输出永远是不授信草案：确认与写库仅在应用内由用户完成，"
             "本服务器没有任何写图库或自确认工具。"
         ),
@@ -295,6 +311,10 @@ def build_mcp_server(
     @server.tool()
     def proposal_status(workspace_id: str, proposal_id: str) -> JsonObject:
         return tool_proposal_status(root, workspace_id, proposal_id)
+
+    @server.tool()
+    def export_png(workspace_id: str) -> JsonObject:
+        return tool_export_png(root, workspace_id)
 
     return server
 

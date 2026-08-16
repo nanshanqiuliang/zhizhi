@@ -52,11 +52,13 @@
 桌面程序内置 MCP server（`--mcp-stdio`），供外部 AI 客户端调用。**约束**：
 
 1. **外部 AI 永远不能写图库**：工具集为 `list_workspaces`/`read_workspace`/
-   `preview_draft`/`validate_patch`/`propose_patch`/`proposal_status`，没有任何
-   apply/commit/save/accept 类图库写工具。`propose_patch` 只把经
+   `preview_draft`/`validate_patch`/`propose_patch`/`proposal_status`/`export_png`，
+   没有任何 apply/commit/save/accept 类图库写工具。`propose_patch` 只把经
    `preview_graph_patch` 防御性校验的**未确认**补丁（`requires_confirmation=true /
    confirmed=false`，预确认补丁 fail-closed 拒绝）落为工作区 `proposals/` 目录下的
-   pending 提议文件（跨进程信道，非图库）；`proposal_status` 只读观察结果。
+   pending 提议文件（跨进程信道，非图库）；`proposal_status` 只读观察结果；
+   `export_png`（WORK-2026-051）只把图渲染为 `exports/mindmap.png`（PIL 服务端
+   渲染，读图不写图）。
 2. **应用内确认机制（WORK-2026-050）**：提议仅在应用内 UI「外部提议」面板由用户逐条
    接受/拒绝。接受 = sidecar API 把存储的提议补丁副本置 `confirmed=true` 后走
    `apply_graph_patch` 提交门（锁/修订冲突/历史/可撤销，source=`mcp_proposal`），

@@ -451,6 +451,16 @@ export function App({
     }
   }
 
+  function exportPng() {
+    const url = api?.getGraphImageDownloadUrl?.();
+    if (!url) {
+      setStatus("当前运行模式不支持导出 PNG");
+      return;
+    }
+    window.open(url, "_blank");
+    setStatus("已生成 PNG，可在打开的页面下载");
+  }
+
   async function runSearch(query: string) {
     if (!api || !query.trim()) {
       setSearchResults([]);
@@ -1650,6 +1660,7 @@ export function App({
               </>
             )}
             <button type="button" onClick={autoLayout}><Icon name="layout" />自动排布</button>
+            <button type="button" onClick={exportPng}>导出 PNG</button>
             <button type="button" onClick={resetDemo}><Icon name="reset" />重新载入示例</button>
             <span className="canvas-tip">滚轮缩放 · 拖动空白平移 · 拖动节点调整位置</span>
           </div>

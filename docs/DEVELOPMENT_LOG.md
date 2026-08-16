@@ -2,6 +2,34 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 知识树 PNG 导出（WORK-2026-051，第 11 步切片 3）
+
+- 关联 ID：WORK-2026-051、WORK-2026-048（048 out-of-scope 预告项）；QA `TR-20260816-003`。
+- 实际变化：
+  ① 新增 `packages/infrastructure/.../png_export.py`：`layout_tree`（BFS 层次布局
+     纯函数：根=无入边者、同层横排、不可达节点归底行，确定性可测）+
+     `render_graph_png`（PIL 渲染：白底、tone 三色圆角节点（按深度 root/branch/leaf）、
+     边直线、CJK 字体回退链 msyh→simhei→simsun→Noto→wqy→PIL default、原子写）+
+     `export_workspace_png`（渲染到 `exports/mindmap.png`，稳定 `export_failed` 错误）。
+  ② API `GET /api/workspaces/{id}/graph/image`：渲染 + FileResponse(image/png)。
+  ③ MCP `export_png(workspace_id)`：返回 `{ok, path}`；工具集 6→7（仍无任何
+     图库写动词）。
+  ④ Web：工具栏「导出 PNG」按钮（`getGraphImageDownloadUrl?.()` → window.open 下载）。
+  ⑤ 运行时依赖 +`pillow>=10,<12`。
+- 影响模块/接口/schema/migration/prompt：新增渲染模块 + 1 端点 + 1 工具 + 1 按钮；
+  无契约/迁移/图库变化。
+- 兼容性：既有工具行为不变；无 exports 目录时自动创建；jsdom/无后端模式按钮提示
+  不支持。
+- 验证与证据：红灯（模块缺失 + 8 failed）→ 绿灯（`test_png_export.py` 7 用例 +
+  MCP export_png + 工具集 7 + stdio 冒烟 7 工具 + Web 按钮）；pytest **500 passed +
+  5 skipped**、`pnpm check` **19 文件 / 73 测试**、mypy strict 43 files、
+  validator/ruff/build/contracts/peers 全绿；QA `TR-20260816-003` PASS。
+- 性能/安全/运维影响：单图毫秒级渲染；渲染输入为本地图数据，无注入面；MCP 工具
+  只写 exports 目录。
+- 回滚：回退本切片提交 + `uv remove pillow`。
+- 遗留风险与下一步：未映射 layout_items 自由布局（导出为层次布局）；SVG/PDF 与
+  主题定制为后续可选项。
+
 ## 2026-08-16 — MCP 写工具 + 应用内确认机制（WORK-2026-050，第 11 步切片 2）
 
 - 关联 ID：WORK-2026-050、WORK-2026-048（工具集 4→6，切片 1 的"零写工具"约束由本切片

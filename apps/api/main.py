@@ -26,6 +26,7 @@ from knowledge_tree_domain.ai_draft import DraftError, uuid7
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError
 from knowledge_tree_infrastructure.command import CommandError, build_command_patch
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError
+from knowledge_tree_infrastructure.png_export import export_workspace_png
 from knowledge_tree_infrastructure.proposals import (
     list_proposals,
     read_proposal,
@@ -441,6 +442,19 @@ def create_app(
             return graph
         except WorkspaceError as error:
             raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/graph/image")
+    def get_graph_image(workspace_id: str) -> FileResponse:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = load_course_graph(layout)
+            exported = export_workspace_png(layout, graph)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        return FileResponse(
+            exported, media_type="image/png", filename=f"mindmap-{workspace_id}.png"
+        )
 
     @app.put("/api/workspaces/{workspace_id}/graph")
     async def put_graph(workspace_id: str, request: Request) -> JsonObject:

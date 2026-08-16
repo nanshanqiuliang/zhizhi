@@ -193,8 +193,9 @@ def test_mcp_toolset_is_read_only(tmp_path: Path) -> None:
 
     tools = {item.name for item in server._tool_manager.list_tools()}  # noqa: SLF001
     # WORK-2026-050: propose_patch queues a PENDING proposal file (never the
-    # graph); proposal_status is read-only observation. No tool may write the
-    # graph itself (harness hard rule).
+    # graph); proposal_status is read-only observation. WORK-2026-051 adds
+    # export_png (renders the graph to exports/, not the graph db). No tool
+    # may write the graph itself (harness hard rule).
     assert tools == {
         "list_workspaces",
         "read_workspace",
@@ -202,6 +203,7 @@ def test_mcp_toolset_is_read_only(tmp_path: Path) -> None:
         "validate_patch",
         "propose_patch",
         "proposal_status",
+        "export_png",
     }
     # No graph-write-capable tool verb may appear in any tool name.
     for forbidden in ("write", "apply", "submit", "commit", "save", "delete", "accept"):
@@ -300,6 +302,7 @@ def _stdio_smoke(root: Path) -> None:
                 "validate_patch",
                 "propose_patch",
                 "proposal_status",
+                "export_png",
             }
             result = await session.call_tool("list_workspaces", {})
             text = result.content[0].text
@@ -404,3 +407,21 @@ def test_proposal_status_unknown_id_fails_closed(tmp_path: Path) -> None:
     )
     assert status["ok"] is False
     assert status["code"] == "proposal_missing"
+
+
+# -- WORK-2026-051: export_png renders the graph, never writes it -------------
+
+
+def test_export_png_writes_exports_file_without_touching_graph(tmp_path: Path) -> None:
+    workspace_id = _seed_workspace(tmp_path)
+    server = _server(tmp_path)
+
+    result = _call_tool(server, "export_png", workspace_id=workspace_id)
+    assert result["ok"] is True
+    exported = Path(result["path"])
+    assert exported.is_file()
+    assert exported.parent == tmp_path / workspace_id / "exports"
+    assert exported.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+    graph = _call_tool(server, "read_workspace", workspace_id=workspace_id)
+    assert graph["graph"]["revision_no"] == 0

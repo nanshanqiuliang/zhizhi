@@ -184,6 +184,7 @@ export interface PersistApi {
     proposalId: string,
   ): Promise<{ status: string; change_id: string; revision_no: number }>;
   rejectProposal?(proposalId: string): Promise<{ status: string }>;
+  getGraphImageDownloadUrl?(): string;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -490,6 +491,9 @@ export function httpPersistApi(
         throw new Error(formatCode(body) || `reject proposal failed: ${response.status}`);
       }
       return (await response.json()) as { status: string };
+    },
+    getGraphImageDownloadUrl(): string {
+      return `${workspaceBase}/graph/image`;
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${workspaceBase}/search?q=${encodeURIComponent(query)}`;
