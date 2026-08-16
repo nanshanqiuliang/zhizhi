@@ -1226,6 +1226,42 @@ def list_anchors(layout: WorkspaceLayout, resource_id: str) -> list[AnchorRef]:
         ) from error
 
 
+def get_anchors_by_ids(layout: WorkspaceLayout, anchor_ids: Sequence[str]) -> list[AnchorRef]:
+    """Resolve registered anchors by id; unknown ids are skipped silently.
+
+    Concept `evidence_ids` may reference anchors that were never materialized
+    (web-search drafts, cleaned workspaces), so dangling ids must not fail the
+    listing. Results are page-ordered for display.
+    """
+
+    unique = list(dict.fromkeys(anchor_ids))
+    if not unique:
+        return []
+    placeholders = ",".join("?" for _ in unique)
+    try:
+        with _connect(layout.db_path) as conn:
+            rows = conn.execute(
+                f"SELECT id, resource_id, page, payload FROM anchor "  # noqa: S608
+                f"WHERE id IN ({placeholders})",
+                tuple(unique),
+            ).fetchall()
+    except sqlite3.DatabaseError as error:
+        raise WorkspaceError(
+            "workspace_corrupt", details={"rule": "anchors_not_readable"}
+        ) from error
+    refs = [
+        AnchorRef(
+            id=str(row[0]),
+            resource_id=str(row[1]),
+            page=int(row[2]),
+            payload=json.loads(str(row[3])),
+        )
+        for row in rows
+    ]
+    refs.sort(key=lambda ref: (ref.page, ref.id))
+    return refs
+
+
 def get_resource_file_path(layout: WorkspaceLayout, resource_id: str) -> Path:
     """Resolve the controlled storage path for a resource's current version."""
 

@@ -1828,3 +1828,57 @@ a:focus-visible {
   color: #2d54a8;
   word-break: break-all;
 }
+
+/* Node source links (WORK-2026-055): jump-to-document anchors and web urls. */
+.source-link-list {
+  margin: 4px 0 8px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.source-link-list button,
+.source-link-list a {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 10px;
+  border: 1px solid rgba(125, 125, 155, 0.3);
+  border-radius: 8px;
+  background: rgba(245, 245, 250, 0.7);
+  font-size: 13px;
+  color: #2d54a8;
+  word-break: break-all;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.source-link-list button:hover,
+.source-link-list a:hover {
+  border-color: rgba(45, 84, 168, 0.6);
+}
+
+.link-add-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.link-add-row label {
+  font-size: 12px;
+  color: #5a6080;
+}
+
+.link-add-row input {
+  padding: 6px 10px;
+  border: 1px solid rgba(125, 125, 155, 0.4);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.link-dot {
+  color: #2d54a8;
+}

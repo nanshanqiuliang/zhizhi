@@ -5,6 +5,7 @@ import type {
   AnchorRef,
   AnswerResult,
   CommandResult,
+  ConceptAnchor,
   ConceptLocks,
   ConceptNode,
   ExternalProposal,
@@ -16,7 +17,7 @@ import type {
   WebSearchSource,
   WorkspaceSnapshot,
 } from "./api";
-import { DEFAULT_WORKSPACE_ID, buildSetLockPatch } from "./api";
+import { DEFAULT_WORKSPACE_ID, buildSetLockPatch, buildUpsertLinkPatch } from "./api";
 import type { EdgeKind } from "./api";
 import { renderMarkdown } from "./markdown";
 import { PdfRenderer } from "./PdfRenderer";
@@ -279,6 +280,14 @@ function edgeTypeLabel(kind: EdgeKind): string {
   return EDGE_TYPE_LABELS[kind] ?? kind;
 }
 
+function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
 function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | "trash" | "lock" | "link" }) {
   const paths = {
     undo: <path d="M9 7H5v-4M5 7c2-3 7-4 10-1 3 2 3 7 0 10-2 2-5 2-7 1" />,
@@ -356,6 +365,8 @@ export function App({
   const [webSearchKeyInput, setWebSearchKeyInput] = useState("");
   const [searchTopic, setSearchTopic] = useState("");
   const [searchSources, setSearchSources] = useState<WebSearchSource[]>([]);
+  const [conceptAnchors, setConceptAnchors] = useState<ConceptAnchor[]>([]);
+  const [linkInput, setLinkInput] = useState("");
   const [sidebarWidth, setSidebarWidth] = useState(250);
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [connectMode, setConnectMode] = useState(false);
@@ -393,6 +404,29 @@ export function App({
   }, []);
 
   const selectedNode = present.nodes.find((node) => node.id === selectedId) ?? present.nodes[0];
+
+  // Source anchors for the selected concept (jump-to-document entries).
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (!api?.listConceptAnchors || !selectedNode) {
+        setConceptAnchors([]);
+        return;
+      }
+      try {
+        const anchors = await api.listConceptAnchors(selectedNode.id);
+        if (!cancelled) setConceptAnchors(anchors);
+      } catch {
+        if (!cancelled) setConceptAnchors([]);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode?.id, present.revisionNo]);
+
   const nodeById = useMemo(
     () => new Map(present.nodes.map((node) => [node.id, node])),
     [present.nodes],
@@ -830,7 +864,34 @@ export function App({
     if (!api || !draft) return;
     setDraftStatus("applying");
     try {
-      await api.acceptDraft({ ...draft.patch, confirmed: true }, draft.evidence ?? []);
+      // Web-search drafts: persist their source urls as link annotations on
+      // every new concept so the detail panel can jump back to the pages.
+      const patch = { ...draft.patch, confirmed: true } as {
+        operations?: Array<{ op?: string; concept?: { annotations?: unknown[] } }>;
+      };
+      if (searchSources.length > 0 && Array.isArray(patch.operations)) {
+        const linkAnnotations = searchSources.map((source, index) => ({
+          kind: `link_${index + 1}`,
+          value: source.url,
+        }));
+        patch.operations = patch.operations.map((operation) =>
+          operation?.op === "create_concept" && operation.concept
+            ? {
+                ...operation,
+                concept: {
+                  ...operation.concept,
+                  annotations: [
+                    ...(Array.isArray(operation.concept.annotations)
+                      ? operation.concept.annotations
+                      : []),
+                    ...linkAnnotations,
+                  ],
+                },
+              }
+            : operation,
+        );
+      }
+      await api.acceptDraft(patch, draft.evidence ?? []);
       const refreshed = await api.loadGraph();
       if (refreshed) {
         setPresent(refreshed);
@@ -859,6 +920,48 @@ export function App({
       return;
     }
     void openViewer(resource);
+  }
+
+  async function jumpToConceptAnchor(anchor: ConceptAnchor) {
+    if (!api) return;
+    const resource = resources.find((item) => item.id === anchor.resource_id);
+    if (!resource) {
+      setStatus("来源资料不存在，可能已被清理");
+      return;
+    }
+    await openViewer(resource);
+    if (resource.mime === "application/pdf" && anchor.page >= 1) {
+      try {
+        const page = await api.getPageText(resource.id, anchor.page);
+        setViewerPage(anchor.page);
+        setViewerText(page.text);
+      } catch {
+        setStatus("来源页文本不可用（内容可能已变化）");
+      }
+    }
+  }
+
+  async function handleAddLink() {
+    if (!api?.applyPatch || !selectedNode) return;
+    const url = linkInput.trim();
+    if (!url) {
+      setStatus("请先粘贴要添加的链接");
+      return;
+    }
+    try {
+      await api.applyPatch(buildUpsertLinkPatch(present, selectedNode, url));
+      setLinkInput("");
+      setStatus("已添加链接");
+      const saved = await api.loadGraph();
+      if (saved) {
+        setPresent(saved);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(saved, selectedNode.id);
+      }
+    } catch (error) {
+      setStatus(`添加链接失败（${(error as Error).message}）`);
+    }
   }
 
   async function handleAsk() {
@@ -1878,6 +1981,9 @@ export function App({
                 >
                   <span className="node-type">{node.tone === "root" ? "主题" : node.tone === "branch" ? "概念" : "知识点"}</span>
                   <strong>{node.title}</strong>
+                  {(node.evidenceIds?.length ?? 0) + (node.links?.length ?? 0) > 0 && (
+                    <span className="lock-dot link-dot" aria-label="有来源或链接">🔗</span>
+                  )}
                   {(node.locks?.content ?? false) && <span className="lock-dot content-lock" aria-label="内容已锁定">锁</span>}
                   {node.positionLocked && <span className="lock-dot" aria-label="位置已锁定">⌑</span>}
                 </button>
@@ -1972,6 +2078,45 @@ export function App({
                 })}
             </ul>
           )}
+
+          <div className="detail-divider" />
+          <p className="overline action-label">来源与链接</p>
+          {conceptAnchors.length === 0 && (selectedNode.links ?? []).length === 0 ? (
+            <p className="edge-empty">暂无来源；接受 AI 草案或手动添加链接后会显示在这里。</p>
+          ) : (
+            <ul className="source-link-list">
+              {conceptAnchors.map((anchor) => (
+                <li key={anchor.anchor_id}>
+                  <button
+                    type="button"
+                    onClick={() => void jumpToConceptAnchor(anchor)}
+                  >
+                    📄 {anchor.resource_name} · 第 {anchor.page} 页
+                  </button>
+                </li>
+              ))}
+              {(selectedNode.links ?? []).map((url) => (
+                <li key={url}>
+                  <a href={url} target="_blank" rel="noreferrer noopener">
+                    🔗 {hostnameOf(url)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="link-add-row">
+            <label htmlFor="node-link-input">添加链接</label>
+            <input
+              id="node-link-input"
+              type="url"
+              placeholder="https://…（文档或网页地址）"
+              value={linkInput}
+              onChange={(event) => setLinkInput(event.target.value)}
+            />
+            <button type="button" className="secondary-button" onClick={() => void handleAddLink()}>
+              保存链接
+            </button>
+          </div>
 
           <div className="source-card">
             <span className="source-icon" aria-hidden="true">↗</span>

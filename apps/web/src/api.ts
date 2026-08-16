@@ -21,6 +21,8 @@ export type ConceptNode = {
   tone: "root" | "branch" | "leaf";
   locks?: ConceptLocks;
   revisionNo?: number;
+  links?: string[];
+  evidenceIds?: string[];
 };
 
 export type EdgeKind = "prerequisite_of" | "related_to" | "part_of" | "example_of";
@@ -147,6 +149,15 @@ export type WebSearchSource = {
   url: string;
 };
 
+export type ConceptAnchor = {
+  anchor_id: string;
+  resource_id: string;
+  page: number;
+  label: string;
+  resource_name: string;
+  mime: string;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -203,6 +214,7 @@ export interface PersistApi {
   ): Promise<{ status: string; configured: boolean; provider: string }>;
   clearWebSearchKey?(): Promise<{ status: string; configured: boolean }>;
   generateSearchDraft?(query: string): Promise<AiDraftResult & { sources: WebSearchSource[] }>;
+  listConceptAnchors?(conceptId: string): Promise<ConceptAnchor[]>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -263,14 +275,20 @@ export function snapshotToGraph(snapshot: WorkspaceSnapshot): Record<string, unk
     origin: "user",
     review_state: "accepted",
     confidence: null,
-    evidence_ids: [],
+    evidence_ids: node.evidenceIds ?? [],
     locks: {
       content: node.locks?.content ?? false,
       relations: node.locks?.relations ?? false,
       position: node.locks?.position ?? node.positionLocked,
       annotations: node.locks?.annotations ?? false,
     },
-    annotations: node.note ? [{ kind: "note", value: node.note }] : [],
+    annotations: [
+      ...(node.note ? [{ kind: "note", value: node.note }] : []),
+      ...(node.links ?? []).map((url, index) => ({
+        kind: `link_${index + 1}`,
+        value: url,
+      })),
+    ],
     revision_no: node.revisionNo ?? 0,
   }));
   const edges = snapshot.edges.map((edge) => ({
@@ -347,11 +365,20 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
     const noteAnnotation = annotations.find(
       (annotation) => annotation?.kind === "note",
     );
+    const linkAnnotations = annotations
+      .filter((annotation) => /^link_\d+$/.test(String(annotation?.kind ?? "")))
+      .sort(
+        (a, b) =>
+          Number(String(a?.kind).slice(5)) - Number(String(b?.kind).slice(5)),
+      );
     const item = layout.get(id);
     const hasParent = (parentsOf.get(id) ?? 0) > 0;
     const hasChildren = (childrenOf.get(id) ?? 0) > 0;
     const tone: ConceptNode["tone"] = !hasParent ? "root" : hasChildren ? "branch" : "leaf";
     const locks = readLocks(concept);
+    const evidenceIds = Array.isArray(concept.evidence_ids)
+      ? concept.evidence_ids.map(String)
+      : [];
     return {
       id,
       title: String(concept.label ?? "未命名"),
@@ -362,6 +389,10 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
       tone,
       locks,
       revisionNo: typeof concept.revision_no === "number" ? concept.revision_no : 0,
+      links: linkAnnotations
+        .map((annotation) => String(annotation?.value ?? ""))
+        .filter(Boolean),
+      evidenceIds,
     };
   });
   return {
@@ -557,6 +588,16 @@ export function httpPersistApi(
         throw new Error(formatCode(body) || `web search draft failed: ${response.status}`);
       }
       return (await response.json()) as AiDraftResult & { sources: WebSearchSource[] };
+    },
+    async listConceptAnchors(conceptId: string): Promise<ConceptAnchor[]> {
+      const response = await fetch(
+        `${workspaceBase}/concepts/${conceptId}/anchors`,
+      );
+      if (!response.ok) {
+        throw new Error(`concept anchors failed: ${response.status}`);
+      }
+      const body = (await response.json()) as { anchors: ConceptAnchor[] };
+      return body.anchors;
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${workspaceBase}/search?q=${encodeURIComponent(query)}`;
@@ -851,6 +892,37 @@ export function buildSetLockPatch(
         expected_updated_revision_no: node.revisionNo ?? 0,
         dimension,
         value,
+      },
+    ],
+  };
+}
+
+export function nextLinkIndex(node: ConceptNode): number {
+  return (node.links?.length ?? 0) + 1;
+}
+
+export function buildUpsertLinkPatch(
+  snapshot: WorkspaceSnapshot,
+  node: ConceptNode,
+  url: string,
+): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    patch_id: uuidv7(),
+    workspace_id: WORKSPACE_ID,
+    course_id: COURSE_ID,
+    base_revision_no: snapshot.revisionNo ?? 0,
+    actor: { type: "user", id: "local-user" },
+    reason: "添加链接",
+    requires_confirmation: true,
+    confirmed: true,
+    operations: [
+      {
+        op_id: uuidv7(),
+        op: "upsert_annotation",
+        target: { type: "concept", id: toCanonicalId(node.id) },
+        expected_updated_revision_no: node.revisionNo ?? 0,
+        annotation: { kind: `link_${nextLinkIndex(node)}`, value: url },
       },
     ],
   };

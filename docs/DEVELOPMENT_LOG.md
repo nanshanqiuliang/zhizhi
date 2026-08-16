@@ -2,6 +2,36 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 知识点来源跳转（WORK-2026-055，文档锚点 + 网址链接）
+
+- 关联 ID：WORK-2026-055、WORK-2026-027（锚点）、WORK-2026-053（搜索来源）；
+  QA `TR-20260816-006`。
+- 实际变化：
+  ① infrastructure 新增 `get_anchors_by_ids`（按 id 批量解析锚点，悬空 id 静默
+     跳过，页序返回）；API 新增 `GET /api/workspaces/{id}/concepts/{cid}/anchors`
+     （概念 evidence_ids → anchor 表 join 资源名/mime；未知概念 404）。
+  ② Web 详情面板新增「来源与链接」区：文档锚点（`资源名 · 第 N 页`，点击打开
+     查看器并跳到对应页文本）+ 网页链接（域名展示，点击新窗口打开）+「添加链接」
+     输入（`buildUpsertLinkPatch` → `upsert_annotation` 提交门，annotations 锁
+     保护，编号 `link_N` 适配按 kind 替换语义）；画布上有来源/链接的节点显示 🔗
+     角标；选中概念/图修订变化时自动刷新锚点。
+  ③ **既有数据丢失 bug 修复**：`snapshotToGraph`（整图自动保存）此前把每个概念
+     写为 `evidence_ids: []` 且只保留 note 注解——AI 草案的锚点关联活不过第一次
+     自动保存、链接注解也会被清。现快照往返完整保留 `evidence_ids` 与
+     `link_N` 注解（往返保真测试锁定）。
+  ④ 接受 Web 搜索草案时，来源 URL 自动作为 `link_1..N` 注解写入每个新建概念
+     （此前接受后来源与概念彻底失联）。
+- 影响模块/接口/schema/migration/prompt：infra 1 函数 + 1 只读端点 + 前端面板/
+  类型/快照转换；无契约变化（annotations 自由字段，`link_N` 符合 kind pattern）。
+- 兼容性：note 注解与既有行为不变；快照多出的 links/evidenceIds 字段向后兼容。
+- 验证与证据：红灯（端点缺失 + Web 5 用例）→ 绿灯（API 3 + Web 5 含往返保真）；
+  pytest **524 passed + 6 skipped**、`pnpm check` **22 文件 / 84 测试**、mypy
+  strict 45、validator/ruff/build/contracts/peers 全绿 + CI；QA `TR-20260816-006`
+  PASS。
+- 回滚：回退提交即回无来源面板形态；已写入的 link 注解随图数据保留（无害）。
+- 遗留风险与下一步：链接删除/编辑（可先覆盖同序号，完整删除走 update_concept
+  后续切片）；MD/TXT 只能打开无法页内定位；链接标题（Annotation 仅 kind/value）。
+
 ## 2026-08-16 — 思维导图垂直树形排版（WORK-2026-054，修 AI 绘图排布不均）
 
 - 关联 ID：WORK-2026-054；QA `TR-20260816-005`。

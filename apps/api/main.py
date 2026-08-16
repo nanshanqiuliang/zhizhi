@@ -41,6 +41,7 @@ from knowledge_tree_infrastructure.workspace import (
     backup_workspace,
     build_answer_context,
     create_workspace,
+    get_anchors_by_ids,
     get_page_text,
     get_resource_file_path,
     get_resource_mime,
@@ -883,6 +884,55 @@ def create_app(
             }
         except WorkspaceError as error:
             raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/concepts/{concept_id}/anchors")
+    def get_concept_anchors(workspace_id: str, concept_id: str) -> JsonObject:
+        """Resolve a concept's evidence anchors for one-click jump-to-source.
+
+        Dangling evidence ids (web-search drafts, cleaned anchors) are skipped
+        so the panel only lists real, openable sources.
+        """
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = load_course_graph(layout)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        concepts = graph.get("concepts")
+        concept = next(
+            (
+                item
+                for item in (concepts if isinstance(concepts, list) else [])
+                if str(item.get("id")) == concept_id
+            ),
+            None,
+        )
+        if concept is None:
+            raise HTTPException(status_code=404, detail={"code": "concept_missing"})
+        evidence_ids = [
+            str(item) for item in (concept.get("evidence_ids") or []) if isinstance(item, str)
+        ]
+        try:
+            anchors = get_anchors_by_ids(layout, evidence_ids)
+            resources = {str(item.id): item for item in list_resources(layout)}
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        payload_anchors: list[JsonObject] = []
+        for anchor in anchors:
+            resource = resources.get(anchor.resource_id)
+            payload_anchors.append(
+                {
+                    "anchor_id": anchor.id,
+                    "resource_id": anchor.resource_id,
+                    "page": anchor.page,
+                    "label": (
+                        anchor.payload.get("label", "") if isinstance(anchor.payload, dict) else ""
+                    ),
+                    "resource_name": resource.display_name if resource else "",
+                    "mime": resource.mime if resource else "",
+                }
+            )
+        return {"anchors": payload_anchors}
 
     @app.post("/api/workspaces/{workspace_id}/ai-draft")
     async def post_ai_draft(workspace_id: str, request: Request) -> JsonObject:
