@@ -1785,3 +1785,46 @@ a:focus-visible {
   display: flex;
   gap: 8px;
 }
+
+/* Web search agent (WORK-2026-053): topic input + draft source list. */
+.web-search-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.web-search-control label {
+  font-size: 12px;
+  color: #5a6080;
+}
+
+.web-search-control input {
+  padding: 6px 10px;
+  border: 1px solid rgba(125, 125, 155, 0.4);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.ai-settings-divider {
+  border-top: 1px solid rgba(125, 125, 155, 0.3);
+  margin: 6px 0;
+}
+
+.search-source-block {
+  margin-bottom: 8px;
+}
+
+.search-source-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.search-source-list a {
+  color: #2d54a8;
+  word-break: break-all;
+}

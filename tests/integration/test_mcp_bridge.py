@@ -204,6 +204,7 @@ def test_mcp_toolset_is_read_only(tmp_path: Path) -> None:
         "propose_patch",
         "proposal_status",
         "export_png",
+        "search_draft",
     }
     # No graph-write-capable tool verb may appear in any tool name.
     for forbidden in ("write", "apply", "submit", "commit", "save", "delete", "accept"):
@@ -303,6 +304,7 @@ def _stdio_smoke(root: Path) -> None:
                 "propose_patch",
                 "proposal_status",
                 "export_png",
+                "search_draft",
             }
             result = await session.call_tool("list_workspaces", {})
             text = result.content[0].text
@@ -425,3 +427,66 @@ def test_export_png_writes_exports_file_without_touching_graph(tmp_path: Path) -
 
     graph = _call_tool(server, "read_workspace", workspace_id=workspace_id)
     assert graph["graph"]["revision_no"] == 0
+
+
+# -- WORK-2026-053: search_draft searches the web, still only proposes ---------
+
+
+def _search_server(root: Path) -> Any:
+    """Server with injected searcher + workspace generator (offline)."""
+
+    def searcher(query: str) -> list[JsonObject]:
+        return [
+            {
+                "title": f"{query} 资料",
+                "url": "https://example.com/mcp",
+                "snippet": f"{query} 的摘要内容。",
+            }
+        ]
+
+    return build_mcp_server(
+        root,
+        workspace_draft_generator=_fake_workspace_draft,
+        web_searcher=searcher,
+    )
+
+
+def test_mcp_toolset_grows_to_eight_with_search_draft(tmp_path: Path) -> None:
+    server = _search_server(tmp_path)
+    tools = {item.name for item in server._tool_manager.list_tools()}  # noqa: SLF001
+    assert tools == {
+        "list_workspaces",
+        "read_workspace",
+        "preview_draft",
+        "validate_patch",
+        "propose_patch",
+        "proposal_status",
+        "export_png",
+        "search_draft",
+    }
+    for forbidden in ("write", "apply", "submit", "commit", "save", "delete", "accept"):
+        assert not any(forbidden in tool for tool in tools)
+
+
+def test_search_draft_returns_untrusted_draft_without_writing(tmp_path: Path) -> None:
+    workspace_id = _seed_workspace(tmp_path)
+    server = _search_server(tmp_path)
+
+    result = _call_tool(server, "search_draft", workspace_id=workspace_id, query="微积分")
+    assert result["ok"] is True
+    assert result["patch"]["requires_confirmation"] is True
+    assert result["patch"]["confirmed"] is False
+    assert result["sources"] == [{"title": "微积分 资料", "url": "https://example.com/mcp"}]
+
+    graph = _call_tool(server, "read_workspace", workspace_id=workspace_id)
+    assert graph["graph"]["revision_no"] == 0
+    assert graph["graph"]["concepts"] == []
+
+
+def test_search_draft_without_configuration_fails_closed(tmp_path: Path) -> None:
+    workspace_id = _seed_workspace(tmp_path)
+    server = build_mcp_server(tmp_path)  # no injected searcher, no key
+
+    result = _call_tool(server, "search_draft", workspace_id=workspace_id, query="微积分")
+    assert result["ok"] is False
+    assert result["code"] == "web_search_not_available"

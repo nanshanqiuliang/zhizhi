@@ -64,7 +64,7 @@ describe("AI settings", () => {
     const api = mockApi();
     render(<App api={api} />);
 
-    const button = await screen.findByRole("button", { name: "AI 设置" });
+    const button = await screen.findByRole("button", { name: "AI 与搜索设置" });
     fireEvent.click(button);
     expect(screen.getByRole("dialog", { name: "AI 设置" })).toBeInTheDocument();
 

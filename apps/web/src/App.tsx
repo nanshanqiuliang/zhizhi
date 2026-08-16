@@ -12,6 +12,8 @@ import type {
   PersistApi,
   ResourceInfo,
   SearchResultItem,
+  WebSearchSettings,
+  WebSearchSource,
   WorkspaceSnapshot,
 } from "./api";
 import { DEFAULT_WORKSPACE_ID, buildSetLockPatch } from "./api";
@@ -281,6 +283,11 @@ export function App({
   const [aiSettings, setAiSettings] = useState<{ configured: boolean; enabled: boolean } | null>(null);
   const [showAiSettings, setShowAiSettings] = useState(false);
   const [aiKeyInput, setAiKeyInput] = useState("");
+  const [webSearchSettings, setWebSearchSettings] = useState<WebSearchSettings | null>(null);
+  const [webSearchProvider, setWebSearchProvider] = useState("tavily");
+  const [webSearchKeyInput, setWebSearchKeyInput] = useState("");
+  const [searchTopic, setSearchTopic] = useState("");
+  const [searchSources, setSearchSources] = useState<WebSearchSource[]>([]);
   const [sidebarWidth, setSidebarWidth] = useState(250);
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [connectMode, setConnectMode] = useState(false);
@@ -372,6 +379,17 @@ export function App({
       })
       .catch(() => {
         if (!cancelled) setAiSettings({ configured: false, enabled: false });
+      });
+    api
+      .getWebSearchSettings?.()
+      .then((settings) => {
+        if (!cancelled) {
+          setWebSearchSettings(settings);
+          setWebSearchProvider(settings.provider);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setWebSearchSettings({ provider: "tavily", configured: false, enabled: false });
       });
     api
       .listWorkspaces?.()
@@ -673,6 +691,7 @@ export function App({
     if (!api) return;
     setDraft(null);
     setDraftError(null);
+    setSearchSources([]);
     setDraftStatus("generating");
     try {
       const result = await api.generateDraft(resource?.id);
@@ -684,6 +703,58 @@ export function App({
       setDraftStatus("failed");
       setDraftError(code === "ai_not_available" ? "AI 未连接" : `草案生成失败（${code}）`);
       setStatus(code === "ai_not_available" ? "AI 未连接，无法生成草案" : "草案生成失败");
+    }
+  }
+
+  async function handleSearchDraft() {
+    if (!api?.generateSearchDraft || !searchTopic.trim() || draftStatus === "generating") return;
+    setDraft(null);
+    setDraftError(null);
+    setSearchSources([]);
+    setDraftStatus("generating");
+    try {
+      const result = await api.generateSearchDraft(searchTopic.trim());
+      setDraft({ draft: result.draft, patch: result.patch });
+      setSearchSources(result.sources);
+      setDraftStatus("ready");
+      setStatus(`已从网络生成草案：${result.draft.concepts.length} 个概念，来源 ${result.sources.length} 个网页`);
+    } catch (error) {
+      const code = (error as Error).message;
+      setDraftStatus("failed");
+      const message =
+        code === "web_search_not_available"
+          ? "搜索未配置（在 AI 设置里填写搜索 Provider 的 API Key）"
+          : code === "ai_not_available"
+            ? "AI 未连接（搜索草案还需要 DeepSeek Key）"
+            : `搜索草案失败（${code}）`;
+      setDraftError(message);
+      setStatus("网络主题草案生成失败");
+    }
+  }
+
+  async function handleSaveWebSearchKey() {
+    if (!api?.setWebSearchKey) return;
+    try {
+      const result = await api.setWebSearchKey(webSearchProvider, webSearchKeyInput.trim());
+      setWebSearchSettings({ provider: result.provider, configured: result.configured, enabled: true });
+      setWebSearchKeyInput("");
+      setStatus("已保存 Web 搜索设置");
+    } catch (error) {
+      setStatus(`保存搜索设置失败（${(error as Error).message}）`);
+    }
+  }
+
+  async function handleClearWebSearchKey() {
+    if (!api?.clearWebSearchKey) return;
+    try {
+      await api.clearWebSearchKey();
+      setWebSearchSettings((prev) =>
+        prev ? { ...prev, configured: false, enabled: false } : prev,
+      );
+      setWebSearchKeyInput("");
+      setStatus("已清除 Web 搜索 Key");
+    } catch (error) {
+      setStatus(`清除搜索 Key 失败（${(error as Error).message}）`);
     }
   }
 
@@ -700,6 +771,7 @@ export function App({
         restoreDrafts(refreshed, selectedId);
       }
       setDraft(null);
+      setSearchSources([]);
       setDraftStatus("idle");
       setStatus("已接受 AI 草案并写入知识树");
       void refreshHistory();
@@ -794,6 +866,7 @@ export function App({
 
   function rejectDraft() {
     setDraft(null);
+    setSearchSources([]);
     setDraftStatus("idle");
     setDraftError(null);
     setStatus("已丢弃 AI 草案");
@@ -1341,7 +1414,7 @@ export function App({
           )}
           {api?.getAiSettings && (
             <button type="button" className="ai-settings-button" onClick={() => setShowAiSettings(true)}>
-              AI 设置
+              AI 与搜索设置
             </button>
           )}
         </div>
@@ -1528,6 +1601,27 @@ export function App({
               >
                 从全部资料生成思维导图
               </button>
+            )}
+            {api?.generateSearchDraft && (
+              <div className="web-search-control">
+                <label htmlFor="web-topic">网络主题</label>
+                <input
+                  id="web-topic"
+                  type="text"
+                  maxLength={200}
+                  placeholder="输入主题，例如：机器学习入门"
+                  value={searchTopic}
+                  onChange={(event) => setSearchTopic(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="import-control"
+                  disabled={draftStatus === "generating" || draftStatus === "applying" || !searchTopic.trim()}
+                  onClick={() => void handleSearchDraft()}
+                >
+                  从网络主题生成思维导图
+                </button>
+              </div>
             )}
             {importStatus === "failed" && <p className="import-note">导入失败，请检查文件类型与大小</p>}
             {importStatus === "importing" && <p className="import-note">导入中…</p>}
@@ -1872,6 +1966,18 @@ export function App({
               <button type="button" className="viewer-close" onClick={rejectDraft}>关闭</button>
             </header>
             <div className="draft-body" aria-live="polite">
+              {searchSources.length > 0 && (
+                <div className="search-source-block">
+                  <p className="overline">网络来源（{searchSources.length}）</p>
+                  <ul className="search-source-list">
+                    {searchSources.map((source) => (
+                      <li key={source.url}>
+                        <a href={source.url} target="_blank" rel="noreferrer noopener">{source.title}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="draft-columns">
                 <div className="draft-list">
                   <p className="overline">概念（{draft.draft.concepts.length}）</p>
@@ -2095,6 +2201,51 @@ export function App({
                 onChange={(event) => setAiKeyInput(event.target.value)}
               />
             </label>
+            {api?.setWebSearchKey && (
+              <div className="ai-settings-divider" />
+            )}
+            {api?.setWebSearchKey && (
+              <>
+                <div className="ai-settings-head">
+                  <p className="overline">Web 搜索</p>
+                  <strong>接入搜索 Provider（可选）</strong>
+                  <span>
+                    {webSearchSettings?.enabled
+                      ? `状态：已连接（${webSearchSettings.provider}，可从网络主题生成草案）`
+                      : "状态：未连接（无 Key 时网络搜索不可用）"}
+                  </span>
+                </div>
+                <label className="ai-settings-field" htmlFor="web-search-provider">
+                  搜索 Provider
+                  <select
+                    id="web-search-provider"
+                    value={webSearchProvider}
+                    onChange={(event) => setWebSearchProvider(event.target.value)}
+                  >
+                    <option value="tavily">Tavily</option>
+                    <option value="brave">Brave Search</option>
+                  </select>
+                </label>
+                <label className="ai-settings-field" htmlFor="web-search-key">
+                  Web 搜索 API Key
+                  <input
+                    id="web-search-key"
+                    type="password"
+                    value={webSearchKeyInput}
+                    placeholder="粘贴 Provider 的 API Key（仅保存在本机数据目录）"
+                    onChange={(event) => setWebSearchKeyInput(event.target.value)}
+                  />
+                </label>
+                <div className="ai-settings-actions">
+                  <button type="button" className="primary" onClick={() => void handleSaveWebSearchKey()}>
+                    保存搜索设置
+                  </button>
+                  <button type="button" onClick={() => void handleClearWebSearchKey()}>
+                    清除搜索 Key
+                  </button>
+                </div>
+              </>
+            )}
             <div className="ai-settings-actions">
               <button type="button" className="primary" onClick={() => void handleSaveAiKey()}>
                 保存并启用

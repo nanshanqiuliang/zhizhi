@@ -74,6 +74,22 @@
 6. stdio server 不占应用单实例锁；数据根与 key 沿用应用配置（`--data-root` /
    `data_root/ai.json`）。
 
+## Web 搜索 provider 门（WORK-2026-053）
+
+「主题 → 搜网 → 思维导图」链路的搜索侧约束（镜像 DeepSeek 门）：
+
+1. **显式 opt-in**：仅在用户于设置对话框保存 Provider Key（`data_root/web-search.json`）
+   或设置 `TAVILY_API_KEY`/`BRAVE_API_KEY` 环境变量后启用；无 key 时 API/MCP 一致
+   结构化 `web_search_not_available`，**不发出任何网络请求**。
+2. **受控密钥**：key 仅存本机数据目录（明文边界已文档化）、仅经 HTTPS 发往对应
+   provider 域名（Tavily/Brave 二选一，白名单）、任何端点/错误/日志不回显。
+3. **不可信输入**：搜索结果（标题/摘要）是外部不可信文本，只作为草案生成素材；
+   产出仍是 `requires_confirmation` 草案，经应用内确认 + GraphPatch 提交门写入。
+   prompt 注入面延续 fail-closed 处理（搜索文本不执行指令）。
+4. query 上限 200 字符；结果仅保留 HTTPS 链接、摘要截断 1000 字符；15s 超时；
+   错误稳定 `web_search_invalid_query`/`web_search_failed`（+rule）。
+5. live 测试双门：`RUN_LIVE_WEB_SEARCH_TESTS=1` + provider key，默认 skip。
+
 ## 可观测与回滚
 
 - 每次生成的前端状态（生成中/就绪/失败）可见；失败显示稳定错误码。

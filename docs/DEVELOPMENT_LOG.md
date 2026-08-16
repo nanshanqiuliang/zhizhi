@@ -2,6 +2,45 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — Web 搜索 agent「主题→搜网→思维导图」（WORK-2026-053，第 11 步切片 4）
+
+- 关联 ID：WORK-2026-053、WORK-2026-043（复用 workspace 草案管线）、WORK-2026-038
+  （镜像 ai_config 门控模式）；QA `TR-20260816-004`。
+- 实际变化：
+  ① 新增 `packages/infrastructure/.../web_search.py`：Tavily/Brave 搜索适配器
+     （stdlib urllib 镜像 LLM 传输层：仅 HTTPS、15s 超时、可注入 opener 供离线测试、
+     稳定 `web_search_invalid_query`/`web_search_failed` code+rule、key 不进错误/日志、
+     仅保留 HTTPS 结果、摘要截断 1000 字符）+ `build_searcher` 绑定。
+  ② 新增 `apps/api/web_search_config.py`：`web-search.json`（provider+key），
+     `ZHIZHI_WEB_SEARCH_PROVIDER`/`TAVILY_API_KEY`/`BRAVE_API_KEY` 环境兜底，
+     provider 白名单（镜像 ai_config）。
+  ③ API：`GET/PUT/DELETE /api/settings/web-search`（configured/enabled/provider，
+     key 不回显；非法 provider 422）+ `POST /api/workspaces/{id}/web-search-draft`
+     （query 校验→搜索→hits 组装 texts→workspace 草案管线→preview 门防御→
+     `{draft, patch, sources}`，不落库）；`create_app` 增 `web_searcher` 注入口
+     （holder 模式，PUT 设置后重建）。
+  ④ MCP：`search_draft(workspace_id, query)`（同语义；工具集 7→8，仍无图库写动词）；
+     `build_mcp_server` 增注入口。
+  ⑤ Web：设置对话框增「Web 搜索」块（provider 选择 + key + 保存/清除）；资料区
+     「网络主题」输入 + 「从网络主题生成思维导图」按钮（复用草案面板，顶部显示
+     网页来源链接；接受/拒绝/重新生成时清来源）；`api.ts` 增 4 个可选方法。
+  ⑥ live 冒烟 `tests/e2e/test_web_search_live_smoke.py`：双门
+     （`RUN_LIVE_WEB_SEARCH_TESTS=1` + provider key）默认 skip。
+- 影响模块/接口/schema/migration/prompt：新增 2 模块 + 4 端点 + 1 工具 + UI 块；
+  无契约/迁移变化；新配置文件 `web-search.json`（数据目录）。
+- 兼容性：无 key 时行为与之前完全一致（无网络出口）；既有测试仅按钮名断言更新
+  （「AI 设置」→「AI 与搜索设置」）。
+- 验证与证据：红灯（provider 模块缺失 collection error + Web 3 failed）→ 绿灯
+  （unit 6 + API 6 + MCP 4 + Web 3）；pytest **515 passed + 6 skipped**（+1 live skip）、
+  `pnpm check` **20 文件 / 76 测试**、mypy strict 45 文件、validator/ruff/build/
+  contracts/peers 全绿 + 远端 CI；QA `TR-20260816-004` PASS。
+- 性能/安全/运维影响：见 harness 文档「Web 搜索 provider 门」——显式 opt-in、
+  HTTPS-only 域名白名单、搜索文本为不可信素材（草案门不变）、key 本机明文边界。
+- 回滚：回退本切片提交即回到无搜索形态；`web-search.json` 可独立删除。
+- 遗留风险与下一步：真实 provider 全链路（含 DeepSeek）需 owner 配 key 复测（自动
+  测试只覆盖注入链路与 fail-closed）；来源锚点落库/跳转、搜索缓存/配额、问答接
+  搜索为后续可选。
+
 ## 2026-08-16 — 远端仓库接入与 CI 首跑（WORK-2026-052）
 
 - 关联 ID：WORK-2026-052、WORK-2026-006（workflow 声明）。

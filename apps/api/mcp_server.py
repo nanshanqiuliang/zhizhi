@@ -49,6 +49,7 @@ from knowledge_tree_infrastructure.proposals import (  # noqa: E402
     read_proposal,
     save_proposal,
 )
+from knowledge_tree_infrastructure.web_search import WebSearchError  # noqa: E402
 from knowledge_tree_infrastructure.workspace import (  # noqa: E402
     WorkspaceError,
     get_resource_mime,
@@ -63,6 +64,7 @@ from apps.api.ai_config import load_api_key  # noqa: E402
 from apps.api.main import (  # noqa: E402
     _LOCAL_ACTOR,
     _build_draft_generator,
+    _build_web_searcher,
     _build_workspace_draft_generator,
     _list_workspaces,
     _read_workspace_texts,
@@ -241,6 +243,68 @@ def tool_export_png(root: Path, workspace_id: str) -> JsonObject:
     return {"ok": True, "path": str(exported)}
 
 
+def tool_search_draft(
+    root: Path,
+    workspace_id: str,
+    query: str,
+    searcher: Any,
+    workspace_draft_generator: Any,
+) -> JsonObject:
+    """Topic -> web search -> untrusted draft; never writes the graph.
+
+    Search snippets are untrusted external input used only as draft material;
+    the returned patch stays `requires_confirmation` / `confirmed=false` behind
+    the same preview gate as every other AI draft.
+    """
+
+    if not isinstance(query, str) or not query.strip() or len(query.strip()) > 200:
+        return _error("web_search_invalid_query", rule="query_invalid")
+    if searcher is None:
+        return _error("web_search_not_available", rule="key_required")
+    if workspace_draft_generator is None:
+        return _error("ai_not_available", rule="key_required")
+    try:
+        hits = searcher(query.strip())
+    except WebSearchError as error:
+        return _error(error.code, **error.details)
+    if not hits:
+        return _error("web_search_failed", rule="no_results")
+
+    try:
+        layout = resolve_workspace(root / workspace_id)
+        graph = load_course_graph(layout)
+    except WorkspaceError as error:
+        return _error_from(error)
+    texts = [(f"web:{hit['url']}", f"{hit['title']}\n{hit['snippet']}") for hit in hits]
+    try:
+        result = cast(JsonObject, workspace_draft_generator(texts, graph))
+    except WorkspaceError as error:
+        return _error_from(error)
+    except (DraftError, DraftExtractionError) as error:
+        return _error_from(error)
+    except LLMProviderError as error:
+        return _error_from(error)
+
+    patch = result.get("patch")
+    if not isinstance(patch, dict):
+        return _error("draft_invalid", rule="patch_missing")
+    operations = patch.get("operations")
+    if not isinstance(operations, list) or not operations:
+        return _error("draft_invalid", rule="no_new_concepts")
+    try:
+        preview = preview_graph_patch(graph, patch, trusted_actor=_LOCAL_ACTOR)
+    except GraphPatchError as error:
+        return _error_from(error, code="draft_invalid")
+    if preview.status != "requires_confirmation":
+        return _error("draft_invalid", rule="patch_not_proposed")
+    return {
+        "ok": True,
+        "draft": result.get("draft"),
+        "patch": patch,
+        "sources": [{"title": hit["title"], "url": hit["url"]} for hit in hits],
+    }
+
+
 # -- server assembly ------------------------------------------------------------
 
 
@@ -249,6 +313,7 @@ def build_mcp_server(
     *,
     draft_generator: DraftGenerator | None = None,
     workspace_draft_generator: WorkspaceDraftGenerator | None = None,
+    web_searcher: Any = None,
 ) -> FastMCP:
     """Build the MCP server bound to a data root.
 
@@ -268,6 +333,7 @@ def build_mcp_server(
             if workspace_draft_generator is not None
             else _build_workspace_draft_generator(saved_key)
         ),
+        "search": (web_searcher if web_searcher is not None else _build_web_searcher(root)),
     }
 
     server = FastMCP(
@@ -276,7 +342,8 @@ def build_mcp_server(
             "知枝本地知识树。本服务器只读并提出 AI 草案：list_workspaces / "
             "read_workspace / preview_draft / validate_patch；propose_patch 可把补丁"
             "提交为待确认提议（pending），proposal_status 只读查询提议结果；"
-            "export_png 把当前知识树渲染为 exports/mindmap.png。"
+            "export_png 把当前知识树渲染为 exports/mindmap.png；search_draft 用"
+            "网络搜索主题生成待确认草案。"
             "AI 输出永远是不授信草案：确认与写库仅在应用内由用户完成，"
             "本服务器没有任何写图库或自确认工具。"
         ),
@@ -315,6 +382,10 @@ def build_mcp_server(
     @server.tool()
     def export_png(workspace_id: str) -> JsonObject:
         return tool_export_png(root, workspace_id)
+
+    @server.tool()
+    def search_draft(workspace_id: str, query: str) -> JsonObject:
+        return tool_search_draft(root, workspace_id, query, state["search"], state["workspace"])
 
     return server
 

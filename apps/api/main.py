@@ -32,6 +32,7 @@ from knowledge_tree_infrastructure.proposals import (
     read_proposal,
     settle_proposal,
 )
+from knowledge_tree_infrastructure.web_search import WebSearchError, build_searcher
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     WorkspaceLayout,
@@ -63,6 +64,10 @@ from knowledge_tree_infrastructure.workspace import (
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from apps.api.ai_config import load_api_key, save_api_key
+from apps.api.web_search_config import (
+    load_web_search_config,
+    save_web_search_config,
+)
 
 JsonObject = dict[str, Any]
 _LOCAL_ACTOR = {"type": "user", "id": "local-user"}
@@ -307,6 +312,18 @@ def _build_workspace_draft_generator(api_key: str | None) -> WorkspaceDraftGener
     return build_deepseek_workspace_draft_generator(api_key)
 
 
+def _build_web_searcher(
+    data_root: Path,
+) -> Callable[[str], list[JsonObject]] | None:
+    """Bind the saved provider+key into a searcher; None means fail closed."""
+
+    config = load_web_search_config(data_root)
+    api_key = config["api_key"]
+    if not api_key:
+        return None
+    return build_searcher(str(config["provider"]), api_key)
+
+
 def create_app(
     *,
     data_root: Path,
@@ -315,6 +332,7 @@ def create_app(
     answer_generator: AnswerGenerator | None = None,
     command_generator: CommandGenerator | None = None,
     workspace_draft_generator: WorkspaceDraftGenerator | None = None,
+    web_searcher: Callable[[str], list[JsonObject]] | None = None,
     web_dist: Path | None = None,
 ) -> FastAPI:
     """Build the persistence API with an explicit data root and CORS allowlist.
@@ -352,6 +370,11 @@ def create_app(
             if workspace_draft_generator is not None
             else _build_workspace_draft_generator(saved_key)
         ),
+    }
+    # Web-search searcher follows the same holder pattern: injected wins
+    # (tests/embedding), otherwise built from web-search.json / environment.
+    web_search_state: dict[str, Any] = {
+        "searcher": (web_searcher if web_searcher is not None else _build_web_searcher(root))
     }
 
     app.add_middleware(
@@ -431,6 +454,42 @@ def create_app(
         ai_state["answer_generator"] = None
         ai_state["command_generator"] = None
         ai_state["workspace_draft_generator"] = None
+        return {"status": "cleared", "configured": False}
+
+    @app.get("/api/settings/web-search")
+    def get_web_search_settings() -> JsonObject:
+        config = load_web_search_config(root)
+        configured = bool(config["api_key"])
+        return {
+            "provider": config["provider"],
+            "configured": configured,
+            "enabled": web_search_state["searcher"] is not None,
+        }
+
+    @app.put("/api/settings/web-search")
+    async def put_web_search_settings(request: Request) -> JsonObject:
+        payload = await _read_json(request)
+        provider = payload.get("provider")
+        api_key = payload.get("api_key")
+        if provider not in ("tavily", "brave"):
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "web_search_invalid_provider", "rule": "provider_unknown"},
+            )
+        if not isinstance(api_key, str) or not api_key.strip():
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "web_search_invalid_query", "rule": "api_key_missing"},
+            )
+        save_web_search_config(root, provider, api_key.strip())
+        web_search_state["searcher"] = build_searcher(provider, api_key.strip())
+        return {"status": "saved", "configured": True, "provider": provider}
+
+    @app.delete("/api/settings/web-search")
+    def delete_web_search_settings() -> JsonObject:
+        provider = str(load_web_search_config(root)["provider"])
+        save_web_search_config(root, provider, None)
+        web_search_state["searcher"] = None
         return {"status": "cleared", "configured": False}
 
     @app.get("/api/workspaces/{workspace_id}/graph")
@@ -914,6 +973,96 @@ def create_app(
                 detail={"code": "draft_invalid", "rule": "patch_not_proposed"},
             )
         return result
+
+    @app.post("/api/workspaces/{workspace_id}/web-search-draft")
+    async def post_web_search_draft(workspace_id: str, request: Request) -> JsonObject:
+        """Topic -> web search -> untrusted draft (never writes the graph)."""
+
+        try:
+            payload = await _read_json(request)
+        except HTTPException as error:
+            raise error
+        query = payload.get("query")
+        if not isinstance(query, str) or not query.strip() or len(query.strip()) > 200:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "web_search_invalid_query", "rule": "query_invalid"},
+            )
+        searcher = web_search_state["searcher"]
+        if searcher is None:
+            raise HTTPException(status_code=503, detail={"code": "web_search_not_available"})
+        if ai_state["workspace_draft_generator"] is None:
+            raise HTTPException(status_code=503, detail={"code": "ai_not_available"})
+        try:
+            hits = searcher(query.strip())
+        except WebSearchError as error:
+            status = 422 if error.code == "web_search_invalid_query" else 502
+            raise HTTPException(
+                status_code=status, detail={"code": error.code, **error.details}
+            ) from error
+        if not hits:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "web_search_failed", "rule": "no_results"},
+            )
+
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            graph = load_course_graph(layout)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        # Search snippets are UNTRUSTED external input used only as draft
+        # material; the result stays an unconfirmed patch behind the same
+        # preview gate as every other AI draft.
+        texts = [(f"web:{hit['url']}", f"{hit['title']}\n{hit['snippet']}") for hit in hits]
+        try:
+            result = cast(
+                WorkspaceDraftGenerator,
+                ai_state["workspace_draft_generator"],
+            )(texts, graph)
+        except (DraftError, DraftExtractionError) as error:
+            if error.code == "draft_invalid" and error.details.get("rule") == "no_concepts":
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "draft_invalid", "rule": "no_new_concepts"},
+                ) from error
+            raise HTTPException(
+                status_code=422, detail={"code": error.code, **error.details}
+            ) from error
+        except LLMProviderError as error:
+            raise HTTPException(
+                status_code=502, detail={"code": error.code, **error.details}
+            ) from error
+
+        patch = result.get("patch")
+        if not isinstance(patch, dict):
+            raise HTTPException(
+                status_code=500, detail={"code": "draft_invalid", "rule": "patch_missing"}
+            )
+        operations = patch.get("operations")
+        if not isinstance(operations, list) or not operations:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "draft_invalid", "rule": "no_new_concepts"},
+            )
+        try:
+            preview = preview_graph_patch(graph, patch, trusted_actor=_LOCAL_ACTOR)
+        except GraphPatchError as error:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "draft_invalid", "rule": error.code, **error.details},
+            ) from error
+        if preview.status != "requires_confirmation":
+            raise HTTPException(
+                status_code=500,
+                detail={"code": "draft_invalid", "rule": "patch_not_proposed"},
+            )
+        return {
+            "draft": result.get("draft"),
+            "patch": patch,
+            "sources": [{"title": hit["title"], "url": hit["url"]} for hit in hits],
+        }
 
     @app.post("/api/workspaces/{workspace_id}/ai-draft/accept")
     async def post_ai_draft_accept(workspace_id: str, request: Request) -> JsonObject:

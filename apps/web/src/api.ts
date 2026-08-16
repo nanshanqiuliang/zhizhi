@@ -136,6 +136,17 @@ export type ExternalProposal = {
   operations_count: number;
 };
 
+export type WebSearchSettings = {
+  provider: string;
+  configured: boolean;
+  enabled: boolean;
+};
+
+export type WebSearchSource = {
+  title: string;
+  url: string;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -185,6 +196,13 @@ export interface PersistApi {
   ): Promise<{ status: string; change_id: string; revision_no: number }>;
   rejectProposal?(proposalId: string): Promise<{ status: string }>;
   getGraphImageDownloadUrl?(): string;
+  getWebSearchSettings?(): Promise<WebSearchSettings>;
+  setWebSearchKey?(
+    provider: string,
+    apiKey: string,
+  ): Promise<{ status: string; configured: boolean; provider: string }>;
+  clearWebSearchKey?(): Promise<{ status: string; configured: boolean }>;
+  generateSearchDraft?(query: string): Promise<AiDraftResult & { sources: WebSearchSource[] }>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -494,6 +512,51 @@ export function httpPersistApi(
     },
     getGraphImageDownloadUrl(): string {
       return `${workspaceBase}/graph/image`;
+    },
+    async getWebSearchSettings(): Promise<WebSearchSettings> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/settings/web-search`);
+      if (!response.ok) {
+        throw new Error(`web search settings failed: ${response.status}`);
+      }
+      return (await response.json()) as WebSearchSettings;
+    },
+    async setWebSearchKey(
+      provider: string,
+      apiKey: string,
+    ): Promise<{ status: string; configured: boolean; provider: string }> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/settings/web-search`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, api_key: apiKey }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(formatCode(body) || `save web search failed: ${response.status}`);
+      }
+      return (await response.json()) as {
+        status: string;
+        configured: boolean;
+        provider: string;
+      };
+    },
+    async clearWebSearchKey(): Promise<{ status: string; configured: boolean }> {
+      const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/settings/web-search`, { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error(`clear web search failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string; configured: boolean };
+    },
+    async generateSearchDraft(query: string): Promise<AiDraftResult & { sources: WebSearchSource[] }> {
+      const response = await fetch(`${workspaceBase}/web-search-draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(formatCode(body) || `web search draft failed: ${response.status}`);
+      }
+      return (await response.json()) as AiDraftResult & { sources: WebSearchSource[] };
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${workspaceBase}/search?q=${encodeURIComponent(query)}`;
