@@ -133,8 +133,16 @@ def test_settle_reject_keeps_graph_untouched(layout: Any) -> None:
 
 
 def test_list_orders_by_creation(layout: Any) -> None:
-    first = save_proposal(layout, _patch(5), note="first")
-    second = save_proposal(layout, _patch(6), note="second")
+    # Injected monotonic ids keep the order stable even when both proposals
+    # land in the same millisecond (created_at ties; id is the tiebreaker).
+    sequence = iter(
+        (
+            "00000000-0000-7000-8000-0000000000a1",
+            "00000000-0000-7000-8000-0000000000a2",
+        )
+    )
+    first = save_proposal(layout, _patch(5), note="first", id_factory=lambda: next(sequence))
+    second = save_proposal(layout, _patch(6), note="second", id_factory=lambda: next(sequence))
 
     listed = list_proposals(layout)
     assert [item["proposal_id"] for item in listed] == [first["proposal_id"], second["proposal_id"]]

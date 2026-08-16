@@ -119,7 +119,15 @@ def list_proposals(layout: WorkspaceLayout, *, status: str | None = "pending") -
             continue
         if status is None or record.get("status") == status:
             records.append(record)
-    records.sort(key=lambda record: str(record.get("created_at", "")))
+    # Millisecond `created_at` can tie when two proposals land in the same
+    # tick; the uuidv7 id is the deterministic tiebreaker (CI caught the
+    # glob-order dependence of sorting by timestamp alone).
+    records.sort(
+        key=lambda record: (
+            str(record.get("created_at", "")),
+            str(record.get("proposal_id", "")),
+        )
+    )
     return records
 
 
