@@ -1,0 +1,28 @@
+QA TR-20260816-004 (WORK-2026-053 web search agent) - command log (all real runs, HEAD e91944b)
+All commands executed from E:\知识树 - 副本 on branch feature/WORK-2026-049-empty-graph-crash.
+
+== 阶段一：红灯真值（实现前，仅新增测试文件）==
+uv run python -m pytest -q tests/unit/test_web_search_provider.py tests/integration/test_web_search_api.py
+    -> ModuleNotFoundError: No module named 'knowledge_tree_infrastructure.web_search' (archived: logs/red-run-python.log)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.websearch.test.tsx
+    -> 3 failed (archived: logs/red-run-web.log)
+
+== 阶段二：绿灯（commit e91944b 实现后）==
+uv run python -m pytest -q tests/unit/test_web_search_provider.py tests/integration/test_web_search_api.py tests/integration/test_mcp_bridge.py
+    -> 27 passed, 1 warning (all injected opener/fakes; zero network)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.websearch.test.tsx
+    -> 3 passed
+
+== 阶段三：全部门禁（HEAD e91944b）==
+uv run ruff format --check packages scripts tests apps             -> 128 files already formatted
+uv run ruff check .                                               -> All checks passed
+uv run mypy scripts                                               -> Success: 16 source files
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+                                                                   -> Success: 45 source files
+uv run python -m scripts.validate_repository                       -> PASS
+uv run python -m pytest -q                                        -> 515 passed, 6 skipped in 26.06s
+pnpm check                                                        -> 20 files / 76 tests passed
+pnpm build                                                        -> OK (chunk>500kB warning pre-existing)
+pnpm --filter @knowledge-tree/contracts-ts check                  -> exit 0
+pnpm peers check                                                  -> No peer dependency issues found
+archived: gates-rest.log, gates-pnpm-check.log

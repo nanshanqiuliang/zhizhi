@@ -1,0 +1,31 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260816-004",
+  "work_item": "WORK-2026-053",
+  "title": "Web 搜索 agent「主题→搜网→思维导图」（第 11 步切片 4）",
+  "reviewed_commit": "e91944b",
+  "reviewed_commit_sha": "e91944b",
+  "implementation_commits": [
+    "e91944b feat(search): web search agent - topic to mindmap via Tavily/Brave (WORK-2026-053)"
+  ],
+  "branch": "feature/WORK-2026-049-empty-graph-crash",
+  "verdict": "PASS",
+  "findings": {"P0": 0, "P1": 0, "P2": 0, "P3": 2},
+  "findings_detail": [
+    {"id": "P-3-001", "severity": "P3", "status": "coverage-boundary", "title": "真实 provider 全链路未启用（无 key）", "detail": "live 冒烟双门（RUN_LIVE_WEB_SEARCH_TESTS=1 + TAVILY/BRAVE key）默认 skip；注入链路与 fail-closed 已覆盖，owner 配 key 后复测。"},
+    {"id": "P-3-002", "severity": "P3", "status": "updated", "title": "设置按钮更名（AI 设置 → AI 与搜索设置）", "detail": "App.ai-settings.test.tsx 按钮断言同步更新；对话框 aria-label 不变。"}
+  ],
+  "correlation_disclosure": "correlated_review: QA 与实现者同属自动化编排流程（提交作者 Codex，AI 实现），可能同模型/供应商；human_signature=false, owner_acceptance=false。",
+  "gates": {
+    "validate_repository": "PASS",
+    "ruff_format": "PASS (128 files)",
+    "ruff_check": "PASS",
+    "mypy_scripts": "PASS (16 files)",
+    "mypy_strict": "PASS (45 files)",
+    "pytest": "515 passed, 6 skipped",
+    "pnpm_check": "20 files / 76 tests PASS",
+    "pnpm_build": "PASS (pre-existing chunk warning)",
+    "contracts_ts_check": "PASS (no drift)",
+    "pnpm_peers_check": "PASS"
+  }
+}

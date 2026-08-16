@@ -1,0 +1,14 @@
+128 files already formatted
+All checks passed!
+Success: no issues found in 16 source files
+Success: no issues found in 45 source files
+PASS: repository skeleton, secret scan, graph/LLM contracts, calculus review packet, and v2 mock/replay harness (5 providers, 7 task profiles, 30/40/50 review items, inconclusive)
+SKIPPED [1] tests\e2e\test_web_search_live_smoke.py:34: live web-search smoke requires RUN_LIVE_WEB_SEARCH_TESTS=1 and TAVILY_API_KEY/BRAVE_API_KEY
+515 passed, 6 skipped, 1 warning in 26.06s
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @knowledge-tree/web@0.0.0 check: `tsc -b --pretty false && eslint . --max-warnings 0 && vitest run`
+Exit status 1
+[ELIFECYCLE] Command failed with exit code 1.
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+$ node scripts/generate.mjs --check && tsc --noEmit --pretty false
+No peer dependency issues found
