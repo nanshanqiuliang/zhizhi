@@ -1,0 +1,97 @@
+$ pnpm --filter @knowledge-tree/contracts-ts check && pnpm --filter @knowledge-tree/web check
+$ node scripts/generate.mjs --check && tsc --noEmit --pretty false
+$ tsc -b --pretty false && eslint . --max-warnings 0 && vitest run
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mE:/知识树 - 副本/apps/web[39m
+
+ [32m✓[39m src/markdown.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstderr[2m | src/PdfViewer.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.empty.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.answer.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.edit.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.workspaces.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.proposals.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/ResourceImport.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.canvas.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.layout.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.persist.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.lock.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.draft.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.ai-settings.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+[90mstderr[2m | src/App.command.test.tsx
+[22m[39mWarning: Please use the `legacy` build in Node.js environments.
+
+ [32m✓[39m src/App.canvas.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 214[2mms[22m[39m
+ [32m✓[39m src/App.answer.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 526[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a question box and renders the answer with clickable sources [33m 524[2mms[22m[39m
+ [32m✓[39m src/App.ai-settings.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 669[2mms[22m[39m
+     [33m[2m✓[22m[39m opens the settings dialog and saves a key [33m 511[2mms[22m[39m
+ [32m✓[39m src/App.workspaces.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 696[2mms[22m[39m
+     [33m[2m✓[22m[39m lists courses and creates a new one via the factory [33m 464[2mms[22m[39m
+ [32m✓[39m src/ResourceImport.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 797[2mms[22m[39m
+     [33m[2m✓[22m[39m opens a markdown resource in the text viewer [33m 426[2mms[22m[39m
+ [32m✓[39m src/App.layout.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 829[2mms[22m[39m
+     [33m[2m✓[22m[39m shows the AI answer output inside the right column [33m 508[2mms[22m[39m
+ [32m✓[39m src/App.proposals.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 855[2mms[22m[39m
+     [33m[2m✓[22m[39m lists pending proposals from external AI clients [33m 311[2mms[22m[39m
+ [32m✓[39m src/App.edit.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 978[2mms[22m[39m
+     [33m[2m✓[22m[39m adds a free concept block without a parent edge [33m 306[2mms[22m[39m
+ [32m✓[39m src/App.empty.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 999[2mms[22m[39m
+ [32m✓[39m src/App.command.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1126[2mms[22m[39m
+     [33m[2m✓[22m[39m interprets a command and shows a preview with accept/reject [33m 507[2mms[22m[39m
+     [33m[2m✓[22m[39m accept flips confirmed and reject never applies [33m 517[2mms[22m[39m
+ [32m✓[39m src/PdfViewer.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1143[2mms[22m[39m
+     [33m[2m✓[22m[39m opens a resource in the page-text viewer [33m 491[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a jump-to-source button and jumps to the anchored page [33m 394[2mms[22m[39m
+ [32m✓[39m src/PdfRender.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1193[2mms[22m[39m
+     [33m[2m✓[22m[39m opens a PDF in the rendered view with a canvas [33m 794[2mms[22m[39m
+     [33m[2m✓[22m[39m highlights a bbox anchor on the rendered page [33m 397[2mms[22m[39m
+ [32m✓[39m src/App.draft.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1412[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a generate-draft action for imported text resources [33m 382[2mms[22m[39m
+     [33m[2m✓[22m[39m generates, previews, accepts and rejects a draft [33m 609[2mms[22m[39m
+ [32m✓[39m src/App.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 1541[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the sample workspace and names unavailable capabilities [33m 380[2mms[22m[39m
+     [33m[2m✓[22m[39m selects a node and edits its title and note with undo and redo [33m 578[2mms[22m[39m
+ [32m✓[39m src/App.lock.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1909[2mms[22m[39m
+     [33m[2m✓[22m[39m locks a concept's content through the patch gate [33m 652[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a specific message when saving hits a lock [33m 780[2mms[22m[39m
+ [32m✓[39m src/App.persist.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 2325[2mms[22m[39m
+     [33m[2m✓[22m[39m loads a saved graph from the API on mount [33m 479[2mms[22m[39m
+     [33m[2m✓[22m[39m auto-saves edits and shows save status [33m 900[2mms[22m[39m
+     [33m[2m✓[22m[39m shows save failure and keeps the draft [33m 715[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m18 passed[39m[22m[90m (18)[39m
+[2m      Tests [22m [1m[32m72 passed[39m[22m[90m (72)[39m
+[2m   Start at [22m 15:36:55
+[2m   Duration [22m 4.84s[2m (transform 1.85s, setup 6.37s, import 3.32s, tests 17.23s, environment 28.44s)[22m
+

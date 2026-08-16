@@ -1,0 +1,14 @@
+121 files already formatted
+All checks passed!
+Success: no issues found in 16 source files
+Success: no issues found in 42 source files
+PASS: repository skeleton, secret scan, graph/LLM contracts, calculus review packet, and v2 mock/replay harness (5 providers, 7 task profiles, 30/40/50 review items, inconclusive)
+SKIPPED [1] tests\e2e\test_deepseek_live_smoke.py:152: live DeepSeek smoke requires RUN_LIVE_LLM_TESTS=1 and DEEPSEEK_API_KEY
+493 passed, 5 skipped, 1 warning in 25.25s
+[2m   Start at [22m 15:36:27
+[2m   Duration [22m 4.88s[2m (transform 2.41s, setup 7.92s, import 3.63s, tests 18.02s, environment 25.89s)[22m
+
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+$ node scripts/generate.mjs --check && tsc --noEmit --pretty false
+No peer dependency issues found
