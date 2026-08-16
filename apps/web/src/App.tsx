@@ -158,38 +158,106 @@ function parentOf(snapshot: WorkspaceSnapshot, nodeId: string) {
   return snapshot.edges.find((edge) => edge.to === nodeId)?.from;
 }
 
+// Vertical tidy-tree auto-layout (WORK-2026-054): parents stack above their
+// children, each parent centered over its children block, siblings spread with
+// a non-cramped gap, isolated nodes drop to a bottom row, and position-locked
+// nodes stay put (their children re-root as new subtree tops).
+const LAYOUT_X_GAP = 240;
+const LAYOUT_Y_GAP = 190;
+const LAYOUT_LEFT = 40;
+const LAYOUT_TOP = 44;
+
 function layoutWorkspace(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
-  const positions = new Map<string, { x: number; y: number }>([
-    ["course", { x: 390, y: 44 }],
-    ["limit", { x: 115, y: 205 }],
-    ["continuity", { x: 390, y: 205 }],
-    ["derivative", { x: 665, y: 205 }],
-  ]);
-  const childGroups = new Map<string, string[]>();
-
+  const byId = new Map(snapshot.nodes.map((node) => [node.id, node]));
+  const layoutParent = new Map<string, string>();
+  const connected = new Set<string>();
   for (const edge of snapshot.edges) {
-    const children = childGroups.get(edge.from) ?? [];
-    children.push(edge.to);
-    childGroups.set(edge.from, children);
+    if (!byId.has(edge.from) || !byId.has(edge.to) || edge.from === edge.to) continue;
+    connected.add(edge.from);
+    connected.add(edge.to);
+    if (!layoutParent.has(edge.to)) layoutParent.set(edge.to, edge.from);
+  }
+  const childrenOf = new Map<string, string[]>();
+  for (const [child, parent] of layoutParent) {
+    const list = childrenOf.get(parent) ?? [];
+    list.push(child);
+    childrenOf.set(parent, list);
   }
 
-  const branchX = new Map<string, number>([
-    ["limit", 115],
-    ["continuity", 390],
-    ["derivative", 665],
-  ]);
-
-  for (const [parentId, children] of childGroups) {
-    if (parentId === "course") continue;
-    const center = branchX.get(parentId) ?? snapshot.nodes.find((node) => node.id === parentId)?.x ?? 390;
-    const width = Math.max(170, (children.length - 1) * 170);
-    children.forEach((childId, index) => {
-      positions.set(childId, {
-        x: center - width / 2 + index * 170,
-        y: 405,
-      });
-    });
+  const positions = new Map<string, { x: number; y: number }>();
+  const roots: string[] = [];
+  const isolated: string[] = [];
+  for (const node of snapshot.nodes) {
+    if (node.positionLocked) continue;
+    if (!connected.has(node.id)) {
+      isolated.push(node.id);
+      continue;
+    }
+    const parent = layoutParent.get(node.id);
+    if (!parent || byId.get(parent)?.positionLocked) roots.push(node.id);
   }
+
+  // Depth-first placement over a BFS depth map; cycles (free-drawn graphs)
+  // simply stop at already-visited nodes instead of looping.
+  const depthOf = new Map<string, number>();
+  let maxDepth = 0;
+  const queue: Array<{ id: string; depth: number }> = roots.map((id) => ({ id, depth: 0 }));
+  while (queue.length > 0) {
+    const { id, depth } = queue.shift() as { id: string; depth: number };
+    if (depthOf.has(id)) continue;
+    depthOf.set(id, depth);
+    maxDepth = Math.max(maxDepth, depth);
+    for (const child of childrenOf.get(id) ?? []) {
+      if (!byId.get(child)?.positionLocked && !depthOf.has(child)) {
+        queue.push({ id: child, depth: depth + 1 });
+      }
+    }
+  }
+
+  const widthMemo = new Map<string, number>();
+  const kidsOf = (id: string): string[] =>
+    (childrenOf.get(id) ?? [])
+      .filter(
+        (child) =>
+          !byId.get(child)?.positionLocked && depthOf.get(child) === (depthOf.get(id) ?? -2) + 1,
+      )
+      .sort();
+  const widthOf = (id: string): number => {
+    const memo = widthMemo.get(id);
+    if (memo !== undefined) return memo;
+    const kids = kidsOf(id);
+    const width =
+      kids.length === 0
+        ? LAYOUT_X_GAP
+        : Math.max(
+            LAYOUT_X_GAP,
+            kids.reduce((sum, kid) => sum + widthOf(kid), 0),
+          );
+    widthMemo.set(id, width);
+    return width;
+  };
+
+  const place = (id: string, left: number): void => {
+    const width = widthOf(id);
+    positions.set(id, { x: left + width / 2, y: LAYOUT_TOP + (depthOf.get(id) ?? 0) * LAYOUT_Y_GAP });
+    let cursor = left;
+    for (const child of kidsOf(id)) {
+      place(child, cursor);
+      cursor += widthOf(child);
+    }
+  };
+
+  let cursor = LAYOUT_LEFT;
+  for (const root of roots.sort()) {
+    place(root, cursor);
+    cursor += widthOf(root);
+  }
+
+  // Isolated nodes (no edges at all) get their own row below the deepest tree.
+  const bottomRow = LAYOUT_TOP + (maxDepth + 1) * LAYOUT_Y_GAP;
+  isolated.sort().forEach((id, index) => {
+    positions.set(id, { x: LAYOUT_LEFT + (index + 0.5) * LAYOUT_X_GAP, y: bottomRow });
+  });
 
   return {
     ...snapshot,

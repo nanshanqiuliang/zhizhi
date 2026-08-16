@@ -355,23 +355,39 @@ def assign_draft_layout(
     relations: Iterable[DraftRelation],
     *,
     view_id: str,
-    x_gap: float = 220.0,
-    y_gap: float = 140.0,
+    x_gap: float = 260.0,
+    y_gap: float = 210.0,
 ) -> tuple[tuple[str, float, float], ...]:
-    """Lay concepts out in topological layers along `prerequisite_of` edges.
+    """Vertical tidy-tree layout along `prerequisite_of` edges (WORK-2026-054).
 
-    Returns `(label, x, y)` tuples. Nodes with no prerequisite ancestor sit on
-    layer 0; each layer is horizontally spaced and internally label-sorted.
+    Returns `(label, x, y)` tuples where x is a horizontal slot coordinate and
+    y grows downward. Levels come from the longest prerequisite chain; each
+    concept hangs under exactly one layout parent (its deepest prerequisite,
+    so DAG multi-parent concepts are placed once), children are spread side by
+    side with the parent centered over them, and concepts without any
+    prerequisite edge form a bottom row instead of crowding the top.
     """
 
     labels = [concept.label for concept in concepts]
-    indegree = {label: 0 for label in labels}
+    label_set = set(labels)
+    prereq_parents: dict[str, list[str]] = {label: [] for label in labels}
+    has_prereq_edge: set[str] = set()
     adjacency: dict[str, list[str]] = {label: [] for label in labels}
+    indegree: dict[str, int] = {label: 0 for label in labels}
     for relation in relations:
-        if relation.edge_type == "prerequisite_of":
-            adjacency[relation.source_label].append(relation.target_label)
-            indegree[relation.target_label] += 1
+        if relation.edge_type != "prerequisite_of":
+            continue
+        source = relation.source_label
+        target = relation.target_label
+        if source not in label_set or target not in label_set or source == target:
+            continue
+        adjacency[source].append(target)
+        indegree[target] += 1
+        prereq_parents[target].append(source)
+        has_prereq_edge.add(source)
+        has_prereq_edge.add(target)
 
+    # Longest-chain levels (topological, deterministic order).
     level: dict[str, int] = {}
     queue: deque[str] = deque(sorted(label for label in labels if indegree[label] == 0))
     for label in queue:
@@ -386,14 +402,78 @@ def assign_draft_layout(
     for label in labels:
         level.setdefault(label, 0)
 
-    layers: dict[int, list[str]] = {}
-    for label in labels:
-        layers.setdefault(level[label], []).append(label)
-    result: list[tuple[str, float, float]] = []
-    for layer_no in sorted(layers):
-        for index, label in enumerate(sorted(layers[layer_no])):
-            result.append((label, index * x_gap, layer_no * y_gap))
-    return tuple(result)
+    # Orphans (no prerequisite edge at all) go to their own bottom row; every
+    # other concept hangs under its deepest prerequisite (level-1) parent.
+    orphans = sorted(label for label in labels if label not in has_prereq_edge)
+    orphan_set = set(orphans)
+    primary_parent: dict[str, str] = {}
+    for label in sorted(labels):
+        if label in orphan_set:
+            continue
+        primary = None
+        for parent in sorted(prereq_parents[label]):
+            if level[parent] == level[label] - 1:
+                primary = parent
+                break
+        if primary is None and prereq_parents[label]:
+            primary = sorted(prereq_parents[label])[0]
+        if primary is not None:
+            primary_parent[label] = primary
+
+    def _in_parent_cycle(node: str) -> bool:
+        seen = set()
+        current = node
+        while current in primary_parent:
+            if current in seen:
+                return True
+            seen.add(current)
+            current = primary_parent[current]
+        return False
+
+    children_map: dict[str, list[str]] = {}
+    roots: list[str] = []
+    for label in sorted(labels):
+        if label in orphan_set:
+            continue
+        chosen = primary_parent.get(label)
+        if chosen is None or _in_parent_cycle(label):
+            roots.append(label)
+        else:
+            children_map.setdefault(chosen, []).append(label)
+
+    positions: dict[str, tuple[float, float]] = {}
+    width_memo: dict[str, float] = {}
+
+    def width_of(node: str) -> float:
+        memo = width_memo.get(node)
+        if memo is not None:
+            return memo
+        kids = children_map.get(node, [])
+        width = x_gap
+        if kids:
+            width = max(x_gap, sum(width_of(child) for child in kids))
+        width_memo[node] = width
+        return width
+
+    def place(node: str, left: float) -> None:
+        width = width_of(node)
+        positions[node] = (left + width / 2, level[node] * y_gap)
+        cursor = left
+        for child in children_map.get(node, []):
+            place(child, cursor)
+            cursor += width_of(child)
+
+    cursor = 0.0
+    for root in roots:
+        place(root, cursor)
+        cursor += width_of(root)
+
+    tree_bottom = max((level[label] for label in labels if label not in orphan_set), default=0)
+    orphan_row = (tree_bottom + 1) * y_gap
+    for index, orphan in enumerate(orphans):
+        positions[orphan] = ((index + 0.5) * x_gap, orphan_row)
+
+    return tuple((label, *positions[label]) for label in labels)
 
 
 # -- patch generation -----------------------------------------------------------
