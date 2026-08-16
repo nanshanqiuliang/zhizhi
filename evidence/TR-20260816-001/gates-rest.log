@@ -1,0 +1,9 @@
+PASS: repository skeleton, secret scan, graph/LLM contracts, calculus review packet, and v2 mock/replay harness (5 providers, 7 task profiles, 30/40/50 review items, inconclusive)
+SKIPPED [1] tests\e2e\test_deepseek_live_smoke.py:129: live DeepSeek smoke requires RUN_LIVE_LLM_TESTS=1 and DEEPSEEK_API_KEY
+SKIPPED [1] tests\e2e\test_deepseek_live_smoke.py:152: live DeepSeek smoke requires RUN_LIVE_LLM_TESTS=1 and DEEPSEEK_API_KEY
+476 passed, 5 skipped, 1 warning in 24.27s
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+$ node scripts/generate.mjs --check && tsc --noEmit --pretty false
+No peer dependency issues found

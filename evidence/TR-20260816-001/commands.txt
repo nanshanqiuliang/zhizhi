@@ -1,0 +1,30 @@
+QA TR-20260816-001 (WORK-2026-049 empty-graph crash fix) - command log (all real runs, HEAD 5094482)
+All commands executed from E:\知识树 - 副本 on branch feature/WORK-2026-049-empty-graph-crash.
+
+== 阶段一：红灯真值（实现前，仅新增测试文件）==
+pnpm --filter @knowledge-tree/web exec vitest run src/App.empty.test.tsx
+    -> 4 failed / 4 errors, exit 1
+       - renders an empty-state guide ...: Cannot read properties of undefined (reading 'tone') at App.tsx:1666
+       - recovers from an empty graph ...: same render crash
+       - does not crash when deleting the last remaining node: parent.id of undefined
+       - does not crash when undoing ... back to an empty graph: node.id of undefined (restoreDrafts)
+    archived: logs/red-run.log
+
+== 阶段二：实现（commit 5094482）后绿灯 ==
+pnpm --filter @knowledge-tree/web exec vitest run src/App.empty.test.tsx
+    -> 1 file passed, 4 tests passed
+    archived: logs/green-run.log
+
+== 阶段三：全部门禁（HEAD 5094482）==
+uv run python -m scripts.validate_repository                          -> PASS
+uv run ruff format --check packages scripts tests apps                -> 118 files already formatted
+uv run ruff check .                                                   -> All checks passed
+uv run mypy scripts                                                   -> Success: 16 source files
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+                                                                      -> Success: 41 source files
+uv run python -m pytest -q                                            -> 476 passed, 5 skipped in 24.27s
+pnpm check                                                            -> 17 files / 68 tests passed (tsc + eslint --max-warnings 0 + vitest)
+pnpm build                                                            -> OK (chunk>500kB warning pre-existing)
+pnpm --filter @knowledge-tree/contracts-ts check                      -> exit 0 (generate.mjs --check + tsc)
+pnpm peers check                                                      -> No peer dependency issues found
+archived: gates-pnpm-check.log, gates-rest.log, gates-python.log

@@ -1,0 +1,50 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260816-001",
+  "work_item": "WORK-2026-049",
+  "title": "空工作区（0 节点）渲染崩溃修复（BUG-2026-001）",
+  "reviewed_commit": "5094482",
+  "reviewed_commit_sha": "5094482",
+  "implementation_commits": [
+    "5094482 fix(web): empty-workspace render crash - empty-state guide + node[0] guards (WORK-2026-049, BUG-2026-001)"
+  ],
+  "branch": "feature/WORK-2026-049-empty-graph-crash",
+  "verdict": "PASS",
+  "findings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "P3": 0
+  },
+  "findings_detail": [
+    {
+      "id": "O-001",
+      "severity": "P3",
+      "status": "pre-existing",
+      "title": "vite chunk >500KB 构建警告（既有，非本变更引入）",
+      "detail": "pnpm build 输出 chunk-size 警告，沿用 TR-20260815-010 P-3-004 记录，行为未变化。"
+    }
+  ],
+  "coverage_boundary": [
+    "桌面 e2e（18 用例）未在本 TR 重跑：纯 Web 渲染变更且 pnpm check/build 全绿；随下次桌面产物重建统一复测。",
+    "空图仅能经契约直连/API/删光节点到达（后端 create_workspace 恒建 1 根节点）；4 条到达路径全部由本 TR 用例覆盖。"
+  ],
+  "correlation_disclosure": "correlated_review: QA 与实现者同属自动化编排流程（提交作者 Codex，AI 实现），可能同模型/供应商；human_signature=false, owner_acceptance=false，最终残余风险接受权归工作区所有者。",
+  "red_light": {
+    "command": "pnpm --filter @knowledge-tree/web exec vitest run src/App.empty.test.tsx",
+    "result": "4 failed / 4 errors, exit 1",
+    "log": "logs/red-run.log"
+  },
+  "gates": {
+    "validate_repository": "PASS",
+    "ruff_format": "PASS (118 files)",
+    "ruff_check": "PASS",
+    "mypy_scripts": "PASS (16 files)",
+    "mypy_strict": "PASS (41 files)",
+    "pytest": "476 passed, 5 skipped",
+    "pnpm_check": "17 files / 68 tests PASS",
+    "pnpm_build": "PASS (pre-existing chunk warning)",
+    "contracts_ts_check": "PASS (no drift)",
+    "pnpm_peers_check": "PASS"
+  }
+}
