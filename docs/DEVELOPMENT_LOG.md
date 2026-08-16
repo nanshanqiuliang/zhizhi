@@ -2,6 +2,28 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 空工作区（0 节点）渲染崩溃修复（WORK-2026-049，BUG-2026-001）
+
+- 关联 ID：WORK-2026-049、BUG-2026-001；QA `TR-20260816-001`。
+- 实际变化：`apps/web/src/App.tsx` 修复 4 条空图崩溃路径——① 详情面板空态守卫
+  （`present.nodes.length === 0` 时渲染「空工作区引导」区块 + 「添加总纲」按钮，
+  复用 `addConcept("root")`，不再渲染依赖 `selectedNode` 的详情）；② `loadGraph`
+  成功分支不再回退示例节点（空图保持空）；③ `restoreDrafts` 对空快照直接返回；
+  ④ `deleteSelected` 删除最后一个节点后跳过选中恢复。新增
+  `apps/web/src/App.empty.test.tsx`（4 用例：空图加载 / 空态建总纲 / 删最后节点 /
+  撤销回空图）。
+- 影响模块/接口/schema/migration/prompt：仅 `apps/web/src/App.tsx` + 新测试文件；
+  无契约/API/持久化变化。
+- 兼容性：正常非空图路径行为不变（既有 64 测试全绿）；空图边界从崩溃变为安全空态。
+- 验证与证据：红灯 4 failed（`selectedNode.tone` undefined，真实运行存档
+  `evidence/TR-20260816-001/logs/red-run.log`）→ 绿灯 4 passed；`pnpm check`
+  17 文件 / 68 测试、pytest 476 passed + 5 skipped、validator/ruff/mypy/build/
+  contracts/peers 全绿；QA `TR-20260816-001` PASS。
+- 性能/安全/运维影响：单次 length 判断，无安全面变化。
+- 回滚：回退本提交即回到崩溃行为；无数据迁移。
+- 遗留风险与下一步：BUG-2026-001 待桌面产物重建发布后 closed；空态 onboarding
+  增强（导入教学）为后续 UX 可选项。
+
 ## 2026-08-16 — 内置 MCP server（WORK-2026-048，第 11 步切片 1）
 
 - 关联 ID：WORK-2026-048、第 11 步、WORK-2026-043/046；QA `TR-20260815-010`。

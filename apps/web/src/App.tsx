@@ -321,10 +321,14 @@ export function App({
         if (cancelled) return;
         if (saved) {
           setPresent(saved);
-          const preferred = saved.nodes[0] ?? present.nodes[0];
-          setSelectedId(preferred.id);
-          setTitleDraft(preferred.title);
-          setNoteDraft(preferred.note);
+          // An empty saved graph is contract-legal: keep it empty instead of
+          // falling back to a demo node that no longer exists (BUG-2026-001).
+          const preferred = saved.nodes[0];
+          if (preferred) {
+            setSelectedId(preferred.id);
+            setTitleDraft(preferred.title);
+            setNoteDraft(preferred.note);
+          }
           setStatus("已从本地恢复保存的知识树");
         } else {
           setStatus("本地暂无保存内容，当前显示示例知识树");
@@ -779,6 +783,8 @@ export function App({
 
   function restoreDrafts(snapshot: WorkspaceSnapshot, preferredId: string) {
     const node = snapshot.nodes.find((candidate) => candidate.id === preferredId) ?? snapshot.nodes[0];
+    // Undo/redo can land on an empty snapshot; there is nothing to select then.
+    if (!node) return;
     setSelectedId(node.id);
     setTitleDraft(node.title);
     setNoteDraft(node.note);
@@ -987,9 +993,13 @@ export function App({
     };
     const parent = next.nodes.find((node) => node.id === parentId) ?? next.nodes[0];
     commit(next, `已删除“${selectedNode.title}”`);
-    setSelectedId(parent.id);
-    setTitleDraft(parent.title);
-    setNoteDraft(parent.note);
+    // Deleting the last node leaves nothing to reselect; the empty-state
+    // guide takes over the detail panel.
+    if (parent) {
+      setSelectedId(parent.id);
+      setTitleDraft(parent.title);
+      setNoteDraft(parent.note);
+    }
   }
 
   async function toggleLock(dimension: "content" | "position") {
@@ -1659,6 +1669,17 @@ export function App({
         </section>
 
         <div className="right-column">
+          {present.nodes.length === 0 ? (
+          <section className="detail-panel" aria-label="空工作区引导">
+          <div className="detail-header">
+            <div>
+              <p className="overline">节点详情</p>
+            </div>
+          </div>
+          <p className="edge-empty">这个工作区还没有节点。可以导入资料生成 AI 草案，或先添加一个总纲。</p>
+          <button type="button" className="primary-button" onClick={() => addConcept("root")}><Icon name="plus" />添加总纲</button>
+          </section>
+          ) : (
           <section className="detail-panel" aria-label="节点详情">
           <div className="detail-header">
             <div>
@@ -1732,6 +1753,7 @@ export function App({
             <div><strong>来源将在后续接入</strong><p>当前示例没有导入文档，不提供虚假的来源跳转。</p></div>
           </div>
           </section>
+          )}
 
           {/* AI_OUTPUT_PLACEHOLDER */}
           {draft && (

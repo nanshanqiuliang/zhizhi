@@ -75,6 +75,7 @@
 | WORK-2026-046 | 放宽 GraphPatch 单补丁操作数上限（maxitems 修复） | 已完成（QA `TR-20260815-007` PASS） | api + ai-draft + QA | WORK-2026-043/044 已验证 | `GraphPatch.operations.maxItems` 100→5000 + 生成产物 + 契约/API 回归测试（150 操作接受、上限+1 拒绝、240 操作全库草案）+ harness 文档补充 | `87f9c1a` 红灯；`f8d673c` 实现；pytest 469/469+5、Web 53/53、e2e 18/18；QA `TR-20260815-007` PASS |
 | WORK-2026-047 | 完整编辑工具箱（自由建块/接线/断线）+ 拖拽跳变修复 | 已完成（QA `TR-20260815-009` PASS） | web + api + QA | WORK-2026-040/045 已验证 | 拖拽后 click 不重定心（`suppressRecentOnClick`）；「添加概念/总纲」自由块 + 「连线」模式（边类型选择）+ 详情面板「关联关系」断线 + 关系锁保护；`ConceptEdge.edge_type` 往返保留（默认 related_to） | `8a67656` 红灯；`c878c44` 实现；Web 64/64、pytest 469/469+5、e2e 18/18；QA `TR-20260815-009` PASS |
 | WORK-2026-048 | 内置 MCP server（第 11 步切片 1：读 + AI 提议，零写工具） | 已完成（QA `TR-20260815-010` PASS） | api + desktop + QA | WORK-2026-043/046 已验证 | FastMCP（mcp<2）stdio server：`list_workspaces`/`read_workspace`/`preview_draft`/`validate_patch`（零写工具，AI 只读与提议）；launcher `--mcp-stdio`；build.spec hiddenimports；源码自举 sys.path | `0f5b1c2` 实现；`944a996` 清理；pytest 476/476+5、Web 64/64、e2e 18/18、冻结 MCP 冒烟 PASS；QA `TR-20260815-010` PASS |
+| WORK-2026-049 | 空工作区（0 节点）渲染崩溃修复（BUG-2026-001） | 已完成（QA `TR-20260816-001` PASS） | web + QA | BUG-2026-001 在案 | 详情面板空态守卫 + 引导（「添加总纲」）；加载/`restoreDrafts`/`deleteSelected` 三处 `nodes[0]` 回退防 undefined；新增 `App.empty.test.tsx` 4 用例（空图加载/空态建总纲/删最后节点/撤销回空图） | 红灯 4 failed（`selectedNode.tone` undefined）→ 绿灯 4 passed；Web 68/68、pytest 476/476+5、全门禁绿；QA `TR-20260816-001` PASS |
 
 ## 当前受阻项
 
