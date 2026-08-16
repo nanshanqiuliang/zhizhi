@@ -39,8 +39,6 @@ def _bootstrap_source_paths() -> None:
 
 _bootstrap_source_paths()
 
-from mcp.server.fastmcp import FastMCP  # noqa: E402
-
 from knowledge_tree_domain import GraphPatchError, preview_graph_patch  # noqa: E402
 from knowledge_tree_domain.ai_draft import DraftError  # noqa: E402
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError  # noqa: E402
@@ -53,6 +51,7 @@ from knowledge_tree_infrastructure.workspace import (  # noqa: E402
     read_resource_text,
     resolve_workspace,
 )
+from mcp.server.fastmcp import FastMCP  # noqa: E402
 
 from apps.api.ai_config import load_api_key  # noqa: E402
 from apps.api.main import (  # noqa: E402
@@ -109,22 +108,24 @@ def tool_preview_draft(
     workspace_draft_generator: WorkspaceDraftGenerator | None,
 ) -> JsonObject:
     """Run the AI draft pipeline without writing anything (untrusted proposal)."""
-    # Fail closed before touching storage when the needed generator is absent.
-    if resource_id:
-        if draft_generator is None:
-            return _error("ai_not_available", rule="key_required")
-    elif workspace_draft_generator is None:
-        return _error("ai_not_available", rule="key_required")
-
     try:
         layout = resolve_workspace(root / workspace_id)
         graph = load_course_graph(layout)
+    except WorkspaceError as error:
+        return _error_from(error)
+
+    try:
         if resource_id:
+            # Fail closed before touching storage when the generator is absent.
+            if draft_generator is None:
+                return _error("ai_not_available", rule="key_required")
             if get_resource_mime(layout, resource_id) == "application/pdf":
                 parse_pdf_resource(layout, resource_id)
             text = read_resource_text(layout, resource_id)
             result = cast(JsonObject, draft_generator(text, resource_id, graph))
         else:
+            if workspace_draft_generator is None:
+                return _error("ai_not_available", rule="key_required")
             texts = _read_workspace_texts(layout)
             if not texts:
                 return _error("draft_invalid", rule="no_resources")
@@ -155,8 +156,6 @@ def tool_preview_draft(
 
 def tool_validate_patch(root: Path, workspace_id: str, patch: JsonObject) -> JsonObject:
     """Dry-run the commit gate on a caller-supplied patch (no write)."""
-    if not isinstance(patch, dict):
-        return _error("patch_invalid", rule="patch_required")
     try:
         layout = resolve_workspace(root / workspace_id)
         graph = load_course_graph(layout)

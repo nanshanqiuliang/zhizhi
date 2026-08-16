@@ -182,8 +182,6 @@ def _server(root: Path) -> Any:
 
 def _call_tool(server: Any, tool: str, **kwargs: Any) -> JsonObject:
     """Invoke a tool's underlying function through the FastMCP tool registry."""
-    from mcp.server.fastmcp import server as fastmcp_server  # noqa: PLC0415
-
     manager = server._tool_manager  # noqa: SLF001 - test-only introspection
     fn = manager.get_tool(tool).fn
     result = fn(**kwargs)
@@ -192,8 +190,6 @@ def _call_tool(server: Any, tool: str, **kwargs: Any) -> JsonObject:
 
 def test_mcp_toolset_is_read_only(tmp_path: Path) -> None:
     server = _server(tmp_path)
-
-    from mcp.server.fastmcp import server as fastmcp_server  # noqa: PLC0415
 
     tools = {item.name for item in server._tool_manager.list_tools()}  # noqa: SLF001
     assert tools == {"list_workspaces", "read_workspace", "preview_draft", "validate_patch"}
@@ -280,20 +276,22 @@ def _stdio_smoke(root: Path) -> None:
     )
 
     async def run() -> None:
-        async with stdio_client(params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                tools = await session.list_tools()
-                names = {tool.name for tool in tools.tools}
-                assert names == {
-                    "list_workspaces",
-                    "read_workspace",
-                    "preview_draft",
-                    "validate_patch",
-                }
-                result = await session.call_tool("list_workspaces", {})
-                text = result.content[0].text
-                assert '"ok": true' in text
+        async with (
+            stdio_client(params) as (read, write),
+            ClientSession(read, write) as session,
+        ):
+            await session.initialize()
+            tools = await session.list_tools()
+            names = {tool.name for tool in tools.tools}
+            assert names == {
+                "list_workspaces",
+                "read_workspace",
+                "preview_draft",
+                "validate_patch",
+            }
+            result = await session.call_tool("list_workspaces", {})
+            text = result.content[0].text
+            assert '"ok": true' in text
 
     asyncio.run(run())
 
