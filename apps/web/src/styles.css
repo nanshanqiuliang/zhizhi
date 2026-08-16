@@ -1749,3 +1749,39 @@ a:focus-visible {
   background: none;
   padding: 0;
 }
+
+/* External MCP proposals (WORK-2026-050): queued patches from external AI
+   clients, confirmed one by one inside the app. */
+.proposal-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.proposal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(125, 125, 155, 0.35);
+  border-radius: 10px;
+  background: rgba(245, 245, 250, 0.6);
+}
+
+.proposal-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.proposal-summary strong {
+  font-size: 14px;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: 8px;
+}

@@ -127,6 +127,15 @@ export type CommandResult = {
   patch: Record<string, unknown>;
 };
 
+export type ExternalProposal = {
+  proposal_id: string;
+  created_at: string;
+  origin: string;
+  note: string;
+  status: string;
+  operations_count: number;
+};
+
 export interface PersistApi {
   loadGraph(): Promise<WorkspaceSnapshot | null>;
   saveGraph(graph: WorkspaceSnapshot): Promise<void>;
@@ -170,6 +179,11 @@ export interface PersistApi {
   listBackups(): Promise<string[]>;
   restoreBackup(filename: string): Promise<{ status: string }>;
   listHistory(): Promise<HistoryRecord[]>;
+  listProposals?(): Promise<ExternalProposal[]>;
+  acceptProposal?(
+    proposalId: string,
+  ): Promise<{ status: string; change_id: string; revision_no: number }>;
+  rejectProposal?(proposalId: string): Promise<{ status: string }>;
 }
 
 const WORKSPACE_ID = "00000000-0000-7000-8000-000000000001";
@@ -442,6 +456,40 @@ export function httpPersistApi(
       }
       const body = (await response.json()) as { records: HistoryRecord[] };
       return body.records;
+    },
+    async listProposals(): Promise<ExternalProposal[]> {
+      const response = await fetch(`${workspaceBase}/proposals`);
+      if (!response.ok) {
+        throw new Error(`proposals failed: ${response.status}`);
+      }
+      const body = (await response.json()) as { proposals: ExternalProposal[] };
+      return body.proposals;
+    },
+    async acceptProposal(
+      proposalId: string,
+    ): Promise<{ status: string; change_id: string; revision_no: number }> {
+      const response = await fetch(`${workspaceBase}/proposals/${proposalId}/accept`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(formatCode(body) || `accept proposal failed: ${response.status}`);
+      }
+      return (await response.json()) as {
+        status: string;
+        change_id: string;
+        revision_no: number;
+      };
+    },
+    async rejectProposal(proposalId: string): Promise<{ status: string }> {
+      const response = await fetch(`${workspaceBase}/proposals/${proposalId}/reject`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const body = await readError(response);
+        throw new Error(formatCode(body) || `reject proposal failed: ${response.status}`);
+      }
+      return (await response.json()) as { status: string };
     },
     async searchGraph(query: string): Promise<SearchResultItem[]> {
       const searchEndpoint = `${workspaceBase}/search?q=${encodeURIComponent(query)}`;

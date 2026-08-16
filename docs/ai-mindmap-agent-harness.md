@@ -47,20 +47,30 @@
 （`packages/domain` / `packages/infrastructure`），不引入 LangChain 等编排框架——编排本身
 保持可审计、确定性、可重放。
 
-## MCP 桥（WORK-2026-048，第 11 步切片 1）
+## MCP 桥（WORK-2026-048 切片 1 + WORK-2026-050 切片 2）
 
 桌面程序内置 MCP server（`--mcp-stdio`），供外部 AI 客户端调用。**约束**：
 
-1. **零写工具**：当前只暴露 `list_workspaces`/`read_workspace`/`preview_draft`/
-   `validate_patch`，没有任何写库/提交工具——外部 AI 只能读与提议；确认与写库仍只在本
-   应用内（预览→确认→提交门→锁定/历史）。后续若加写工具，必须重新过 harness 评审并
-   实现"外部提议 → 应用内确认"机制，不得让外部 AI 自确认。
-2. `preview_draft` 返回的补丁必须是 `requires_confirmation=true / confirmed=false` 的
+1. **外部 AI 永远不能写图库**：工具集为 `list_workspaces`/`read_workspace`/
+   `preview_draft`/`validate_patch`/`propose_patch`/`proposal_status`，没有任何
+   apply/commit/save/accept 类图库写工具。`propose_patch` 只把经
+   `preview_graph_patch` 防御性校验的**未确认**补丁（`requires_confirmation=true /
+   confirmed=false`，预确认补丁 fail-closed 拒绝）落为工作区 `proposals/` 目录下的
+   pending 提议文件（跨进程信道，非图库）；`proposal_status` 只读观察结果。
+2. **应用内确认机制（WORK-2026-050）**：提议仅在应用内 UI「外部提议」面板由用户逐条
+   接受/拒绝。接受 = sidecar API 把存储的提议补丁副本置 `confirmed=true` 后走
+   `apply_graph_patch` 提交门（锁/修订冲突/历史/可撤销，source=`mcp_proposal`），
+   成功才 settle accepted（附 change_id）；提交门拒绝时提议保持 pending（fail-closed）。
+   仅 pending→accepted/rejected 单向迁移。**外部 AI 不得自确认**——确认动作只存在于
+   应用内本地回环 API，MCP 无对应工具；会话级自动确认开关（默认关）为后续独立评审项。
+3. `preview_draft` 返回的补丁必须是 `requires_confirmation=true / confirmed=false` 的
    不可信草案，经 `preview_graph_patch` 防御性校验后才返回；无 key 时结构化
    `ai_not_available`，不崩溃、不吞错。
-3. `validate_patch` 只做预检（dry-run），不落库；错误保持稳定 `code/rule`。
-4. stdio 信道纯净（stdout 不重定向日志）；只读并发安全，不占应用单实例锁。
-5. 数据根与 key 沿用应用配置（`--data-root` / `data_root/ai.json`）。
+4. `validate_patch` 只做预检（dry-run），不落库；错误保持稳定 `code/rule`。
+5. stdio 信道纯净（stdout 不重定向日志）；提议文件为原子写 JSON
+   （`schema_version: 1`）；proposal_id 严格 UUID 校验防路径穿越；note 截断 500 字符。
+6. stdio server 不占应用单实例锁；数据根与 key 沿用应用配置（`--data-root` /
+   `data_root/ai.json`）。
 
 ## 可观测与回滚
 

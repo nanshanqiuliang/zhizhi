@@ -26,6 +26,11 @@ from knowledge_tree_domain.ai_draft import DraftError, uuid7
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError
 from knowledge_tree_infrastructure.command import CommandError, build_command_patch
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError
+from knowledge_tree_infrastructure.proposals import (
+    list_proposals,
+    read_proposal,
+    settle_proposal,
+)
 from knowledge_tree_infrastructure.workspace import (
     WorkspaceError,
     WorkspaceLayout,
@@ -243,6 +248,12 @@ def _http_error(error: WorkspaceError) -> HTTPException:
     if error.code in {"backup_invalid"}:
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
     if error.code == "backup_checksum_mismatch":
+        return HTTPException(status_code=409, detail={"code": error.code, **error.details})
+    if error.code == "proposal_missing":
+        return HTTPException(status_code=404, detail={"code": error.code, **error.details})
+    if error.code == "proposal_invalid":
+        return HTTPException(status_code=422, detail={"code": error.code, **error.details})
+    if error.code == "proposal_state_conflict":
         return HTTPException(status_code=409, detail={"code": error.code, **error.details})
     if error.code == "patch_invalid":
         return HTTPException(status_code=422, detail={"code": error.code, **error.details})
@@ -510,6 +521,69 @@ def create_app(
             }
         except WorkspaceError as error:
             raise _http_error(error) from error
+
+    @app.get("/api/workspaces/{workspace_id}/proposals")
+    def get_proposals(workspace_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            pending = list_proposals(layout)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        # Lean listing: the full patch stays server-side; the UI only needs
+        # identity + summary to decide whether to open the confirmation.
+        return {
+            "proposals": [
+                {
+                    "proposal_id": item["proposal_id"],
+                    "created_at": item["created_at"],
+                    "origin": item["origin"],
+                    "note": item["note"],
+                    "status": item["status"],
+                    "operations_count": item.get("summary", {}).get("operations_count", 0),
+                }
+                for item in pending
+            ]
+        }
+
+    @app.post("/api/workspaces/{workspace_id}/proposals/{proposal_id}/accept")
+    def post_proposal_accept(workspace_id: str, proposal_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            record = read_proposal(layout, proposal_id)
+            if record["status"] != "pending":
+                raise WorkspaceError(
+                    "proposal_state_conflict",
+                    details={"rule": "not_pending", "status": record["status"]},
+                )
+            # The in-app human confirmation act: apply the stored untrusted
+            # draft as a confirmed patch through the same protected commit
+            # gate as the UI (locks / revision / history / undo). A gate
+            # rejection leaves the proposal pending (fail closed).
+            patch = {**record["patch"], "confirmed": True}
+            applied = apply_graph_patch(
+                layout, patch, trusted_actor=_LOCAL_ACTOR, source="mcp_proposal"
+            )
+            settle_proposal(layout, proposal_id, "accepted", change_id=applied.change_id)
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        return {
+            "status": "applied",
+            "proposal_id": proposal_id,
+            "change_id": applied.change_id,
+            "revision_no": applied.after_revision_no,
+        }
+
+    @app.post("/api/workspaces/{workspace_id}/proposals/{proposal_id}/reject")
+    def post_proposal_reject(workspace_id: str, proposal_id: str) -> JsonObject:
+        workspace_root = _workspace_root(root, workspace_id)
+        try:
+            layout = resolve_workspace(workspace_root)
+            settle_proposal(layout, proposal_id, "rejected")
+        except WorkspaceError as error:
+            raise _http_error(error) from error
+        return {"status": "rejected", "proposal_id": proposal_id}
 
     @app.post("/api/workspaces/{workspace_id}/backup")
     def post_backup(workspace_id: str) -> JsonObject:

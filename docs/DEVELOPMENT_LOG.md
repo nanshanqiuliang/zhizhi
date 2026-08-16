@@ -2,6 +2,44 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — MCP 写工具 + 应用内确认机制（WORK-2026-050，第 11 步切片 2）
+
+- 关联 ID：WORK-2026-050、WORK-2026-048（工具集 4→6，切片 1 的"零写工具"约束由本切片
+  的"提议→应用内确认"机制取代并过 harness 评审）；QA `TR-20260816-002`。
+- 实际变化：
+  ① 新增 `packages/infrastructure/.../proposals.py`：外部提议文件存储
+     （`<workspace>/proposals/<uuidv7>.json`，原子写 tmp+replace，`schema_version: 1`，
+     pending→accepted/rejected 单向迁移，proposal_id 严格 UUID 校验防路径穿越，note
+     截断 500 字符）——MCP 进程与 sidecar API 进程的跨进程信道，不触图库。
+  ② MCP server 新增 2 工具：`propose_patch`（补丁先过 `preview_graph_patch` 防御性
+     校验且必须为未确认草案——预确认补丁 fail-closed——再落 pending 提议，返回
+     `proposal_id` + `requires_confirmation=true/confirmed=false`）与 `proposal_status`
+     （只读观察，无自确认路径）；instructions 信任边界文案更新。
+  ③ API 新增 3 端点：`GET /api/workspaces/{id}/proposals`（pending 列表 + 摘要，不含
+     全量补丁）、`POST .../proposals/{pid}/accept`（读提议→补丁副本置 confirmed→
+     `apply_graph_patch(source="mcp_proposal")` 提交门→settle accepted + change_id；
+     门拒绝时提议保持 pending fail-closed）、`POST .../proposals/{pid}/reject`；
+     `_http_error` 增 proposal_missing(404)/proposal_invalid(422)/
+     proposal_state_conflict(409)。
+  ④ Web：`api.ts` 增 `ExternalProposal` 类型与可选 `listProposals/acceptProposal/
+     rejectProposal`；`App.tsx` 右栏「外部提议（MCP）」面板（说明/操作数/时间 +
+     接受/拒绝/刷新；挂载与窗口 focus 刷新；接受后 `loadGraph` 刷新画布并重置 undo
+     栈）+ `styles.css` 提议样式。
+- 影响模块/接口/schema/migration/prompt：新增 `proposals.py`、3 端点、2 MCP 工具、
+  Web 面板；无 canonical 契约/SQLite schema 变化（历史 source 自由字符串新增
+  `mcp_proposal` 取值）。
+- 兼容性：048 的 4 个工具行为不变；既有 Web mock（可选方法）与全部既有测试不受影响；
+  提议目录不存在时列表返回空。
+- 验证与证据：红灯（`ModuleNotFoundError: knowledge_tree_infrastructure.proposals` +
+  Web 4 failed）→ 绿灯（提议存储 7/7、API 6/6、MCP 新增 4/4 含 stdio 6 工具冒烟、
+  Web 4/4）；pytest **493 passed + 5 skipped**、`pnpm check` **18 文件 / 72 测试**、
+  validator/ruff/mypy strict(42)/build/contracts/peers 全绿；QA `TR-20260816-002` PASS。
+- 性能/安全/运维影响：本地文件 IO 信道；外部输入双重校验（入队 preview + 确认 apply）；
+  错误码稳定可诊断。
+- 回滚：回退本切片提交即回 048 只读形态；`proposals/` 目录可独立删除清理。
+- 遗留风险与下一步：会话级自动确认开关（默认关）需独立 harness 评审；提议 TTL/清理
+  策略未做；冻结产物 MCP 冒烟随下次产物重建复测。
+
 ## 2026-08-16 — 空工作区（0 节点）渲染崩溃修复（WORK-2026-049，BUG-2026-001）
 
 - 关联 ID：WORK-2026-049、BUG-2026-001；QA `TR-20260816-001`。

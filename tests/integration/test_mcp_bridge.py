@@ -192,8 +192,18 @@ def test_mcp_toolset_is_read_only(tmp_path: Path) -> None:
     server = _server(tmp_path)
 
     tools = {item.name for item in server._tool_manager.list_tools()}  # noqa: SLF001
-    assert tools == {"list_workspaces", "read_workspace", "preview_draft", "validate_patch"}
-    # No write-capable tool may exist in this slice (harness hard rule).
+    # WORK-2026-050: propose_patch queues a PENDING proposal file (never the
+    # graph); proposal_status is read-only observation. No tool may write the
+    # graph itself (harness hard rule).
+    assert tools == {
+        "list_workspaces",
+        "read_workspace",
+        "preview_draft",
+        "validate_patch",
+        "propose_patch",
+        "proposal_status",
+    }
+    # No graph-write-capable tool verb may appear in any tool name.
     for forbidden in ("write", "apply", "submit", "commit", "save", "delete", "accept"):
         assert not any(forbidden in tool for tool in tools)
 
@@ -288,6 +298,8 @@ def _stdio_smoke(root: Path) -> None:
                 "read_workspace",
                 "preview_draft",
                 "validate_patch",
+                "propose_patch",
+                "proposal_status",
             }
             result = await session.call_tool("list_workspaces", {})
             text = result.content[0].text
@@ -298,3 +310,97 @@ def _stdio_smoke(root: Path) -> None:
 
 def test_stdio_protocol_smoke(tmp_path: Path) -> None:
     _stdio_smoke(tmp_path)
+
+
+# -- WORK-2026-050: propose_patch queues a pending proposal, never writes -----
+
+
+def test_propose_patch_queues_pending_without_writing(tmp_path: Path) -> None:
+    workspace_id = _seed_workspace(tmp_path)
+    server = _server(tmp_path)
+
+    draft = _call_tool(server, "preview_draft", workspace_id=workspace_id)
+    result = _call_tool(
+        server,
+        "propose_patch",
+        workspace_id=workspace_id,
+        patch=draft["patch"],
+        note="from cursor",
+    )
+    assert result["ok"] is True
+    assert result["proposal_id"]
+    assert result["status"] == "pending"
+    assert result["requires_confirmation"] is True
+    assert result["confirmed"] is False
+
+    # The graph itself is untouched: still the empty baseline.
+    graph = _call_tool(server, "read_workspace", workspace_id=workspace_id)
+    assert graph["graph"]["revision_no"] == 0
+    assert graph["graph"]["concepts"] == []
+
+    # The proposal is observable through the read-only status tool.
+    status = _call_tool(
+        server, "proposal_status", workspace_id=workspace_id, proposal_id=result["proposal_id"]
+    )
+    assert status["ok"] is True
+    assert status["status"] == "pending"
+    assert status["change_id"] is None
+
+
+def test_propose_patch_invalid_patch_fails_closed_without_file(tmp_path: Path) -> None:
+    workspace_id = _seed_workspace(tmp_path)
+    server = _server(tmp_path)
+
+    result = _call_tool(
+        server,
+        "propose_patch",
+        workspace_id=workspace_id,
+        patch={"schema_version": 1, "operations": []},
+    )
+    assert result["ok"] is False
+    assert result["code"] == "patch_invalid"
+
+    # Fail-closed: nothing was queued on disk.
+    proposals_dir = tmp_path / WORKSPACE_ID / "proposals"
+    assert not proposals_dir.exists() or list(proposals_dir.iterdir()) == []
+
+
+def test_proposal_status_reflects_settled_outcome(tmp_path: Path) -> None:
+    from knowledge_tree_infrastructure.proposals import settle_proposal
+    from knowledge_tree_infrastructure.workspace import resolve_workspace
+
+    workspace_id = _seed_workspace(tmp_path)
+    server = _server(tmp_path)
+
+    draft = _call_tool(server, "preview_draft", workspace_id=workspace_id)
+    proposed = _call_tool(server, "propose_patch", workspace_id=workspace_id, patch=draft["patch"])
+    proposal_id = proposed["proposal_id"]
+
+    # The in-app human decision (mimicked by settling the store directly).
+    settle_proposal(
+        resolve_workspace(tmp_path / workspace_id),
+        proposal_id,
+        "accepted",
+        change_id="00000000-0000-7000-8000-0000000000ff",
+    )
+
+    status = _call_tool(
+        server, "proposal_status", workspace_id=workspace_id, proposal_id=proposal_id
+    )
+    assert status["ok"] is True
+    assert status["status"] == "accepted"
+    assert status["change_id"] == "00000000-0000-7000-8000-0000000000ff"
+
+
+def test_proposal_status_unknown_id_fails_closed(tmp_path: Path) -> None:
+    workspace_id = _seed_workspace(tmp_path)
+    server = _server(tmp_path)
+
+    status = _call_tool(
+        server,
+        "proposal_status",
+        workspace_id=workspace_id,
+        proposal_id="00000000-0000-7000-8000-0000000000ee",
+    )
+    assert status["ok"] is False
+    assert status["code"] == "proposal_missing"

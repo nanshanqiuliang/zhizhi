@@ -1,14 +1,15 @@
-"""Built-in MCP server for 知枝 (WORK-2026-048, Step 11 slice 1).
+"""Built-in MCP server for 知枝 (WORK-2026-048 + WORK-2026-050, Step 11).
 
 Exposes read + AI-propose tools over the Model Context Protocol (stdio) so
 external MCP clients (Cursor, Claude Desktop, ...) can enumerate workspaces,
-read the knowledge tree, request an AI draft and validate a proposed patch.
+read the knowledge tree, request an AI draft, validate a proposed patch, and
+queue a patch as a PENDING proposal.
 
-Hard harness rule (docs/ai-mindmap-agent-harness.md): this slice exposes NO
-write tools. AI output stays an untrusted draft (`requires_confirmation` /
-`confirmed=false`); the only write path remains the in-app preview -> confirm
--> commit-gate flow (locks / revision / history). A future slice may add a
-submit tool only behind an explicit in-app confirmation mechanism.
+Hard harness rule (docs/ai-mindmap-agent-harness.md): no tool may write the
+graph itself. `propose_patch` only queues an untrusted proposal file for the
+in-app human confirmation flow (accept goes through the same commit gate as
+the UI: locks / revision / history / undo); `proposal_status` is read-only
+observation. External AI can never confirm its own proposal.
 """
 
 from __future__ import annotations
@@ -43,6 +44,10 @@ from knowledge_tree_domain import GraphPatchError, preview_graph_patch  # noqa: 
 from knowledge_tree_domain.ai_draft import DraftError  # noqa: E402
 from knowledge_tree_infrastructure.ai_draft_llm import DraftExtractionError  # noqa: E402
 from knowledge_tree_infrastructure.llm.errors import LLMProviderError  # noqa: E402
+from knowledge_tree_infrastructure.proposals import (  # noqa: E402
+    read_proposal,
+    save_proposal,
+)
 from knowledge_tree_infrastructure.workspace import (  # noqa: E402
     WorkspaceError,
     get_resource_mime,
@@ -168,6 +173,59 @@ def tool_validate_patch(root: Path, workspace_id: str, patch: JsonObject) -> Jso
     return {"ok": True, "status": preview.status, "snapshot": preview.snapshot}
 
 
+def tool_propose_patch(
+    root: Path, workspace_id: str, patch: JsonObject, note: str = ""
+) -> JsonObject:
+    """Queue a patch as a PENDING proposal file; never write the graph.
+
+    The patch must pass the same defensive preview gate as the in-app flow and
+    stay an unconfirmed draft (`requires_confirmation` / `confirmed=false`);
+    a pre-confirmed or invalid patch fails closed before anything is queued.
+    """
+
+    try:
+        layout = resolve_workspace(root / workspace_id)
+        graph = load_course_graph(layout)
+    except WorkspaceError as error:
+        return _error_from(error)
+    try:
+        preview = preview_graph_patch(graph, patch, trusted_actor=_LOCAL_ACTOR)
+    except GraphPatchError as error:
+        return _error_from(error, code="patch_invalid")
+    if preview.status != "requires_confirmation":
+        return _error("patch_invalid", rule="patch_not_proposed")
+    try:
+        record = save_proposal(layout, patch, origin="mcp", note=note)
+    except WorkspaceError as error:
+        return _error_from(error)
+    return {
+        "ok": True,
+        "proposal_id": record["proposal_id"],
+        "status": record["status"],
+        "requires_confirmation": True,
+        "confirmed": False,
+    }
+
+
+def tool_proposal_status(root: Path, workspace_id: str, proposal_id: str) -> JsonObject:
+    """Read-only observation of a queued proposal (no self-confirmation)."""
+    try:
+        layout = resolve_workspace(root / workspace_id)
+    except WorkspaceError as error:
+        return _error_from(error)
+    try:
+        record = read_proposal(layout, proposal_id)
+    except WorkspaceError as error:
+        return _error_from(error)
+    return {
+        "ok": True,
+        "proposal_id": record["proposal_id"],
+        "status": record["status"],
+        "change_id": record.get("change_id"),
+        "created_at": record.get("created_at"),
+    }
+
+
 # -- server assembly ------------------------------------------------------------
 
 
@@ -201,8 +259,10 @@ def build_mcp_server(
         "zhizhi",
         instructions=(
             "知枝本地知识树。本服务器只读并提出 AI 草案：list_workspaces / "
-            "read_workspace / preview_draft / validate_patch。AI 输出永远是不授信草案，"
-            "确认与写库仅在应用内完成；本服务器没有任何写库工具。"
+            "read_workspace / preview_draft / validate_patch；propose_patch 可把补丁"
+            "提交为待确认提议（pending），proposal_status 只读查询提议结果。"
+            "AI 输出永远是不授信草案：确认与写库仅在应用内由用户完成，"
+            "本服务器没有任何写图库或自确认工具。"
         ),
     )
 
@@ -227,6 +287,14 @@ def build_mcp_server(
     @server.tool()
     def validate_patch(workspace_id: str, patch: JsonObject) -> JsonObject:
         return tool_validate_patch(root, workspace_id, patch)
+
+    @server.tool()
+    def propose_patch(workspace_id: str, patch: JsonObject, note: str = "") -> JsonObject:
+        return tool_propose_patch(root, workspace_id, patch, note)
+
+    @server.tool()
+    def proposal_status(workspace_id: str, proposal_id: str) -> JsonObject:
+        return tool_proposal_status(root, workspace_id, proposal_id)
 
     return server
 

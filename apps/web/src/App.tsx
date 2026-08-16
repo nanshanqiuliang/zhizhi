@@ -7,6 +7,7 @@ import type {
   CommandResult,
   ConceptLocks,
   ConceptNode,
+  ExternalProposal,
   HistoryRecord,
   PersistApi,
   ResourceInfo,
@@ -285,6 +286,7 @@ export function App({
   const [connectMode, setConnectMode] = useState(false);
   const [connectSource, setConnectSource] = useState<string | null>(null);
   const [connectType, setConnectType] = useState<EdgeKind>("related_to");
+  const [proposals, setProposals] = useState<ExternalProposal[]>([]);
   const sidebarDrag = useRef<{ startX: number; startWidth: number } | null>(null);
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
@@ -305,6 +307,15 @@ export function App({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [connectMode]);
+
+  // External MCP proposals arrive from another process (file queue behind the
+  // sidecar API); re-check whenever the user comes back to the window.
+  useEffect(() => {
+    const refresh = () => void refreshProposals();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selectedNode = present.nodes.find((node) => node.id === selectedId) ?? present.nodes[0];
   const nodeById = useMemo(
@@ -370,6 +381,7 @@ export function App({
       .catch(() => {
         if (!cancelled) setWorkspaces([]);
       });
+    void refreshProposals();
     return () => {
       cancelled = true;
     };
@@ -397,6 +409,46 @@ export function App({
           setStatus(saveErrorMessage((error as Error).message));
         });
     }, 600);
+  }
+
+  async function refreshProposals() {
+    if (!api?.listProposals) return;
+    try {
+      setProposals(await api.listProposals());
+    } catch {
+      // The queue is best-effort UI state; keep the stale list on failure.
+    }
+  }
+
+  async function acceptExternalProposal(proposalId: string) {
+    if (!api?.acceptProposal) return;
+    try {
+      const result = await api.acceptProposal(proposalId);
+      setStatus(`已接受外部提议（修订 ${result.revision_no}），可撤销`);
+      const saved = await api.loadGraph();
+      if (saved) {
+        setPresent(saved);
+        setPast([]);
+        setFuture([]);
+        restoreDrafts(saved, selectedId);
+      }
+    } catch (error) {
+      setStatus(`接受提议失败（${(error as Error).message}）`);
+    } finally {
+      await refreshProposals();
+    }
+  }
+
+  async function rejectExternalProposal(proposalId: string) {
+    if (!api?.rejectProposal) return;
+    try {
+      await api.rejectProposal(proposalId);
+      setStatus("已拒绝外部提议");
+    } catch (error) {
+      setStatus(`拒绝提议失败（${(error as Error).message}）`);
+    } finally {
+      await refreshProposals();
+    }
   }
 
   async function runSearch(query: string) {
@@ -1752,6 +1804,49 @@ export function App({
             <span className="source-icon" aria-hidden="true">↗</span>
             <div><strong>来源将在后续接入</strong><p>当前示例没有导入文档，不提供虚假的来源跳转。</p></div>
           </div>
+          </section>
+          )}
+
+          {proposals.length > 0 && (
+          <section className="draft-panel proposal-panel" aria-label="外部提议">
+            <header className="viewer-header">
+              <div>
+                <p className="overline">外部提议（MCP）</p>
+                <strong>外部 AI 客户端提交的补丁提议，等待你确认</strong>
+              </div>
+              <button type="button" className="viewer-close" onClick={() => void refreshProposals()}>刷新</button>
+            </header>
+            <ul className="proposal-list">
+              {proposals.map((proposal) => (
+                <li key={proposal.proposal_id} className="proposal-item">
+                  <div className="proposal-summary">
+                    <strong>{proposal.note || "（无说明）"}</strong>
+                    <span className="draft-confidence">
+                      {proposal.operations_count} 项操作 · {new Date(proposal.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="proposal-actions">
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => void acceptExternalProposal(proposal.proposal_id)}
+                    >
+                      接受提议
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => void rejectExternalProposal(proposal.proposal_id)}
+                    >
+                      拒绝提议
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="draft-boundary">
+              提议只在你确认后经提交门写入；锁定内容不会被覆盖，写入后可撤销。
+            </p>
           </section>
           )}
 
