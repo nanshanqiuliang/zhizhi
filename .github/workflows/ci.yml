@@ -33,7 +33,7 @@ jobs:
       - name: Lint
         run: uv run ruff check .
       - name: Type check
-        run: uv run mypy scripts && uv run mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api
+        run: uv run mypy scripts && uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
       - name: Test
         run: uv run python -m pytest
 
@@ -56,6 +56,8 @@ jobs:
         run: pnpm peers check
       - name: Check and test
         run: pnpm check
+      - name: Contracts drift check
+        run: pnpm --filter @knowledge-tree/contracts-ts check
       - name: Build
         run: pnpm build
 
