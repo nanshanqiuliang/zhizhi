@@ -55,6 +55,12 @@ uv run python scripts/package_desktop.py    # 可选：打成便携 zip
 - **思维导图 agent**：导入资料后点「从全部资料生成思维导图」，AI 阅读全部导入文件（PDF 自动
   解析），在**右侧栏**生成整张知识树草案（概念/关系/置信度/来源）；预览后「接受并写入」才
   落库，可撤销；约束见 `docs/ai-mindmap-agent-harness.md`。
+- **MCP 接入（第 11 步切片 1）**：桌面程序内置 MCP server，供外部 AI 客户端（Cursor、
+  Claude Desktop 等）调用。启动方式：`zhizhi.exe --mcp-stdio --data-root <数据目录>`，
+  在客户端里把它配成一个 stdio MCP server 即可。当前工具：`list_workspaces`（枚举课程）、
+  `read_workspace`（读取知识树）、`preview_draft`（生成 AI 草案，返回待确认补丁）、
+  `validate_patch`（预检补丁能否通过提交门）。**外部 AI 只能读取与提议，没有任何写库
+  工具**——确认与写库仍在本应用内完成（延续"AI 输出永不直写库"约束）。
 - **边栏**：左侧栏右缘可拖拽调宽；点「«」隐藏、「显示边栏」恢复；AI 草案/回答/指令预览都在
   **右侧栏**。
 - 备份/恢复、撤销/重做、锁定、来源回跳等能力与源码运行完全一致。

@@ -1,0 +1,29 @@
+# QA TR-20260815-010 — 门禁汇总（全部在 HEAD 944a996 真实运行，cwd=E:\知识树 - 副本）
+
+| 门禁 | 命令 | 结果 | 证据 |
+|---|---|---|---|
+| Python 依赖 | `uv sync --locked --group dev` | PASS（91 packages resolved） | gates/uv-sync.log |
+| 仓库验证 | `uv run python -m scripts.validate_repository` | PASS（skeleton/secret scan/graph+LLM 契约/calculus review packet/v2 mock-replay） | gates/validate_repository.log |
+| ruff format | `uv run ruff format --check packages scripts tests apps` | PASS（118 files already formatted） | gates/ruff_format_check.log |
+| ruff lint | `uv run ruff check .` | PASS（All checks passed） | gates/ruff_check.log |
+| mypy scripts | `uv run mypy scripts` | PASS（16 source files） | gates/mypy_scripts.log |
+| mypy strict | `uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop` | PASS（**41 source files**，含 apps/desktop 与新增 mcp_server.py） | gates/mypy_strict.log |
+| pytest 全量 | `uv run python -m pytest -q` | **476 passed, 5 skipped, 1 warning in 26.84s**（5 skip = live DeepSeek 需 RUN_LIVE_LLM_TESTS=1 + key，符合预期） | gates/pytest.log |
+| pnpm 安装 | `pnpm install --frozen-lockfile` | PASS（Already up to date） | gates/pnpm-install.log |
+| peers | `pnpm peers check` | PASS（No peer dependency issues found） | gates/pnpm-peers.log |
+| pnpm check | `pnpm check`（tsc -b + eslint + vitest） | PASS：**16 files / 64 tests passed** | gates/pnpm-check.log |
+| pnpm build | `pnpm build` | PASS（vite built in 169ms；chunk>500kB 警告为既有提示） | gates/pnpm-build.log |
+| contracts-ts drift | `pnpm --filter @knowledge-tree/contracts-ts check`（generate.mjs --check && tsc --noEmit） | PASS（exit 0，无 drift） | gates/contracts-ts-check.log |
+
+## 红灯真值（隔离 worktree @944a996，E:\ztree-qa-worktree-010，已移除并 prune）
+- `git worktree add --detach` → `uv sync --locked --group dev` → 改名 `apps/api/mcp_server.py` → `mcp_server.py.bak`
+- `uv run python -m pytest -q tests/integration/test_mcp_bridge.py`
+  → **ERROR collecting tests/integration/test_mcp_bridge.py：ModuleNotFoundError: No module named 'apps.api.mcp_server'；1 error in 1.35s**（红灯确认，exit 2）
+- 还原后同命令 → **7 passed, 1 warning in 1.55s**（绿灯确认，exit 0）
+- 日志：logs/redlight-944a996.log、logs/head-944a996.log
+
+## 冻结产物（2026-08-16 14:16:53 重建，11,565,348 B）
+- dist\zhizhi\zhizhi.exe（windowed bootloader）+ _internal\web_dist（index-ec9Mn6UR.js / index-DimZVipg.css）
+- P-013 探针：`zhizhi.exe --mcp-stdio --data-root <临时>` 真实 stdio 会话：initialize + tools/list（精确 4 工具）+ call list_workspaces（空根 []）+ 会话存活期间播种 → list 1 个 + read_workspace 返回图 + 无 key 结构化 ai_not_available；会话关闭后 exe 进程数 before=0 during=1 **after=0**（无残留）
+- P-012 探针：sidecar（`--no-window`，同数据根）健康 200 + /api/workspaces 返回 1 个工作区 + MCP stdio 客户端同根 list/read 正常 → **只读并发安全**；终止后端口释放
+- 全部 15 项探针 15/15 PASS（探针脚本 probes/qa_probe_mcp.py；日志 logs/probes-mcp.log；首轮 13/15 为探针自身缺陷，见 qa-attempt.md）

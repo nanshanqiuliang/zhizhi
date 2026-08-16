@@ -1,0 +1,37 @@
+{
+  "test_run_id": "TR-20260815-010",
+  "captured_at": "2026-08-16T14:30:00+08:00",
+  "host": {
+    "os": "Windows",
+    "platform": "win32",
+    "machine": "x86_64",
+    "system_locale": "zh-CN (cp936 console)",
+    "ps_version": "5.1.26100.9168",
+    "repo_path": "E:\\知识树 - 副本"
+  },
+  "toolchain": {
+    "node": "v24.14.1",
+    "pnpm": "11.19.0",
+    "uv": "0.12.3",
+    "python": "3.12.6",
+    "git": "2.53.0.windows.2",
+    "mcp_sdk": "1.29.0"
+  },
+  "repo_state": {
+    "branch": "feature/WORK-2026-048-mcp-server",
+    "head_commit": "944a99617f587d5542d44d54384111f08528c596",
+    "head_commit_time": "2026-08-16T14:16:18+08:00",
+    "head_commit_subject": "fix(mcp): ruff/mypy strict cleanups (WORK-2026-048)",
+    "implementation_commits": ["fab4d70 feat(mcp): built-in MCP server - read + AI-propose tools, zero write tools (WORK-2026-048)", "944a996 fix(mcp): ruff/mypy strict cleanups (WORK-2026-048)"],
+    "working_tree": "modified (uncommitted, pre-existing at QA observation): docs/USER_FACING_DEVELOPMENT_ROADMAP.md, docs/USER_MANUAL.md, docs/ai-mindmap-agent-harness.md (WORK-2026-048 documentation updates, preserved untouched); untracked: .reasonix/, .workbuddy/, handoff/, paper.pdf (pre-existing), evidence/TR-20260815-010/ (this QA's artifacts)"
+  },
+  "frozen_artifact": {
+    "exe": "dist\\zhizhi\\zhizhi.exe",
+    "exe_size_bytes": 11565348,
+    "exe_build_time": "2026-08-16T14:16:53+08:00",
+    "bundled_web": "dist\\zhizhi\\_internal\\web_dist",
+    "bundled_js": "assets\\index-ec9Mn6UR.js",
+    "bundled_css": "assets\\index-DimZVipg.css",
+    "probe_note": "frozen exe --mcp-stdio probe (P-013) exercised the real PyInstaller bundle over stdio (initialize/tools/list/call/seed+read), proving mcp hiddenimports are correctly bundled in the PYZ archive."
+  }
+}

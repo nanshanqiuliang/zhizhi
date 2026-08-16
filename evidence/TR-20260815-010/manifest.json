@@ -1,0 +1,138 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260815-010",
+  "work_item": "WORK-2026-048",
+  "title": "内置 MCP server（第 11 步切片 1：读 + AI 提议，零写工具）",
+  "reviewed_commit": "944a996",
+  "reviewed_commit_sha": "944a99617f587d5542d44d54384111f08528c596",
+  "implementation_commits": [
+    "fab4d70 feat(mcp): built-in MCP server - read + AI-propose tools, zero write tools (WORK-2026-048)",
+    "944a996 fix(mcp): ruff/mypy strict cleanups (WORK-2026-048)"
+  ],
+  "branch": "feature/WORK-2026-048-mcp-server",
+  "verdict": "PASS",
+  "findings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "P3": 4
+  },
+  "findings_detail": [
+    {
+      "id": "P-3-001",
+      "severity": "P3",
+      "status": "observation",
+      "title": "validate_patch 对 actor 不符返回 patch_invalid 而非 permission_denied（行为命名差异，非缺陷）",
+      "detail": "任务探针规格预期 actor 不符 -> permission_denied；实际 tool_validate_patch 将一切 GraphPatchError 统一映射为 code=patch_invalid、rule=actor_context_mismatch（P-005 实测 {'ok':False,'code':'patch_invalid','rule':'actor_context_mismatch'}）。MCP 工具错误命名空间稳定（patch_invalid/draft_invalid/workspace_*/ai_not_available），rule 携带细节；满足工作项 AC-4『越权补丁返回稳定错误、不写库』。属命名选择，无功能影响。"
+    },
+    {
+      "id": "P-3-002",
+      "severity": "P3",
+      "status": "observation",
+      "title": "mcp SDK 1.29 + pydantic-settings 启动警告 IncompleteFieldDefinitionWarning (lifespan)",
+      "detail": "server 与 client 导入 FastMCP 时 pydantic-settings 输出 Field 'lifespan' 前向引用警告（上游 SDK 内部），走 stderr 不污染 stdio 信道；pytest 全量 1 warning 同源。无功能影响；若后续升级 mcp 依赖需复核（mcp<2 已锁 1.x）。"
+    },
+    {
+      "id": "P-3-003",
+      "severity": "P3",
+      "status": "observation/coverage-boundary",
+      "title": "真实 LLM 草案路径未在本 QA 启用（无 key）",
+      "detail": "preview_draft 的 AI 生成路径在无 key 时仅验证到结构化 ai_not_available fail-closed 边界；真实 LLM 链路（DeepSeek）由既有 476 测试与 live 门禁覆盖（RUN_LIVE_LLM_TESTS=1 + key 显式启用，未开启）。本 QA 的注入生成器验证了 MCP 工具对生成结果的契约（requires_confirmation/confirmed=false/防御性 preview_graph_patch）。"
+    },
+    {
+      "id": "P-3-004",
+      "severity": "P3",
+      "status": "observation",
+      "title": "红灯真值采用『改名模块→collection error』方式",
+      "detail": "隔离 worktree 中把 apps/api/mcp_server.py 改名 .bak 后测试 collection 即 ModuleNotFoundError（红灯），还原后 7 passed（绿灯）；此方式与『红灯测试先行』的语义等价（测试强依赖被审模块）。worktree 已移除并 prune。"
+    }
+  ],
+  "red_light": {
+    "method": "git worktree add --detach (E:\\ztree-qa-worktree-010) @944a996；改名 apps/api/mcp_server.py -> mcp_server.py.bak；还原后重跑",
+    "command": "uv run python -m pytest -q tests/integration/test_mcp_bridge.py",
+    "red_result": "ERROR collecting tests/integration/test_mcp_bridge.py: ModuleNotFoundError: No module named 'apps.api.mcp_server'; 1 error in 1.35s (exit 2)",
+    "red_log": "logs/redlight-944a996.log",
+    "green_result": "7 passed, 1 warning in 1.55s (exit 0)",
+    "green_log": "logs/head-944a996.log",
+    "worktree_removed": true
+  },
+  "gates": {
+    "uv_sync": "PASS (91 packages resolved)",
+    "validate_repository": "PASS",
+    "ruff_format_check": "PASS (118 files already formatted)",
+    "ruff_check": "PASS (All checks passed)",
+    "mypy_scripts": "PASS (16 source files)",
+    "mypy_strict": "PASS (41 source files, packages/contracts-py, domain, infrastructure, apps/api, apps/desktop)",
+    "pytest": "476 passed, 5 skipped, 1 warning in 26.84s",
+    "pnpm_install_frozen": "PASS (Already up to date)",
+    "pnpm_peers": "PASS (No peer dependency issues found)",
+    "pnpm_check": "PASS (16 files / 64 tests passed)",
+    "pnpm_build": "PASS (vite built in 169ms; chunk>500kB warning pre-existing)",
+    "contracts_ts_drift": "PASS (exit 0)"
+  },
+  "probes": {
+    "summary": "15/15 PASS",
+    "script": "probes/qa_probe_mcp.py",
+    "log": "logs/probes-mcp.log",
+    "run1_log": "logs/probes-mcp-run1.log (13/15; P-012/P-013 failed due to probe bugs only, fixed and re-run)",
+    "items": [
+      "P-001 工具集精确 4 个、无写工具",
+      "P-002 preview_draft 单资源 md：requires_confirmation/confirmed=false、revision 不变",
+      "P-003 preview_draft 无 key：结构化 ai_not_available/key_required",
+      "P-004 未知工作区/无 db/无图：结构化 workspace_missing/workspace_corrupt",
+      "P-005 validate_patch 全分支（合法/confirmed:true/actor 不符/版本冲突/confirmation=false，均不写库）",
+      "P-006 list_workspaces 空根 []、噪声忽略、播种后 1 个",
+      "P-007 preview_draft 单资源 PDF：parse_pdf_resource 抽取文本、revision 不变",
+      "P-008 空资源全库草案：draft_invalid/no_resources",
+      "P-009 坏生成器输出 fail-closed（无 ops/无 patch/坏 base/抛 DraftError）",
+      "P-010 源码 stdio 会话：initialize/tools/list/call 全通",
+      "P-011 错误隔离：错误调用后会话存活、后续调用正常",
+      "P-012 并发：sidecar exe（同数据根）+ MCP stdio 客户端同时读正常",
+      "P-012b sidecar 终止后端口释放",
+      "P-013 冻结 exe --mcp-stdio：initialize/4 工具/播种后 read_workspace/无 key fail-closed；无残留进程",
+      "P-014 python -m apps.api.mcp_server --help 正常"
+    ]
+  },
+  "files": [
+    "commands.txt",
+    "environment.json",
+    "gate-summary.txt",
+    "qa-attempt.md",
+    "gates/contracts-ts-check.log",
+    "gates/mypy_scripts.log",
+    "gates/mypy_strict.log",
+    "gates/pnpm-build.log",
+    "gates/pnpm-check.log",
+    "gates/pnpm-install.log",
+    "gates/pnpm-peers.log",
+    "gates/pytest.log",
+    "gates/ruff_check.log",
+    "gates/ruff_format_check.log",
+    "gates/run_pnpm_gates.ps1",
+    "gates/run_python_gates.ps1",
+    "gates/uv-sync.log",
+    "gates/validate_repository.log",
+    "logs/head-944a996.log",
+    "logs/probes-mcp-run1.log",
+    "logs/probes-mcp.log",
+    "logs/redlight-944a996.log",
+    "logs/sidecar-app.log",
+    "probes/qa_probe_mcp.py"
+  ],
+  "sensitive_data": false,
+  "network_used": false,
+  "external_capabilities_enabled": false,
+  "correlation": {
+    "correlated_review": true,
+    "human_signature": false,
+    "owner_acceptance": false,
+    "note": "机器 QA 证据不冒充人类签名；最终残余风险接受权归工作区所有者。"
+  },
+  "notes": [
+    "探针临时工作区（%TEMP%\\ztree-qa-010-*）与 sidecar 数据根均为 QA 临时目录，执行后已清理；未在 apps/web/src 或 tests/ 内遗留任何文件。",
+    "工作树勘察时的未提交文档修改（docs/USER_FACING_DEVELOPMENT_ROADMAP.md、docs/USER_MANUAL.md、docs/ai-mindmap-agent-harness.md，WORK-2026-048 文档更新）非本 QA 产生，QA 未改动并保留。",
+    "门禁脚本初版因 PowerShell 5.1 ANSI 读取无 BOM UTF-8 脚本导致中文路径乱码误在 evidence/ 下执行；已改为 ASCII-only 脚本体 + $PSScriptRoot 推导仓库根重跑，重跑结果全绿（日志统一 UTF-16LE，与既有封存一致）。",
+    "pytest 5 skipped = live DeepSeek smoke 需要 RUN_LIVE_LLM_TESTS=1 + DEEPSEEK_API_KEY（未启用），符合预期门禁。",
+    "未提交任何 git 变更；工作树状态与勘察时一致（仅新增本 QA 证据目录 evidence/TR-20260815-010/）。"
+  ]
+}

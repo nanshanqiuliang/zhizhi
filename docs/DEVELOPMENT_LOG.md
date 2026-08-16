@@ -2,6 +2,37 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 内置 MCP server（WORK-2026-048，第 11 步切片 1）
+
+- 关联 ID：WORK-2026-048、第 11 步、WORK-2026-043/046；QA `TR-20260815-010`。
+- 实际变化：
+  ① 新增 `apps/api/mcp_server.py`：FastMCP（官方 SDK，`mcp<2`，MIT；2.x 重构无 FastMCP
+     故锁 1.x）stdio server，暴露**恰好四个工具** `list_workspaces` / `read_workspace` /
+     `preview_draft` / `validate_patch`——**本切片零写工具**（harness 硬约束：外部 AI 只能
+     读与提议，确认与写库仅在应用内；后续加写工具须重过 harness 评审 + 应用内确认机制）。
+  ② `preview_draft` 复用 `/ai-draft` 语义：单资源/全库、PDF 自动解析、40 块上限、
+     fail-soft、`preview_graph_patch` 防御性校验；返回 `requires_confirmation=true /
+     confirmed=false` 不写库；无 key 结构化 `ai_not_available`。`validate_patch` 只做
+     dry-run 预检。错误统一 `{ok:false, code, rule, ...}`（镜像端点稳定码）。
+  ③ `apps/desktop/launcher.py` 增 `--mcp-stdio`（不重定向 stdout、不占单实例锁）；
+     `build.spec` 补 mcp hiddenimports（冻结 exe 11.5MB，`--mcp-stdio` 实测通过）；
+     源码模式 `python -m apps.api.mcp_server` 自举 `packages/*/src` sys.path（与 pytest
+     pythonpath 对齐）。
+- 影响模块/接口/schema/migration/prompt：新增模块 + 依赖（`mcp<2`）+ launcher 模式；
+  无 canonical 契约/迁移/既有端点变化。
+- 兼容性：`--mcp-stdio` 不启用不影响应用；只读并发安全（可与 sidecar 同数据根并行）。
+- 验证与证据：红灯真值（worktree 改名模块 → collection error；还原 7/7 passed）；实现
+  `0f5b1c2`（feat）+ `944a996`（ruff/mypy 清理，含 ruff 排除 `evidence/` 封存产物）；
+  pytest 476/476 + 5 skipped；Web 64/64；ruff/mypy（41 files）/validator/pnpm 全绿；
+  QA `TR-20260815-010` PASS（0 P0/P1/P2；4 P3：actor 错误码命名差异、mcp SDK 上游
+  lifespan 警告、真实 LLM 未启用、sidecar 日志为空）；冻结 exe MCP stdio + 并发探针
+  15/15。
+- 性能/安全/运维影响：MCP 只读/提议、无写路径 → 无数据风险；stdio 仅本机进程管道；
+  依赖面 +3MB（exe 8.6→11.5MB）。
+- 回滚：回退实现提交即移除 MCP 能力与依赖。
+- 遗留风险与下一步：写工具 + 应用内确认机制（切片 2，须 harness 评审）；受控 Web 搜索
+  （需定 provider）；`generate_mindmap` PNG 导出；PPTX/DOCX/OCR；大图性能与安全加固。
+
 ## 2026-08-16 — 完整编辑工具箱 + 拖拽跳变修复（WORK-2026-047）
 
 - 关联 ID：WORK-2026-047、WORK-2026-040/045、REQ-2026-001、NFR-2026-001；QA `TR-20260815-009`。

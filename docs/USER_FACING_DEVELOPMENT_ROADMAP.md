@@ -135,11 +135,17 @@
 
 完成标志：达到可公开测试 Beta 的稳定性与安全门槛。
 
-当前状态：**尚未开始**。Proposal 原始估算为项目启动后约 16–24 周，不计需求大改或外部服务阻塞。
+当前状态：**切片 1 已落地（内置 MCP server，WORK-2026-048，约 5%）**——桌面程序可作
+MCP server（`--mcp-stdio`）暴露 `list_workspaces`/`read_workspace`/`preview_draft`/
+`validate_patch` 四个工具给外部 AI 客户端（Cursor / Claude Desktop 等）；本切片**零写
+工具**（外部 AI 只能读与提议，确认与写库仍在应用内，延续"AI 输出永不直写库"硬约束）。
+Proposal 原始估算为项目启动后约 16–24 周，不计需求大改或外部服务阻塞；切片 2 候选：
+写工具 + 应用内确认机制、受控 Web Search（需定搜索 provider）、`generate_mindmap` PNG
+导出、PPTX/DOCX/OCR、大图性能与安全加固。
 
 ## 当前进度快照
 
-- 当前自然语言步骤：**第 10 步——封装为 Windows App（已完成，切片 3b 安装器待 QA 封存）**。
+- 当前自然语言步骤：**第 11 步——Beta 加固与扩展（切片 1 内置 MCP server 落地，WORK-2026-048）**。
 - 第 2 步进度：**已完成底层 prototype（100%）**；持久化撤销属于第 4/6 步，不冒充已上线功能。
 - 第 3 步进度：**100%（developer demo 已验证）**。
 - 第 4 步进度：**100%**——SQLite 持久化内核（`TR-20260814-005`）+ FastAPI sidecar 与 Web 自动保存（`TR-20260814-006`）+ FTS5 基础搜索（`TR-20260814-007`）均通过职责隔离 QA。

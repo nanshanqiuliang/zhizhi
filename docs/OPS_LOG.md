@@ -12,6 +12,25 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-048：内置 MCP server（第 11 步切片 1）+ 桌面产物重发
+
+- 关联 ID：WORK-2026-048、第 11 步、TR-20260815-010。
+- 环境/版本/build/config：commit `944a996`（feature/WORK-2026-048-mcp-server）；local-dev
+  Windows x64；新增依赖 `mcp<2`（官方 SDK，MIT）。桌面产物重建：`dist/zhizhi/zhizhi.exe`
+  （11,565,348 字节，14:16:53，较上版 +3MB 为 mcp 依赖）、`dist/zhizhi-0.1.0-setup.exe`
+  （24.9MB）、`dist/zhizhi-0.1.0-portable.zip`（29.3MB）。
+- 变更或症状：桌面程序新增 MCP server（`--mcp-stdio`），暴露 `list_workspaces`/
+  `read_workspace`/`preview_draft`/`validate_patch` 四个工具（读 + AI 提议，**零写工具**）。
+  外部 MCP 客户端（Cursor/Claude Desktop）可在其配置中把 `zhizhi.exe --mcp-stdio
+  --data-root <目录>` 注册为 stdio server；AI 只能读与提议，确认与写库仍在应用内。
+- 影响：既有启动方式（窗口/无窗口/浏览器）不变；`--mcp-stdio` 不占单实例锁、可与应用
+  并行只读；数据目录与 key 沿用应用配置。
+- 证据：QA `TR-20260815-010` PASS（correlated_review，0 P0/P1/P2）；pytest 476/476 +
+  5 skipped、Web 64/64、mypy 41 files、e2e 18/18、冻结 exe MCP stdio 冒烟 PASS。
+- 缓解/回滚：回退实现提交即移除 MCP 能力与依赖。
+- 遗留风险/Owner/期限：写工具 + 应用内确认机制（切片 2，须 harness 评审）；受控 Web
+  搜索需 owner 定 provider；live DeepSeek 全库生成复测待 owner key。
+
 ## 2026-08-16 — WORK-2026-047：编辑工具箱（自由建块/接线/断线）+ 拖拽跳变修复 + 桌面产物重发
 
 - 关联 ID：WORK-2026-047、WORK-2026-040/045、TR-20260815-009。

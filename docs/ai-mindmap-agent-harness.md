@@ -47,6 +47,21 @@
 （`packages/domain` / `packages/infrastructure`），不引入 LangChain 等编排框架——编排本身
 保持可审计、确定性、可重放。
 
+## MCP 桥（WORK-2026-048，第 11 步切片 1）
+
+桌面程序内置 MCP server（`--mcp-stdio`），供外部 AI 客户端调用。**约束**：
+
+1. **零写工具**：当前只暴露 `list_workspaces`/`read_workspace`/`preview_draft`/
+   `validate_patch`，没有任何写库/提交工具——外部 AI 只能读与提议；确认与写库仍只在本
+   应用内（预览→确认→提交门→锁定/历史）。后续若加写工具，必须重新过 harness 评审并
+   实现"外部提议 → 应用内确认"机制，不得让外部 AI 自确认。
+2. `preview_draft` 返回的补丁必须是 `requires_confirmation=true / confirmed=false` 的
+   不可信草案，经 `preview_graph_patch` 防御性校验后才返回；无 key 时结构化
+   `ai_not_available`，不崩溃、不吞错。
+3. `validate_patch` 只做预检（dry-run），不落库；错误保持稳定 `code/rule`。
+4. stdio 信道纯净（stdout 不重定向日志）；只读并发安全，不占应用单实例锁。
+5. 数据根与 key 沿用应用配置（`--data-root` / `data_root/ai.json`）。
+
 ## 可观测与回滚
 
 - 每次生成的前端状态（生成中/就绪/失败）可见；失败显示稳定错误码。

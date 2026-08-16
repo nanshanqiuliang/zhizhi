@@ -1,0 +1,48 @@
+QA TR-20260815-010 (WORK-2026-048 MCP server) - command log (all real runs, HEAD 944a996)
+All commands executed via the DSH pwsh tool (Windows PowerShell 5.1) from E:\知识树 - 副本 unless noted.
+
+== 阶段一：红灯真值（隔离 worktree）==
+git worktree add --detach E:\ztree-qa-worktree-010 HEAD
+  (in worktree) uv sync --locked --group dev
+  (in worktree) Rename-Item apps\api\mcp_server.py mcp_server.py.bak
+  (in worktree) uv run python -m pytest -q tests/integration/test_mcp_bridge.py
+      -> ERROR collecting tests/integration/test_mcp_bridge.py
+         ModuleNotFoundError: No module named 'apps.api.mcp_server'
+         1 error in 1.35s  (red-light confirmed)
+  (in worktree) Rename-Item apps\api\mcp_server.py.bak mcp_server.py
+  (in worktree) uv run python -m pytest -q tests/integration/test_mcp_bridge.py
+      -> 7 passed, 1 warning in 1.55s  (green confirmed)
+git worktree remove --force E:\ztree-qa-worktree-010
+git worktree prune
+  (worktree list shows only the main checkout afterwards)
+
+== 阶段二：全部门禁（HEAD，main checkout）==
+uv sync --locked --group dev                                          -> PASS (91 packages resolved)
+uv run python -m scripts.validate_repository                          -> PASS (skeleton/secret scan/graph+LLM contracts/review packet/v2 mock-replay)
+uv run ruff format --check packages scripts tests apps                -> PASS (118 files already formatted)
+uv run ruff check .                                                   -> PASS (All checks passed)
+uv run mypy scripts                                                   -> PASS (16 source files)
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+                                                                      -> PASS (41 source files)
+uv run python -m pytest -q                                           -> 476 passed, 5 skipped, 1 warning in 26.84s
+pnpm install --frozen-lockfile                                       -> PASS (Already up to date)
+pnpm peers check                                                     -> PASS (No peer dependency issues found)
+pnpm check                                                           -> PASS (16 files / 64 tests passed)
+pnpm build                                                           -> PASS (vite built in 169ms; chunk>500kB warning pre-existing)
+pnpm --filter @knowledge-tree/contracts-ts check                     -> PASS (node scripts/generate.mjs --check && tsc --noEmit; exit 0)
+
+== 阶段三：对抗探针（脚本证据\TR-20260815-010\probes\qa_probe_mcp.py）==
+uv run python evidence\TR-20260815-010\probes\qa_probe_mcp.py
+  run1: 13/15 PASS（P-012/P-013 FAIL 均为探针自身缺陷：/api/workspaces 返回 {"workspaces":[...]} 而非裸数组；
+        P-013 无 key 断言在播种前调用 preview_draft 返回 workspace_missing。修正探针后重跑）
+  run2: 15/15 PASS（见 logs/probes-mcp.log；run1 见 logs/probes-mcp-run1.log）
+
+== 其它勘察命令 ==
+git log --oneline -5 / git diff --stat 37d0988 944a996 / git worktree list / git status --porcelain
+Get-Item dist\zhizhi\zhizhi.exe（11,565,348 B，2026-08-16T14:16:53+08:00 重建）
+uv run python -c "import importlib.metadata as md; print(md.version('mcp'))" -> 1.29.0（满足 mcp<2）
+
+== 约束 ==
+未提交任何 git 变更；未修改产品代码；工作树中 docs/USER_FACING_DEVELOPMENT_ROADMAP.md、
+docs/USER_MANUAL.md、docs/ai-mindmap-agent-harness.md 的未提交修改为勘察时已存在（WORK-2026-048
+文档更新，非本 QA 产生），QA 未改动并保留。
