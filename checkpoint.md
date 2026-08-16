@@ -2,6 +2,9 @@
 
 Updated: 2026-08-16 (Asia/Shanghai)
 
+> **交接/接手入口**：完整交接文档见 [`docs/HANDOFF.md`](docs/HANDOFF.md)（项目全貌、
+> 上手路径、工作流、决策记录、遗留与下一步）。本文件是最新进度快照。
+
 ## Web search agent checkpoint — 2026-08-16 17:15 +08:00（WORK-2026-053，第 11 步切片 4）
 
 - 「主题→搜网→思维导图」已落地：`web_search.py`（Tavily/Brave stdlib 适配器，
