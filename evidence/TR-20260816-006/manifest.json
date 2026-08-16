@@ -1,0 +1,30 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260816-006",
+  "work_item": "WORK-2026-055",
+  "title": "知识点来源跳转（文档锚点 + 网址链接）",
+  "reviewed_commit": "c70c512",
+  "reviewed_commit_sha": "c70c512",
+  "implementation_commits": [
+    "c70c512 feat(sources): one-click jump from nodes to document anchors and web urls (WORK-2026-055)"
+  ],
+  "branch": "feature/WORK-2026-049-empty-graph-crash",
+  "verdict": "PASS",
+  "findings": {"P0": 0, "P1": 0, "P2": 0, "P3": 1},
+  "findings_detail": [
+    {"id": "P-3-001", "severity": "P3", "status": "observation", "title": "链接删除/编辑未实现（有意）", "detail": "同序号 upsert 可覆盖；完整删除走 update_concept，后续切片。MD/TXT 来源只能打开文档无法页内定位（无分页模型）。"}
+  ],
+  "correlation_disclosure": "correlated_review: QA 与实现者同属自动化编排流程（提交作者 Codex，AI 实现），可能同模型/供应商；human_signature=false, owner_acceptance=false。",
+  "gates": {
+    "validate_repository": "PASS",
+    "ruff_format": "PASS (130 files)",
+    "ruff_check": "PASS",
+    "mypy_scripts": "PASS (16 files)",
+    "mypy_strict": "PASS (45 files)",
+    "pytest": "524 passed, 6 skipped",
+    "pnpm_check": "22 files / 84 tests PASS",
+    "pnpm_build": "PASS (pre-existing chunk warning)",
+    "contracts_ts_check": "PASS (no drift)",
+    "pnpm_peers_check": "PASS"
+  }
+}

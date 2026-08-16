@@ -1,0 +1,23 @@
+QA TR-20260816-006 (WORK-2026-055 node source links) - command log (all real runs, HEAD c70c512)
+All commands executed from E:\知识树 - 副本 on branch feature/WORK-2026-049-empty-graph-crash.
+
+== 阶段一：红灯真值（实现前，仅新增测试文件）==
+uv run python -m pytest -q tests/integration/test_concept_anchors_api.py
+    -> 2 failed, 1 passed (404-by-absence passed vacuously; endpoint missing)
+       (archived: logs/red-run-python.log)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.sources.test.tsx
+    -> collection/type failures (archived: logs/red-run-web.log)
+
+== 阶段二：全部门禁（HEAD c70c512）==
+uv run ruff format --check packages scripts tests apps             -> 130 files already formatted
+uv run ruff check .                                               -> All checks passed
+uv run mypy scripts                                               -> Success: 16 source files
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+                                                                   -> Success: 45 source files
+uv run python -m scripts.validate_repository                       -> PASS
+uv run python -m pytest -q                                        -> 524 passed, 6 skipped in 27.58s
+pnpm check                                                        -> 22 files / 84 tests passed
+pnpm build                                                        -> OK (chunk>500kB warning pre-existing)
+pnpm --filter @knowledge-tree/contracts-ts check                  -> exit 0
+pnpm peers check                                                  -> No peer dependency issues found
+archived: gates-rest.log, gates-pnpm-check.log
