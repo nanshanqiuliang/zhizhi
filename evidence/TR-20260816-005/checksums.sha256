@@ -1,0 +1,6 @@
+e2c167d0ecaccc2b0a2a612281b0ad58846996be10fcf4b2a8594e85adf3721c *evidence/TR-20260816-005/commands.txt
+d662c0c2ff4868ee74a2df9b4de6ac0b111ac82d230d3ce9fd981c6fc604519a *evidence/TR-20260816-005/manifest.json
+90f419a89d5a5f41c5b7db3b4e6c7f0f84d1c8a9686f22411a8b1e603cc8a32a *evidence/TR-20260816-005/logs/red-run-python.log
+f5b19de36b7b23ae6e588794c6e5bb93f8029e10fc3e39f918ad9c9e9de7a342 *evidence/TR-20260816-005/logs/red-run-web.log
+ab252da74e54b9331dd4d4bf29af4dd4ebd0da5b1cfc505b7e9b9185049006ce *evidence/TR-20260816-005/gates-pnpm-check.log
+9dac850bb035078175b5bb5d90c698b2dee8af891fffd8e32e7586aa6c124c57 *evidence/TR-20260816-005/gates-rest.log

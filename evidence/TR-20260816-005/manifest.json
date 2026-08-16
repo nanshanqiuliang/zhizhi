@@ -1,0 +1,28 @@
+{
+  "schema_version": "evidence-manifest.v1",
+  "test_run_id": "TR-20260816-005",
+  "work_item": "WORK-2026-054",
+  "title": "思维导图垂直树形排版（修 AI 绘图排布不均/过紧）",
+  "reviewed_commit": "9ba7344",
+  "reviewed_commit_sha": "9ba7344",
+  "implementation_commits": [
+    "9ba7344 feat(layout): vertical tidy-tree layout - centered parents, spacious spacing (WORK-2026-054)"
+  ],
+  "branch": "feature/WORK-2026-049-empty-graph-crash",
+  "verdict": "PASS",
+  "findings": {"P0": 0, "P1": 0, "P2": 0, "P3": 0},
+  "findings_detail": [],
+  "correlation_disclosure": "correlated_review: QA 与实现者同属自动化编排流程（提交作者 Codex，AI 实现），可能同模型/供应商；human_signature=false, owner_acceptance=false。",
+  "gates": {
+    "validate_repository": "PASS",
+    "ruff_format": "PASS (129 files)",
+    "ruff_check": "PASS",
+    "mypy_scripts": "PASS (16 files)",
+    "mypy_strict": "PASS (45 files)",
+    "pytest": "521 passed, 6 skipped",
+    "pnpm_check": "21 files / 79 tests PASS",
+    "pnpm_build": "PASS (pre-existing chunk warning)",
+    "contracts_ts_check": "PASS (no drift)",
+    "pnpm_peers_check": "PASS"
+  }
+}
