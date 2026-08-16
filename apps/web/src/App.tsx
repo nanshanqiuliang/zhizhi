@@ -195,6 +195,31 @@ function layoutWorkspace(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
   };
 }
 
+export const CANVAS_MIN_WIDTH = 1000;
+export const CANVAS_MIN_HEIGHT = 650;
+const CANVAS_MARGIN = 48;
+const NODE_WIDTH = 150;
+const NODE_HEIGHT = 68;
+
+export interface SurfaceSize {
+  width: number;
+  height: number;
+}
+
+/** Content-driven canvas size: node bounding box + node size + margin, floored. */
+export function canvasSurfaceSize(nodes: readonly { x: number; y: number }[]): SurfaceSize {
+  let maxX = 0;
+  let maxY = 0;
+  for (const node of nodes) {
+    if (node.x > maxX) maxX = node.x;
+    if (node.y > maxY) maxY = node.y;
+  }
+  return {
+    width: Math.max(CANVAS_MIN_WIDTH, maxX + NODE_WIDTH + CANVAS_MARGIN),
+    height: Math.max(CANVAS_MIN_HEIGHT, maxY + NODE_HEIGHT + CANVAS_MARGIN),
+  };
+}
+
 function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | "trash" | "lock" }) {
   const paths = {
     undo: <path d="M9 7H5v-4M5 7c2-3 7-4 10-1 3 2 3 7 0 10-2 2-5 2-7 1" />,
@@ -1023,8 +1048,10 @@ export function App({
     }
     const deltaX = (event.clientX - active.startX) / camera.zoom;
     const deltaY = (event.clientY - active.startY) / camera.zoom;
-    const x = Math.max(8, Math.min(835, active.originX + deltaX));
-    const y = Math.max(8, Math.min(555, active.originY + deltaY));
+    // Unbounded canvas (WORK-2026-045): no upper clamp; the surface grows with
+    // content. The 8px floor keeps nodes reachable near the origin corner.
+    const x = Math.max(8, active.originX + deltaX);
+    const y = Math.max(8, active.originY + deltaY);
     active.currentX = x;
     active.currentY = y;
     setPresent((snapshot) => ({
@@ -1093,6 +1120,8 @@ export function App({
       };
     });
   }
+
+  const surface = canvasSurfaceSize(present.nodes);
 
   return (
     <main className="app-shell">
@@ -1448,14 +1477,23 @@ export function App({
           <div className="canvas-viewport" ref={canvasViewport} onWheel={handleWheel}>
             <div
               className="canvas-surface"
-              style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})` }}
+              style={{
+                width: surface.width,
+                height: surface.height,
+                transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`,
+              }}
               onPointerDown={startPan}
               onPointerMove={moveDrag}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
             >
               <div className="canvas-grid" aria-hidden="true" />
-              <svg className="edge-layer" viewBox="0 0 1000 650" aria-hidden="true">
+              <svg
+                className="edge-layer"
+                viewBox={`0 0 ${surface.width} ${surface.height}`}
+                style={{ width: surface.width, height: surface.height }}
+                aria-hidden="true"
+              >
                 {present.edges.map((edge) => {
                   const from = nodeById.get(edge.from);
                   const to = nodeById.get(edge.to);
@@ -1490,11 +1528,13 @@ export function App({
                   {node.positionLocked && <span className="lock-dot" aria-label="位置已锁定">⌑</span>}
                 </button>
               ))}
-              <div className="canvas-legend" aria-hidden="true">
-                <span><i className="legend-root" />主题</span>
-                <span><i className="legend-branch" />概念</span>
-                <span><i className="legend-leaf" />知识点</span>
-              </div>
+            </div>
+            {/* Legend stays anchored to the viewport corner, not the (possibly
+                huge) transformed surface, so it never drifts out of view. */}
+            <div className="canvas-legend" aria-hidden="true">
+              <span><i className="legend-root" />主题</span>
+              <span><i className="legend-branch" />概念</span>
+              <span><i className="legend-leaf" />知识点</span>
             </div>
           </div>
         </section>
