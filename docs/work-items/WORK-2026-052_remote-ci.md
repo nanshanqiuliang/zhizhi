@@ -47,10 +47,10 @@ updated_at: 2026-08-16T00:00:00Z
 
 ## 验收标准
 
-- [ ] AC-1：远端私有仓库存在且 main 推送成功（`155cc32` 或其后代）。
-- [ ] AC-2：CI run 三 job 全绿（含对齐后的 mypy 43 文件口径 + contracts-ts drift 门）。
-- [ ] AC-3：workflow 与本地门禁清单一致（AGENTS.md 列举命令全覆盖）。
-- [ ] 回滚：`git remote remove origin` + `gh repo delete` 即完全移除远端与 CI。
+- [x] AC-1：远端私有仓库存在且 main 推送成功（`d131e2c`）。
+- [x] AC-2：CI run 三 job 全绿（含对齐后的 mypy 43 文件口径 + contracts-ts drift 门）。
+- [x] AC-3：workflow 与本地门禁清单一致（AGENTS.md 列举命令全覆盖）。
+- [x] 回滚：`git remote remove origin` + `gh repo delete` 即完全移除远端与 CI。
 
 ## 验证计划
 

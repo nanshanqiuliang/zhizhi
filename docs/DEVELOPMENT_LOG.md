@@ -2,6 +2,28 @@
 
 > 用途：按时间记录已发生的技术变化、验证和遗留风险。计划项请写入 `ENGINEERING_PLAN.md`。
 
+## 2026-08-16 — 远端仓库接入与 CI 首跑（WORK-2026-052）
+
+- 关联 ID：WORK-2026-052、WORK-2026-006（workflow 声明）。
+- 实际变化：① `.github/workflows/ci.yml` 对齐当前基线——`mypy --strict` 目标补
+  `apps/desktop`（43 文件口径，本地同命令已绿）、web job 增加
+  `pnpm --filter @knowledge-tree/contracts-ts check`（契约 drift 门）；② 创建私有
+  远端 `github.com/nanshanqiuliang/zhizhi`（许可证意图未决，闭源为安全默认）并
+  推送 main（`d131e2c`）；③ CI 首跑通过。
+- 影响模块/接口/schema/migration/prompt：仅 workflow 与 git 远端配置，无产品代码。
+- 兼容性：本地与 CI 工具版本一致（uv 0.12.3 / node 24.14.1 / pnpm 11.19.0，
+  requires-python >=3.12,<3.13）；`uv sync --locked --group dev` 含主依赖 pillow，
+  PNG 导出测试在 CI 可运行。
+- 验证与证据：run `31935593884`（head `d131e2c`）三 job 全绿——Python contracts
+  and tests（12 steps）、TypeScript checks and build（13 steps）、Desktop gate
+  declaration（5 steps）；URL
+  `https://github.com/nanshanqiuliang/zhizhi/actions/runs/31935593884`。
+- 性能/安全/运维影响：私有仓库最小暴露；推送内容为既有 git 历史（secret scan 门禁绿，
+  未跟踪的用户文件未包含）。
+- 回滚：`git remote remove origin` + `gh repo delete nanshanqiuliang/zhizhi` 完全移除。
+- 遗留风险与下一步：分支保护/必检 CI（owner GitHub 设置项）；公开化与许可证决策；
+  pull_request 触发路径待首个 PR 验证。
+
 ## 2026-08-16 — 知识树 PNG 导出（WORK-2026-051，第 11 步切片 3）
 
 - 关联 ID：WORK-2026-051、WORK-2026-048（048 out-of-scope 预告项）；QA `TR-20260816-003`。

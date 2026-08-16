@@ -18,8 +18,11 @@ Updated: 2026-08-16 (Asia/Shanghai)
 - 基线：pytest **500 passed + 5 skipped**、Web **19 文件/73 测试**、mypy strict 43
   文件、全门禁绿；桌面产物已重建（setup.exe 28.9MB / portable.zip 36.5MB，含全部
   049/050/051 能力）。
-- **main 已追平**：9e15cb4（骨架）fast-forward 至最新提交（242+ 提交），零冲突；
-  无远端仓库（remote CI 仍为环境缺口，需 owner 建 remote 后首跑）。
+- **main 已追平**：9e15cb4（骨架）fast-forward 至最新提交（242+ 提交），零冲突。
+- **远端 CI 已接通**（WORK-2026-052）：私有仓库 `github.com/nanshanqiuliang/zhizhi`，
+  workflow 对齐本地门禁（mypy strict 43 文件口径 + contracts-ts drift 门）后首跑
+  run `31935593884` 三 job 全绿（python/web/desktop-contract）。分支保护/必检 CI 为
+  owner 在 GitHub 设置中的可选项；许可证公开化决策未变。
 - Exact next action（owner 决策后）：受控 Web 搜索 agent（provider 决策：Brave/
   Tavily/自建）；或会话级自动确认开关（需 harness 评审）；或 B-lite agentic 绘图
   编排（依赖 050 已就绪）。

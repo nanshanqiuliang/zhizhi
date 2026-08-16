@@ -78,6 +78,7 @@
 | WORK-2026-049 | 空工作区（0 节点）渲染崩溃修复（BUG-2026-001） | 已完成（QA `TR-20260816-001` PASS） | web + QA | BUG-2026-001 在案 | 详情面板空态守卫 + 引导（「添加总纲」）；加载/`restoreDrafts`/`deleteSelected` 三处 `nodes[0]` 回退防 undefined；新增 `App.empty.test.tsx` 4 用例（空图加载/空态建总纲/删最后节点/撤销回空图） | 红灯 4 failed（`selectedNode.tone` undefined）→ 绿灯 4 passed；Web 68/68、pytest 476/476+5、全门禁绿；QA `TR-20260816-001` PASS |
 | WORK-2026-050 | MCP 写工具 + 应用内确认（第 11 步切片 2） | 已完成（QA `TR-20260816-002` PASS） | api + infrastructure + web + QA | WORK-2026-048 已验证；harness 评审通过（外部提议→应用内确认） | `proposals.py` 提议文件存储（原子写/pending 单向迁移/路径穿越防护）；MCP `propose_patch`（防御性校验→pending，不写图库）+ `proposal_status`（只读）；API `GET proposals` + `accept`（`apply_graph_patch` source=mcp_proposal）/`reject`；Web「外部提议（MCP）」面板（接受/拒绝/焦点刷新） | pytest 493/493+5、Web 72/72、全门禁绿；stdio 冒烟 6 工具；QA `TR-20260816-002` PASS |
 | WORK-2026-051 | 知识树 PNG 导出（第 11 步切片 3） | 已完成（QA `TR-20260816-003` PASS） | api + infrastructure + web + QA | WORK-2026-050 已验证 | `png_export.py`（`layout_tree` 确定性 BFS 层次布局 + PIL 渲染：tone 三色圆角节点/边直线/中文字体回退/原子写）；`GET /graph/image` FileResponse；MCP `export_png`（工具集 6→7，写 exports 不触图库）；Web「导出 PNG」按钮；运行时依赖 +pillow | pytest 500/500+5、Web 73/73、全门禁绿；stdio 冒烟 7 工具；QA `TR-20260816-003` PASS |
+| WORK-2026-052 | 远端仓库接入与 CI 首跑（清账项） | 已完成（CI run 31935593884 全绿） | repo + ops | main 已追平（155cc32+） | workflow 对齐基线（mypy strict +apps/desktop、+contracts-ts drift 门）；私有远端 `nanshanqiuliang/zhizhi` 创建 + main 推送（`d131e2c`） | CI 首跑三 job success（python 12 steps / web 13 steps / desktop-contract 5 steps）；run URL 已存 OPS_LOG |
 
 ## 当前受阻项
 

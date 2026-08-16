@@ -6,7 +6,9 @@
 
 - 产品代码：本地知识树 Web 界面 + FastAPI loopback sidecar + SQLite 持久化原型；LLM port 契约层、mock/DeepSeek adapter 已冻结；AI 草案流水线（切片 1–4，增量式）、带来源问答（第 9 步切片 1）、自然语言转 GraphPatch（切片 2）、增量重建（切片 3a/3b）、AI 修改历史（第 9 步收尾）已实现。真实调用仅显式构造 adapter（live 双门控 + `DEEPSEEK_API_KEY` opt-in）；草案/指令只经提交门落库；问答/草案生成/指令解释/增量内核只读。
 - 开发环境：本地 Python/Node 工具门已建立；test/staging/production 未建立。
-- CI/CD：GitHub Actions workflow 已声明但无远端 run 证据；不是可用部署流水线。
+- CI/CD：GitHub Actions（`quality-gates`）已在私有远端 `nanshanqiuliang/zhizhi` 上运行
+  （WORK-2026-052，首跑 run 31935593884 三 job 全绿：python/web/desktop-contract）；
+  push(main) 触发；分支保护/必检 CI 建议由 owner 在 GitHub 设置中启用。
 - 监控与告警：未建立。
 - 备份与恢复：工作区 sqlite 在线备份 + checksum 恢复已实现（WORK-2026-021）；无托管环境演练。
 - 正式发布：无。
