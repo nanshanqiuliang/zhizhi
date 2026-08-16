@@ -14,6 +14,7 @@ import type {
   WorkspaceSnapshot,
 } from "./api";
 import { DEFAULT_WORKSPACE_ID, buildSetLockPatch } from "./api";
+import type { EdgeKind } from "./api";
 import { renderMarkdown } from "./markdown";
 import { PdfRenderer } from "./PdfRenderer";
 import { canvasSurfaceSize } from "./canvas";
@@ -196,7 +197,18 @@ function layoutWorkspace(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
   };
 }
 
-function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | "trash" | "lock" }) {
+const EDGE_TYPE_LABELS: Record<EdgeKind, string> = {
+  prerequisite_of: "先修",
+  related_to: "相关",
+  part_of: "包含",
+  example_of: "举例",
+};
+
+function edgeTypeLabel(kind: EdgeKind): string {
+  return EDGE_TYPE_LABELS[kind] ?? kind;
+}
+
+function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | "trash" | "lock" | "link" }) {
   const paths = {
     undo: <path d="M9 7H5v-4M5 7c2-3 7-4 10-1 3 2 3 7 0 10-2 2-5 2-7 1" />,
     redo: <path d="M15 7h4v-4m0 4c-2-3-7-4-10-1-3 2-3 7 0 10 2 2 5 2 7 1" />,
@@ -205,6 +217,7 @@ function Icon({ name }: { name: "undo" | "redo" | "layout" | "reset" | "plus" | 
     plus: <path d="M12 5v14M5 12h14" />,
     trash: <path d="M5 7h14M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />,
     lock: <path d="M7 10V7a5 5 0 0 1 10 0v3m-12 0h14v10H5z" />,
+    link: <path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5" />,
   } as const;
 
   return (
@@ -269,11 +282,29 @@ export function App({
   const [aiKeyInput, setAiKeyInput] = useState("");
   const [sidebarWidth, setSidebarWidth] = useState(250);
   const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [connectMode, setConnectMode] = useState(false);
+  const [connectSource, setConnectSource] = useState<string | null>(null);
+  const [connectType, setConnectType] = useState<EdgeKind>("related_to");
   const sidebarDrag = useRef<{ startX: number; startWidth: number } | null>(null);
   const nextNodeNumber = useRef(1);
   const drag = useRef<DragState | null>(null);
   const canvasViewport = useRef<HTMLDivElement | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Real browsers synthesize a `click` after pointerup; a drag must not let
+  // that click recenter the canvas (WORK-2026-047).
+  const suppressRecentOnClick = useRef(false);
+
+  useEffect(() => {
+    if (!connectMode) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setConnectMode(false);
+        setConnectSource(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [connectMode]);
 
   const selectedNode = present.nodes.find((node) => node.id === selectedId) ?? present.nodes[0];
   const nodeById = useMemo(
@@ -734,7 +765,12 @@ export function App({
   function selectNode(nodeId: string) {
     const node = present.nodes.find((candidate) => candidate.id === nodeId);
     if (!node) return;
-    centerOnNode(node);
+    // A click synthesized right after a drag must not recenter (jump); a
+    // plain click still centers on the node.
+    if (!suppressRecentOnClick.current) {
+      centerOnNode(node);
+    }
+    suppressRecentOnClick.current = false;
     setSelectedId(node.id);
     setTitleDraft(node.title);
     setNoteDraft(node.note);
@@ -843,8 +879,8 @@ export function App({
       id,
       title: "新概念",
       note: "在这里记录这个概念的定义、例子或疑问。",
-      x: Math.min(800, Math.max(20, selectedNode.x + (siblings - 0.5) * 170)),
-      y: Math.min(535, selectedNode.y + 185),
+      x: Math.max(8, selectedNode.x + (siblings - 0.5) * 170),
+      y: Math.max(8, selectedNode.y + 185),
       positionLocked: false,
       tone: "leaf",
     };
@@ -856,6 +892,82 @@ export function App({
     setSelectedId(id);
     setTitleDraft(child.title);
     setNoteDraft(child.note);
+  }
+
+  function addConcept(tone: "root" | "branch" = "branch") {
+    // Place the free block at the viewport center (unbounded canvas), so it
+    // appears where the user is looking.
+    const viewport = canvasViewport.current;
+    const centerX = viewport ? (viewport.clientWidth / 2 - camera.x) / camera.zoom : 320;
+    const centerY = viewport ? (viewport.clientHeight / 2 - camera.y) / camera.zoom : 240;
+    const id = `new-concept-${nextNodeNumber.current++}`;
+    const concept: ConceptNode = {
+      id,
+      title: tone === "root" ? "新总纲" : "新概念",
+      note: "在这里记录这个主题的定义、例子或疑问。",
+      x: Math.max(8, centerX - 75),
+      y: Math.max(8, centerY - 34),
+      positionLocked: false,
+      tone,
+    };
+    const next = { ...present, nodes: [...present.nodes, concept] };
+    commit(next, tone === "root" ? "已添加总纲，可在右侧编辑标题" : "已添加概念，可在右侧编辑标题");
+    setSelectedId(id);
+    setTitleDraft(concept.title);
+    setNoteDraft(concept.note);
+  }
+
+  function handleNodeClick(node: ConceptNode) {
+    if (connectMode) {
+      if (node.locks?.relations) {
+        setStatus("关系已锁定，无法连线");
+        return;
+      }
+      if (!connectSource) {
+        setConnectSource(node.id);
+        setStatus(`连线起点：${node.title}，请选择终点`);
+        return;
+      }
+      if (connectSource === node.id) {
+        setStatus("起点与终点相同，请重新选择起点");
+        setConnectSource(null);
+        return;
+      }
+      const already = present.edges.some(
+        (edge) =>
+          (edge.from === connectSource && edge.to === node.id) ||
+          (edge.from === node.id && edge.to === connectSource),
+      );
+      if (already) {
+        setStatus("这两个节点已存在连线");
+        setConnectSource(null);
+        return;
+      }
+      const next = {
+        ...present,
+        edges: [...present.edges, { from: connectSource, to: node.id, edge_type: connectType }],
+      };
+      commit(next, "已添加连线");
+      setConnectSource(null);
+      return;
+    }
+    selectNode(node.id);
+  }
+
+  function disconnectEdge(from: string, to: string) {
+    const locked = [from, to].some((id) => {
+      const node = present.nodes.find((candidate) => candidate.id === id);
+      return node?.locks?.relations ?? false;
+    });
+    if (locked) {
+      setStatus("关系已锁定，无法断开连线");
+      return;
+    }
+    const next = {
+      ...present,
+      edges: present.edges.filter((edge) => !(edge.from === from && edge.to === to)),
+    };
+    commit(next, "已删除连线");
   }
 
   function deleteSelected() {
@@ -1042,6 +1154,9 @@ export function App({
     drag.current = null;
     if (active.mode === "pan") return;
     if (active.currentX === active.originX && active.currentY === active.originY) return;
+    // Suppress the browser's synthesized click so it cannot recenter the
+    // canvas right after a node drag (WORK-2026-047).
+    suppressRecentOnClick.current = true;
     setPast([...past, active.before]);
     setFuture([]);
     setStatus("已移动概念节点");
@@ -1445,6 +1560,33 @@ export function App({
               <button type="button" onClick={() => void redo()} disabled={future.length === 0 && !api}><Icon name="redo" />重做</button>
             </div>
             <span className="toolbar-rule" />
+            <button type="button" onClick={() => addConcept("branch")}><Icon name="plus" />添加概念</button>
+            <button type="button" onClick={() => addConcept("root")}><Icon name="plus" />添加总纲</button>
+            <button
+              type="button"
+              className={connectMode ? "active-tool" : ""}
+              onClick={() => {
+                setConnectMode((value) => !value);
+                setConnectSource(null);
+              }}
+            >
+              <Icon name="link" />连线
+            </button>
+            {connectMode && (
+              <>
+                <select
+                  aria-label="连线类型"
+                  value={connectType}
+                  onChange={(event) => setConnectType(event.target.value as EdgeKind)}
+                >
+                  <option value="related_to">相关</option>
+                  <option value="prerequisite_of">先修</option>
+                  <option value="part_of">包含</option>
+                  <option value="example_of">举例</option>
+                </select>
+                <span className="canvas-tip">先点起点块，再点终点块；Esc 退出</span>
+              </>
+            )}
             <button type="button" onClick={autoLayout}><Icon name="layout" />自动排布</button>
             <button type="button" onClick={resetDemo}><Icon name="reset" />重新载入示例</button>
             <span className="canvas-tip">滚轮缩放 · 拖动空白平移 · 拖动节点调整位置</span>
@@ -1482,6 +1624,7 @@ export function App({
                   return (
                     <path
                       key={`${edge.from}-${edge.to}`}
+                      aria-label={`连线：${from.title} → ${to.title}（${edgeTypeLabel(edge.edge_type ?? "related_to")}）`}
                       d={`M ${x1} ${y1} C ${x1} ${middle}, ${x2} ${middle}, ${x2} ${y2}`}
                     />
                   );
@@ -1493,9 +1636,9 @@ export function App({
                   key={node.id}
                   aria-label={`概念：${node.title}`}
                   aria-pressed={node.id === selectedNode.id}
-                  className={`concept-node ${node.tone}${node.id === selectedNode.id ? " selected" : ""}${node.positionLocked ? " locked" : ""}`}
+                  className={`concept-node ${node.tone}${node.id === selectedNode.id ? " selected" : ""}${node.positionLocked ? " locked" : ""}${connectMode && connectSource === node.id ? " connect-source" : ""}`}
                   style={{ left: node.x, top: node.y }}
-                  onClick={() => selectNode(node.id)}
+                  onClick={() => handleNodeClick(node)}
                   onPointerDown={(event) => startDrag(event, node)}
                 >
                   <span className="node-type">{node.tone === "root" ? "主题" : node.tone === "branch" ? "概念" : "知识点"}</span>
@@ -1553,6 +1696,36 @@ export function App({
             <button type="button" onClick={() => void toggleLock("position")}><Icon name="lock" />{selectedNode.positionLocked ? "解除位置锁定" : "锁定位置"}</button>
             <button type="button" className="danger-button" onClick={deleteSelected}><Icon name="trash" />删除当前节点</button>
           </div>
+
+          <div className="detail-divider" />
+          <p className="overline action-label">关联关系（{present.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id).length}）</p>
+          {present.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id).length === 0 ? (
+            <p className="edge-empty">暂无连线；点「连线」再点两个块即可建立。</p>
+          ) : (
+            <ul className="edge-list">
+              {present.edges
+                .filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id)
+                .map((edge) => {
+                  const otherId = edge.from === selectedNode.id ? edge.to : edge.from;
+                  const other = present.nodes.find((node) => node.id === otherId);
+                  const label = other
+                    ? `${edge.from === selectedNode.id ? "指向" : "来自"} ${other.title}`
+                    : otherId;
+                  return (
+                    <li key={`${edge.from}-${edge.to}`}>
+                      <span>{label}（{edgeTypeLabel(edge.edge_type ?? "related_to")}）</span>
+                      <button
+                        type="button"
+                        aria-label={`删除连线 ${label}`}
+                        onClick={() => disconnectEdge(edge.from, edge.to)}
+                      >
+                        删除
+                      </button>
+                    </li>
+                  );
+                })}
+            </ul>
+          )}
 
           <div className="source-card">
             <span className="source-icon" aria-hidden="true">↗</span>

@@ -608,6 +608,69 @@ a:focus-visible {
   white-space: nowrap;
 }
 
+.canvas-toolbar select {
+  max-width: 96px;
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 0.72rem;
+  color: #33413a;
+  border: 1px solid #c6cfc8;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.canvas-toolbar button.active-tool {
+  border-color: #bf7c2e;
+  background: #fdf3e4;
+  color: #8a541a;
+}
+
+.concept-node.connect-source {
+  outline: 3px solid rgb(191 124 46 / 55%);
+  outline-offset: 2px;
+}
+
+.edge-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edge-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #d8dfd7;
+  border-radius: 8px;
+  background: #fbfcfa;
+  font-size: 0.74rem;
+  color: #33413a;
+}
+
+.edge-list button {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  color: #a03e2b;
+  border: 1px solid #e2c4bc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.edge-list button:hover {
+  background: #fdf1ee;
+}
+
+.edge-empty {
+  margin: 0;
+  color: #8b9890;
+  font-size: 0.72rem;
+}
+
 .canvas-viewport {
   position: relative;
   min-width: 0;

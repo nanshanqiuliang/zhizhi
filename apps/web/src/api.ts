@@ -23,9 +23,19 @@ export type ConceptNode = {
   revisionNo?: number;
 };
 
+export type EdgeKind = "prerequisite_of" | "related_to" | "part_of" | "example_of";
+
+export const EDGE_KINDS: readonly EdgeKind[] = [
+  "prerequisite_of",
+  "related_to",
+  "part_of",
+  "example_of",
+];
+
 export type ConceptEdge = {
   from: string;
   to: string;
+  edge_type?: EdgeKind;
 };
 
 export type WorkspaceSnapshot = {
@@ -235,7 +245,7 @@ export function snapshotToGraph(snapshot: WorkspaceSnapshot): Record<string, unk
     course_id: COURSE_ID,
     source_concept_id: toCanonicalId(edge.from),
     target_concept_id: toCanonicalId(edge.to),
-    edge_type: "related_to",
+    edge_type: edge.edge_type ?? "related_to",
     origin: "user",
     review_state: "accepted",
     confidence: null,
@@ -326,6 +336,9 @@ export function graphToSnapshot(graph: CanonicalGraph): WorkspaceSnapshot {
     edges: edges.map((edge) => ({
       from: String(edge.source_concept_id),
       to: String(edge.target_concept_id),
+      edge_type: EDGE_KINDS.includes(edge.edge_type as EdgeKind)
+        ? (edge.edge_type as EdgeKind)
+        : undefined,
     })),
     revisionNo: typeof graph.revision_no === "number" ? graph.revision_no : 0,
   };
