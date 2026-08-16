@@ -1,0 +1,7 @@
+421a074e38935762ba1dcbd1286ea9f42b32b313aab696d28f7baa5cbaca3a52 *evidence/TR-20260816-003/commands.txt
+aab1f6b55c1eec55cdc29f08ef166f219643bf5d6fe8b20195342e88c4117ffb *evidence/TR-20260816-003/manifest.json
+85d0485624d807f346b66f7894e84384dd4a4cda55c26a56249a49a073d4299a *evidence/TR-20260816-003/logs/frozen-smoke.log
+ad7fd49facf5d0b9f10ee49ed3993f0a45157317215ba26f6eb114261c662cc6 *evidence/TR-20260816-003/logs/red-run-python.log
+f813b46cf4c1e43d9a5e9489eeeadf8c5903140cc0c067d95f32886880c51f42 *evidence/TR-20260816-003/logs/red-run-web.log
+4dfdfb5b4b1bbce42aaf167f68501d2d3e6ab3a9e839f1c3c8936529d21ce938 *evidence/TR-20260816-003/gates-rest.log
+e2b8402db6b84bee9ec985f5dd9c1f0b8090921d779fb2fef664308a4ab3845e *evidence/TR-20260816-003/probes/frozen_png_smoke.py

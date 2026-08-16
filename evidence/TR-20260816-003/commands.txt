@@ -1,0 +1,31 @@
+QA TR-20260816-003 (WORK-2026-051 PNG export) - command log (all real runs, HEAD 1154c80 + build.spec fix)
+All commands executed from E:\知识树 - 副本 on branch feature/WORK-2026-049-empty-graph-crash.
+
+== 阶段一：红灯真值（实现前，仅新增测试文件）==
+uv run python -m pytest -q tests/integration/test_png_export.py tests/integration/test_mcp_bridge.py
+    -> 8 failed, 10 passed (archived: logs/red-run-python.log)
+pnpm --filter @knowledge-tree/web exec vitest run src/App.export.test.tsx
+    -> 1 failed (archived: logs/red-run-web.log)
+
+== 阶段二：全部门禁（HEAD 1154c80）==
+uv run ruff format --check packages scripts tests apps             -> 123 files already formatted
+uv run ruff check .                                               -> All checks passed
+uv run mypy scripts                                               -> Success: 16 source files
+uv run python -m mypy --strict packages/contracts-py/src packages/domain/src packages/infrastructure/src apps/api apps/desktop
+                                                                   -> Success: 43 source files
+uv run python -m scripts.validate_repository                       -> PASS
+uv run python -m pytest -q                                        -> 500 passed, 5 skipped in 26.24s
+pnpm check                                                        -> 19 files / 73 tests passed
+pnpm build                                                        -> OK (chunk>500kB warning pre-existing)
+pnpm --filter @knowledge-tree/contracts-ts check                  -> exit 0
+pnpm peers check                                                  -> No peer dependency issues found
+archived: gates-rest.log
+
+== 阶段三：冻结产物 ==
+pnpm build + scripts/build_desktop.py (first attempt)
+    -> frozen exe --mcp-stdio crashed: ModuleNotFoundError PIL (build.spec excludes)
+fix: remove PIL/PIL.Image from build.spec excludes
+scripts/build_desktop.py + build_installer.py + package_desktop.py (rebuild)
+    -> setup.exe 28,922,730 bytes; portable.zip 36,480,216 bytes
+uv run --group dev --group build python evidence/TR-20260816-003/probes/frozen_png_smoke.py
+    -> E1..E5 PASS, RESULT: PASS (archived: logs/frozen-smoke.log)

@@ -73,10 +73,9 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
-        # Build/dev-only packages that the app never imports at runtime; some
-        # are pulled in via optional imports (e.g. pypdf -> PIL) when present.
-        "PIL",
-        "PIL.Image",
+        # Build/dev-only packages that the app never imports at runtime.
+        # NOTE: PIL is intentionally NOT excluded anymore — png_export
+        # (WORK-2026-051) renders the knowledge tree to PNG with Pillow.
         "hypothesis",
         "mypy",
         "pytest",
