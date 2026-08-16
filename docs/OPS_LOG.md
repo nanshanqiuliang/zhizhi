@@ -14,6 +14,16 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — 仓库公开化：MIT License + 转公开（owner 决策落定）
+
+- 关联 ID：许可证意图（长期 owner 未决项）→ 已决：**MIT，公开**。
+- 变更：新增 `LICENSE`（MIT，nanshanqiuliang）；README 增加 License 节；
+  `gh repo edit nanshanqiuliang/zhizhi --visibility public`。
+- 影响：仓库可被公开访问/索引；AGPL 借鉴边界问题随之消解（本项目未引入
+  SparkNoteAI/AGPL 代码，MIT 自有代码无冲突）；分支保护仍建议 owner 设置。
+- 回滚：`gh repo edit --visibility private` 可转回（已被索引/缓存的内容不可完全
+  撤回——公开前已确认无秘密：secret scan 门禁全绿、数据目录/密钥不在仓库）。
+
 ## 2026-08-16 — WORK-2026-054：思维导图垂直树形排版（产物重建受阻记录）
 
 - 关联 ID：WORK-2026-054、TR-20260816-005。

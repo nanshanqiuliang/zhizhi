@@ -48,3 +48,8 @@ pnpm build
 ```
 
 所有 LLM 检查默认只使用静态配置或 fixture，不会发起真实 API 请求；真实 DeepSeek smoke 仅在 `RUN_LIVE_LLM_TESTS=1` 且提供 `DEEPSEEK_API_KEY` 时运行，默认跳过。
+
+## License
+
+本项目以 [MIT License](LICENSE) 开源（代码与文档）。AI 能力需要自备 DeepSeek / Tavily / Brave 的 API Key（均有免费额度），本项目不分发任何密钥，也不对第三方服务收费负责。
+
