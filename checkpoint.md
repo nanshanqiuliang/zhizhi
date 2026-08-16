@@ -2,6 +2,24 @@
 
 Updated: 2026-08-16 (Asia/Shanghai)
 
+## Web search agent checkpoint — 2026-08-16 17:15 +08:00（WORK-2026-053，第 11 步切片 4）
+
+- 「主题→搜网→思维导图」已落地：`web_search.py`（Tavily/Brave stdlib 适配器，
+  HTTPS-only/稳定 code+rule）+ `web-search.json` 配置（env 兜底）+ 设置三端点 +
+  `POST /web-search-draft`（搜索→workspace 草案管线→preview 门→sources，不落库）
+  + MCP `search_draft`（工具集 8）+ Web 设置块/「网络主题」生成/来源列表。
+- 安全门（harness 文档新增一节）：默认零网络出口；key 仅 HTTPS 发往 provider 域名、
+  不回显；搜索文本为不可信素材，确认门不变；live 双门默认 skip。
+- 基线：pytest **515 passed + 6 skipped**、Web **20 文件/76 测试**、mypy strict 45、
+  全门禁绿；QA `TR-20260816-004` PASS + 冻结冒烟 addendum（2/2）；产物已重建
+  （setup.exe 28.9MB / portable.zip 36.5MB）；main/CI 已推送。
+- Owner 待办：①在应用内配置搜索 Key（Tavily/Brave 官网注册，均有免费额度）+
+  DeepSeek Key 后复测真实全链路（自动测试只覆盖注入链路与 fail-closed）；
+  ②可选：分支保护规则。
+- Exact next action（owner 决策后）：会话级自动确认开关（需 harness 评审）；或
+  B-lite agentic 绘图编排（050 提议/观察机制已就绪）；或硬ening 批次（OCR/PPTX
+  导入、大图性能、红队、签名）。
+
 ## Step-11 slices 2/3 + BUG-001 + main catch-up checkpoint — 2026-08-16 16:00 +08:00
 
 - WORK-2026-049（BUG-2026-001）：空工作区（0 节点）渲染崩溃修复——4 条路径

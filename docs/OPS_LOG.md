@@ -14,6 +14,22 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-053：Web 搜索 agent + 桌面产物重发
+
+- 关联 ID：WORK-2026-053、TR-20260816-004。
+- 环境/版本/build/config：commits `e91944b`/`6f74a5b` + addendum 提交；无新增依赖
+  （搜索 stdlib urllib）。产物重建：`dist/zhizhi-0.1.0-setup.exe`（28,931,045
+  字节）、`dist/zhizhi-0.1.0-portable.zip`（36,489,305 字节），含 053 全部能力。
+- 变更或症状：①「AI 设置」对话框更名「AI 与搜索设置」并新增 Web 搜索块
+  （Tavily/Brave provider 选择 + key，存 `data/web-search.json`）；②资料区新增
+  「网络主题」输入 +「从网络主题生成思维导图」：搜索→AI 草案→预览确认（同一提交
+  门），草案面板显示网页来源；③MCP 工具集 8（`search_draft`）。
+- 影响：**默认零网络出口**（无 key 时结构化 fail-closed）；配置 key 后仅向所选
+  provider 域名发 HTTPS 请求（15s 超时）；搜索文本为不可信素材，不改变草案确认门。
+- 证据：QA `TR-20260816-004` PASS + addendum（冻结冒烟 2/2：8 工具、无 key
+  fail-closed）；pytest 515/515+6、Web 76/76、mypy strict 45。
+- 缓解/回滚：回退提交即回无搜索形态；删 `web-search.json` 即断开。
+
 ## 2026-08-16 — WORK-2026-051：知识树 PNG 导出 + 桌面产物重发（含 build.spec 修复）
 
 - 关联 ID：WORK-2026-051、TR-20260816-003。
