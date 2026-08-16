@@ -14,6 +14,20 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-054：思维导图垂直树形排版（产物重建受阻记录）
+
+- 关联 ID：WORK-2026-054、TR-20260816-005。
+- 环境/版本/build/config：commits `9ba7344`/`9befe9b`；CI run `31941798588`
+  （head `9befe9b`）三 job 全绿。
+- 变更或症状：AI 草案初始布局与 Web「自动排布」改为垂直 tidy-tree（父居中/间距
+  260×210 与 240×190/无边概念底行/锁定切断/环安全）。
+- **产物重建受阻（环境占用，第三次同模式）**：重建时检测到 zhizhi.exe 正在运行
+  （PID 44592），PyInstaller 清理 `dist\zhizhi\_internal\...ClrLoader.dll` 报
+  PermissionError；未强杀用户进程，dist 产物保持上一版（053）。**待办**：关闭应用
+  后重跑 `pnpm build && uv run --group dev --group build python
+  scripts/build_desktop.py && .../build_installer.py && .../package_desktop.py`。
+- 影响：源码运行与 CI 不受影响；新布局需新产物或源码运行才可体验。
+
 ## 2026-08-16 — WORK-2026-053：Web 搜索 agent + 桌面产物重发
 
 - 关联 ID：WORK-2026-053、TR-20260816-004。
