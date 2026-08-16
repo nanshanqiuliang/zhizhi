@@ -1,7 +1,8 @@
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { App, canvasSurfaceSize } from "./App";
+import { App } from "./App";
+import { canvasSurfaceSize } from "./canvas";
 
 function nodeButton(title: string): HTMLElement {
   const node = document.querySelector(`[aria-label="概念：${title}"]`) as HTMLElement | null;
