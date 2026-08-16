@@ -2,6 +2,28 @@
 
 Updated: 2026-08-16 (Asia/Shanghai)
 
+## Step-11 slices 2/3 + BUG-001 + main catch-up checkpoint — 2026-08-16 16:00 +08:00
+
+- WORK-2026-049（BUG-2026-001）：空工作区（0 节点）渲染崩溃修复——4 条路径
+  （空图加载/删最后节点/撤销回空图/渲染守卫）+ 空态引导 UI；`5094482`/`4624c4c`，
+  QA `TR-20260816-001` PASS。BUG 状态 ready_for_release（产物已重建）。
+- WORK-2026-050（切片 2）：MCP 写工具 + 应用内确认——`proposals.py` 提议文件存储、
+  MCP `propose_patch`（防御校验→pending，不写图库）+ `proposal_status`（只读）、
+  API list/accept（`apply_graph_patch` source=mcp_proposal）/reject、Web「外部提议」
+  面板；`9a8374a`/`2a8256c`，QA `TR-20260816-002` PASS（含冻结冒烟 addendum 6/6）。
+- WORK-2026-051（切片 3）：知识树 PNG 导出——`png_export.py`（确定性层次布局 + PIL
+  渲染 + CJK 字体回退）、`GET /graph/image`、MCP `export_png`（工具集 7）、Web 按钮；
+  +pillow 运行时依赖；`1154c80`/`54396ee`（build.spec 去 PIL 排除），QA
+  `TR-20260816-003` PASS（冻结冒烟 5/5）。
+- 基线：pytest **500 passed + 5 skipped**、Web **19 文件/73 测试**、mypy strict 43
+  文件、全门禁绿；桌面产物已重建（setup.exe 28.9MB / portable.zip 36.5MB，含全部
+  049/050/051 能力）。
+- **main 已追平**：9e15cb4（骨架）fast-forward 至最新提交（242+ 提交），零冲突；
+  无远端仓库（remote CI 仍为环境缺口，需 owner 建 remote 后首跑）。
+- Exact next action（owner 决策后）：受控 Web 搜索 agent（provider 决策：Brave/
+  Tavily/自建）；或会话级自动确认开关（需 harness 评审）；或 B-lite agentic 绘图
+  编排（依赖 050 已就绪）。
+
 ## Post-delivery fixes round 3 QA closure checkpoint — 2026-08-16 00:58 +08:00
 
 - Role-separated QA reviewed `0abe9e9` (WORK-2026-044 draft diagnostics) and returned **PASS**

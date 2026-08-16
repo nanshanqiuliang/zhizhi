@@ -12,6 +12,21 @@
 - 正式发布：无。
 - 值守/支持渠道：未建立。
 
+## 2026-08-16 — WORK-2026-051：知识树 PNG 导出 + 桌面产物重发（含 build.spec 修复）
+
+- 关联 ID：WORK-2026-051、TR-20260816-003。
+- 环境/版本/build/config：commits `1154c80`/`54396ee`；运行时依赖 +`pillow>=10,<12`；
+  `build.spec` excludes 移除 PIL（历史排除使冻结包缺 PIL，首建 `--mcp-stdio` 冒烟
+  崩溃 `ModuleNotFoundError`，已修复重建）。产物：`dist/zhizhi-0.1.0-setup.exe`
+  （28,922,730 字节，较上版 +4.0MB 为 Pillow）、`dist/zhizhi-0.1.0-portable.zip`
+  （36,480,216 字节）。
+- 变更或症状：知识树可导出 PNG（三入口：Web「导出 PNG」按钮、`GET /graph/image`、
+  MCP `export_png` 工具，工具集 7）；确定性层次布局 + tone 三色节点 + 中文字体回退；
+  文件落 `exports/mindmap.png`，不触图库。
+- 证据：QA `TR-20260816-003` PASS（pytest 500/500+5、Web 73/73、mypy strict 43、
+  冻结冒烟 5/5：7 工具/export 落盘/PNG magic/图库不动）。
+- 缓解/回滚：回退提交 + `uv remove pillow`；exports 文件可删。
+
 ## 2026-08-16 — WORK-2026-049/050：空图崩溃修复 + MCP 提议确认 + 桌面产物重发
 
 - 关联 ID：WORK-2026-049（BUG-2026-001）、WORK-2026-050、TR-20260816-001、
